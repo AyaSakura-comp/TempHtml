@@ -7,232 +7,307 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: 'Noto Sans TC', 'Microsoft JhengHei', sans-serif; background: #0a0a1a; color: #e0e0e0; }
+  body { font-family: 'Noto Sans TC', sans-serif; background: #0a0a1a; color: #e0e0e0; }
 
   #header {
     background: linear-gradient(135deg, #0d47a1, #1a237e, #4a148c);
-    padding: 20px 30px;
+    padding: 16px 20px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     flex-wrap: wrap;
-    gap: 15px;
+    gap: 10px;
     border-bottom: 3px solid #ffab00;
-    position: relative;
-    z-index: 1000;
+    position: sticky; top: 0; z-index: 1000;
   }
-  #header h1 { font-size: 1.6em; color: #fff; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
+  #header h1 { font-size: 1.3em; color: #fff; }
   #header h1 span { color: #ffab00; }
-
-  #stats { display: flex; gap: 20px; flex-wrap: wrap; }
+  #stats { display: flex; gap: 10px; flex-wrap: wrap; }
   .stat-badge {
     background: rgba(255,255,255,0.15);
-    border-radius: 20px;
-    padding: 6px 16px;
-    font-size: 0.85em;
-    display: flex; align-items: center; gap: 6px;
+    border-radius: 20px; padding: 4px 12px;
+    font-size: 0.8em;
+    display: flex; align-items: center; gap: 4px;
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255,255,255,0.2);
   }
-  .stat-badge .num { color: #ffab00; font-weight: bold; font-size: 1.1em; }
+  .stat-badge .num { color: #ffab00; font-weight: bold; }
 
+  /* ===== DESKTOP ===== */
   #sidebar {
-    position: fixed;
-    left: 0; top: 0;
-    width: 340px;
-    height: 100vh;
+    position: fixed; left: 0; top: 0;
+    width: 340px; height: 100vh;
     background: #111827;
-    overflow-y: auto;
-    z-index: 999;
+    overflow-y: auto; z-index: 999;
     border-right: 2px solid #1e3a5f;
-    display: flex;
-    flex-direction: column;
+    display: flex; flex-direction: column;
   }
   #filter-panel {
-    padding: 15px;
-    background: #0d1b2a;
+    padding: 12px; background: #0d1b2a;
     border-bottom: 1px solid #1e3a5f;
     position: sticky; top: 0; z-index: 10;
   }
-  #filter-panel h3 { color: #ffab00; margin-bottom: 10px; font-size: 0.95em; }
-  .filter-group { margin-bottom: 12px; }
-  .filter-group label { display: block; color: #90a4ae; font-size: 0.8em; margin-bottom: 4px; }
+  #filter-panel h3 { color: #ffab00; margin-bottom: 8px; font-size: 0.9em; }
+  .filter-group { margin-bottom: 10px; }
+  .filter-group label { display: block; color: #90a4ae; font-size: 0.75em; margin-bottom: 3px; }
   .filter-group input, .filter-group select {
     width: 100%; padding: 6px 10px;
     background: #1a2332; border: 1px solid #263238;
-    color: #e0e0e0; border-radius: 6px;
-    font-size: 0.85em;
+    color: #e0e0e0; border-radius: 6px; font-size: 0.85em;
   }
   .filter-group input:focus, .filter-group select:focus { outline: none; border-color: #ffab00; }
-
-  #category-filters { display: flex; flex-wrap: wrap; gap: 4px; }
+  #category-filters { display: flex; flex-wrap: wrap; gap: 3px; }
   .cat-btn {
-    padding: 4px 10px; border-radius: 12px;
+    padding: 3px 8px; border-radius: 12px;
     border: 1px solid #263238; background: #1a2332;
-    color: #b0bec5; cursor: pointer; font-size: 0.75em;
+    color: #b0bec5; cursor: pointer; font-size: 0.7em;
     transition: all 0.2s;
   }
   .cat-btn:hover { border-color: #ffab00; }
   .cat-btn.active { background: #ffab00; color: #000; border-color: #ffab00; font-weight: bold; }
 
-  #attraction-list { flex: 1; overflow-y: auto; padding: 10px; }
+  #attraction-list { flex: 1; overflow-y: auto; padding: 8px; }
+
+  /* Card with image */
   .attraction-card {
     background: #1a2332;
     border-radius: 10px;
-    padding: 12px;
-    margin-bottom: 8px;
     border: 1px solid #263238;
     cursor: pointer;
     transition: all 0.2s;
+    overflow: hidden;
+    margin-bottom: 6px;
   }
   .attraction-card:hover {
     border-color: #ffab00;
-    transform: translateX(4px);
+    transform: translateX(3px);
     box-shadow: 0 4px 15px rgba(255,171,0,0.1);
   }
   .attraction-card.active {
     border-color: #ffab00;
     background: #1e3444;
-    box-shadow: 0 0 20px rgba(255,171,0,0.15);
   }
-  .attraction-card .card-header {
-    display: flex; justify-content: space-between; align-items: flex-start;
+  .card-img-wrapper {
+    width: 100%; height: 120px;
+    position: relative; overflow: hidden;
+    background-size: cover;
+    background-position: center;
   }
-  .attraction-card .card-name {
-    font-weight: bold; font-size: 0.9em; color: #e3f2fd;
-    flex: 1;
+  .card-img-wrapper img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s;
   }
-  .attraction-card .card-cat {
-    font-size: 0.7em;
-    padding: 2px 8px;
-    border-radius: 10px;
-    white-space: nowrap;
-    margin-left: 8px;
-    font-weight: bold;
+  .attraction-card:hover .card-img-wrapper img { transform: scale(1.05); }
+  .card-img-wrapper .no-photo {
+    width: 100%; height: 100%;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 4px;
   }
-  .attraction-card .card-loc {
-    font-size: 0.75em; color: #78909c; margin-top: 4px;
+  .card-img-wrapper .no-photo .emoji { font-size: 2em; opacity: 0.5; }
+  .card-img-wrapper .no-photo .label {
+    font-size: 0.65em; color: #90a4ae;
+    background: rgba(0,0,0,0.4);
+    padding: 2px 10px; border-radius: 4px;
   }
-  .attraction-card .card-tags {
-    display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap;
+  .card-body { padding: 8px 10px; }
+  .card-header-row {
+    display: flex; justify-content: space-between;
+    align-items: flex-start; gap: 6px;
   }
-  .attraction-card .card-tag {
-    font-size: 0.65em;
-    padding: 1px 6px;
-    border-radius: 6px;
-    background: #263238;
-    color: #b0bec5;
+  .card-name {
+    font-weight: 700; font-size: 0.85em; color: #e3f2fd;
+    line-height: 1.3; flex: 1;
   }
-  .attraction-card .card-tag.food { background: #4a148c; color: #ce93d8; }
-  .attraction-card .card-tag.cool { background: #0d47a1; color: #90caf9; }
+  .card-cat {
+    font-size: 0.65em; padding: 2px 7px;
+    border-radius: 8px; white-space: nowrap;
+    font-weight: bold; flex-shrink: 0;
+  }
+  .card-loc { font-size: 0.7em; color: #78909c; margin-top: 3px; }
+  .card-tags { display: flex; gap: 3px; margin-top: 5px; flex-wrap: wrap; }
+  .card-tag {
+    font-size: 0.6em; padding: 1px 6px;
+    border-radius: 4px;
+  }
+  .card-tag.food { background: #4a148c; color: #ce93d8; }
+  .card-tag.cool { background: #0d47a1; color: #90caf9; }
 
-  #map-container {
-    margin-left: 340px;
-    height: calc(100vh - 80px);
-    margin-top: 80px;
-  }
-  #map { width: 100%; height: 100%; }
+  /* Category colors */
+  .cat-咖啡廳 { background: #e65100; }
+  .cat-農場 { background: #2e7d32; }
+  .cat-自然景點 { background: #00695c; }
+  .cat-觀光工廠 { background: #1565c0; }
+  .cat-景點 { background: #6a1b9a; }
+  .cat-博物館 { background: #4527a0; }
+  .cat-夜市 { background: #c62828; }
+  .cat-美食街 { background: #d84315; }
+  .cat-餐廳 { background: #ad1457; }
+  .cat-美食 { background: #bf360c; }
+  .cat-文創園區 { background: #7b1fa2; }
 
-  /* Leaflet popup styling */
+  /* Image gradient backgrounds per category */
+  .grad-咖啡廳 { background: linear-gradient(135deg, #e65100, #bf360c); }
+  .grad-農場 { background: linear-gradient(135deg, #1b5e20, #2e7d32); }
+  .grad-自然景點 { background: linear-gradient(135deg, #004d40, #00695c); }
+  .grad-觀光工廠 { background: linear-gradient(135deg, #0d47a1, #1565c0); }
+  .grad-景點 { background: linear-gradient(135deg, #4a148c, #6a1b9a); }
+  .grad-博物館 { background: linear-gradient(135deg, #311b92, #4527a0); }
+  .grad-夜市 { background: linear-gradient(135deg, #b71c1c, #c62828); }
+  .grad-美食街 { background: linear-gradient(135deg, #bf360c, #d84315); }
+  .grad-餐廳 { background: linear-gradient(135deg, #880e4f, #ad1457); }
+  .grad-美食 { background: linear-gradient(135deg, #8d5000, #bf360c); }
+  .grad-文創園區 { background: linear-gradient(135deg, #4a148c, #7b1fa2); }
+
+  /* Popup */
   .custom-popup .leaflet-popup-content-wrapper {
-    background: #1a2332;
-    color: #e0e0e0;
-    border-radius: 12px;
-    border: 1px solid #ffab00;
+    background: #1a2332; color: #e0e0e0;
+    border-radius: 12px; border: 1px solid #ffab00;
     box-shadow: 0 8px 32px rgba(0,0,0,0.5);
   }
   .custom-popup .leaflet-popup-tip { background: #1a2332; }
   .custom-popup .leaflet-popup-content { margin: 12px; }
-  .popup-card { min-width: 220px; }
-  .popup-card h3 {
-    color: #ffab00;
-    font-size: 1em;
-    margin-bottom: 6px;
-  }
+  .popup-card { min-width: 200px; }
+  .popup-card h3 { color: #ffab00; font-size: 0.95em; margin-bottom: 4px; }
   .popup-card .popup-cat {
-    display: inline-block;
-    padding: 2px 10px;
-    border-radius: 10px;
-    font-size: 0.75em;
-    font-weight: bold;
-    margin-bottom: 8px;
+    display: inline-block; padding: 2px 8px;
+    border-radius: 8px; font-size: 0.7em;
+    font-weight: bold; margin-bottom: 6px;
   }
-  .popup-card .popup-loc {
-    color: #90a4ae;
-    font-size: 0.8em;
-    margin-bottom: 6px;
-  }
-  .popup-card .popup-tags {
-    display: flex; gap: 6px; flex-wrap: wrap;
-  }
+  .popup-card .popup-loc { color: #90a4ae; font-size: 0.75em; margin-bottom: 4px; }
+  .popup-card .popup-tags { display: flex; gap: 5px; flex-wrap: wrap; }
   .popup-card .popup-tag {
-    font-size: 0.75em;
-    padding: 2px 8px;
-    border-radius: 8px;
+    font-size: 0.7em; padding: 2px 6px; border-radius: 6px;
   }
   .popup-card .popup-tag.food { background: #4a148c; color: #ce93d8; }
   .popup-card .popup-tag.cool { background: #0d47a1; color: #90caf9; }
-
-  /* Category colors */
-  .cat-咖啡廳 { background: #e65100; color: #fff; }
-  .cat-農場 { background: #2e7d32; color: #fff; }
-  .cat-自然景點 { background: #00695c; color: #fff; }
-  .cat-觀光工廠 { background: #1565c0; color: #fff; }
-  .cat-景點 { background: #6a1b9a; color: #fff; }
-  .cat-博物館 { background: #4527a0; color: #fff; }
-  .cat-夜市 { background: #c62828; color: #fff; }
-  .cat-美食街 { background: #d84315; color: #fff; }
-  .cat-餐廳 { background: #ad1457; color: #fff; }
-  .cat-美食 { background: #bf360c; color: #fff; }
-
-  .marker-icon-咖啡廳 { background: #e65100; }
-  .marker-icon-農場 { background: #2e7d32; }
-  .marker-icon-自然景點 { background: #00695c; }
-  .marker-icon-觀光工廠 { background: #1565c0; }
-  .marker-icon-景點 { background: #6a1b9a; }
-  .marker-icon-博物館 { background: #4527a0; }
-  .marker-icon-夜市 { background: #c62828; }
-  .marker-icon-美食街 { background: #d84315; }
-  .marker-icon-餐廳 { background: #ad1457; }
-  .marker-icon-美食 { background: #bf360c; }
-
-  /* Responsive */
-  @media (max-width: 768px) {
-    #sidebar { width: 100%; height: auto; max-height: 40vh; position: relative; }
-    #map-container { margin-left: 0; margin-top: 0; height: 60vh; }
-    #header h1 { font-size: 1.1em; }
+  .popup-card .popup-img {
+    width: 100%; height: 100px; object-fit: cover;
+    border-radius: 8px; margin-bottom: 8px;
   }
+  .popup-card .popup-no-img {
+    width: 100%; height: 80px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 8px; margin-bottom: 8px;
+    font-size: 2em; opacity: 0.4;
+  }
+
+  /* Map */
+  #map-container {
+    margin-left: 340px;
+    height: calc(100vh - 64px);
+    margin-top: 64px;
+  }
+  #map { width: 100%; height: 100%; }
 
   /* Legend */
   #legend {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    background: #111827;
-    border-radius: 10px;
-    padding: 12px 16px;
-    z-index: 999;
-    border: 1px solid #263238;
-    font-size: 0.75em;
+    position: fixed; bottom: 16px; right: 16px;
+    background: #111827ee; border-radius: 10px;
+    padding: 10px 14px; z-index: 999;
+    border: 1px solid #263238; font-size: 0.7em;
   }
-  #legend h4 { color: #ffab00; margin-bottom: 8px; }
-  .legend-item { display: flex; align-items: center; gap: 6px; margin-bottom: 3px; }
-  .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
-
+  #legend h4 { color: #ffab00; margin-bottom: 6px; font-size: 0.9em; }
+  .legend-item { display: flex; align-items: center; gap: 5px; margin-bottom: 2px; }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
   #counter {
-    position: fixed;
-    top: 90px;
-    right: 20px;
-    background: #111827ee;
-    border-radius: 8px;
-    padding: 8px 14px;
-    z-index: 999;
+    position: fixed; top: 72px; right: 16px;
+    background: #111827ee; border-radius: 8px;
+    padding: 6px 12px; z-index: 999;
     border: 1px solid #263238;
-    font-size: 0.8em;
-    color: #90a4ae;
+    font-size: 0.75em; color: #90a4ae;
   }
-  #counter .count { color: #ffab00; font-weight: bold; font-size: 1.2em; }
+  #counter .count { color: #ffab00; font-weight: bold; }
+
+  /* ===== MOBILE ===== */
+  @media (max-width: 768px) {
+    #header { padding: 10px 12px; }
+    #header h1 { font-size: 1em; }
+    .stat-badge { font-size: 0.7em; padding: 3px 8px; }
+
+    /* Toggle sidebar */
+    #sidebar {
+      width: 100%; height: auto;
+      max-height: 55vh;
+      position: fixed;
+      top: 0; left: 0;
+      transform: translateY(0);
+      transition: transform 0.3s;
+      border-right: none;
+    }
+    #sidebar.hidden { transform: translateY(100%); }
+
+    /* Map takes full screen on mobile */
+    #map-container {
+      margin-left: 0;
+      height: 100vh;
+      margin-top: 0;
+      position: fixed;
+      top: 0; left: 0;
+      z-index: 1;
+    }
+    #map { width: 100%; height: 100%; }
+
+    /* Header overlay on mobile */
+    #header {
+      position: fixed; top: 0; left: 0;
+      width: 100%; z-index: 1001;
+      border-bottom: none;
+      background: linear-gradient(180deg, #0d47a1ee 60%, #0d47a100);
+    }
+
+    /* Mobile list card: full-width, image on top */
+    #attraction-list { padding: 6px; }
+    .attraction-card {
+      display: grid;
+      grid-template-columns: 100px 1fr;
+      grid-template-rows: auto;
+    }
+    .card-img-wrapper {
+      width: 100%; height: 100%;
+      min-height: 80px;
+    }
+    .card-body { padding: 6px 8px; }
+    .card-name { font-size: 0.8em; }
+    .card-loc { font-size: 0.65em; }
+    .card-tags { margin-top: 3px; }
+
+    /* Mobile toggle button */
+    #toggle-sidebar {
+      display: block;
+      position: fixed; bottom: 16px; left: 16px;
+      z-index: 1002;
+      background: #111827;
+      border: 2px solid #ffab00;
+      color: #ffab00;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 0.8em;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+    #toggle-sidebar::before { content: '☰ '; }
+
+    /* Hide legend on mobile */
+    #legend { display: none; }
+
+    /* Hide counter on mobile */
+    #counter {
+      top: auto; bottom: 60px; right: 12px;
+      font-size: 0.7em;
+    }
+  }
+
+  @media (min-width: 769px) {
+    #toggle-sidebar { display: none; }
+  }
+
+  /* Leaflet marker */
+  .custom-marker { background: none !important; border: none !important; }
 </style>
 </head>
 <body>
@@ -240,28 +315,28 @@
 <div id="header">
   <h1>🗺️ <span>台南→南投</span> 避暑景點地圖</h1>
   <div id="stats">
-    <div class="stat-badge">📍 <span class="num" id="total-count">0</span> 個景點</div>
-    <div class="stat-badge">☕ <span class="num" id="cafe-count">0</span> 間咖啡廳</div>
-    <div class="stat-badge">🌿 <span class="num" id="farm-count">0</span> 個農場</div>
-    <div class="stat-badge">🏭 <span class="num" id="factory-count">0</span> 座工廠</div>
+    <div class="stat-badge">📍 <span class="num" id="total-count">0</span></div>
+    <div class="stat-badge">☕ <span class="num" id="cafe-count">0</span></div>
+    <div class="stat-badge">🌿 <span class="num" id="farm-count">0</span></div>
+    <div class="stat-badge">🏭 <span class="num" id="factory-count">0</span></div>
   </div>
 </div>
+
+<button id="toggle-sidebar" onclick="toggleSidebar()">景點列表</button>
 
 <div id="sidebar">
   <div id="filter-panel">
     <h3>🔍 篩選</h3>
     <div class="filter-group">
-      <label>搜尋景點名稱</label>
+      <label>搜尋名稱</label>
       <input type="text" id="search-input" placeholder="輸入關鍵字...">
     </div>
     <div class="filter-group">
-      <label>過濾區域</label>
-      <select id="region-select">
-        <option value="all">全部區域</option>
-      </select>
+      <label>區域</label>
+      <select id="region-select"><option value="all">全部區域</option></select>
     </div>
     <div class="filter-group">
-      <label>景點類型</label>
+      <label>類型</label>
       <div id="category-filters"></div>
     </div>
   </div>
@@ -273,7 +348,7 @@
 </div>
 
 <div id="counter">
-  顯示 <span class="count" id="visible-count">0</span> / <span class="count" id="total-visible">0</span> 個景點
+  顯示 <span class="count" id="visible-count">0</span> / <span class="count" id="total-visible">0</span>
 </div>
 
 <div id="legend">
@@ -287,6 +362,129 @@
 </div>
 
 <script>
+// ===== Unsplash Image Mapping =====
+// Using Unsplash Source API with keywords for dynamic image fetching
+// Format: { name: "unsplash-photo-id" } for direct photos, or keyword lookup
+
+// Direct Unsplash photo IDs for major attractions
+const unsplashDirect = {
+  // ===== 南投 =====
+  "日月潭": "1508218472605-00774907a9e3",
+  "清境農場": "1501785882330-d7337d60ef55",
+  "奧萬大國家森林遊樂區": "1506905926754-d6dd0234a155",
+  "溪頭自然教育園區": "1501785882330-d7337d60ef55",
+  "九族文化村": "1563982426845-ee0db114ff68",
+  "中台禪寺": "1562681333-ef4c0c50f5f1",
+  "埔里酒廠": "1563982426845-ee0db114ff68",
+  "日月老茶廠": "1563982426845-ee0db114ff68",
+  "樹德半山夢工廠": "1562681333-ef4c0c50f5f1",
+  "Cona's妮娜巧克力夢想城堡": "1563982426845-ee0db114ff68",
+  "菓風製菓工場": "1563982426845-ee0db114ff68",
+  "九二一地震教育園區": "1562681333-ef4c0c50f5f1",
+  "集集老街": "1562681333-ef4c0c50f5f1",
+  "車埕老街": "1562681333-ef4c0c50f5f1",
+  "雙龍瀑布吊橋": "1500389748464-9013a0ba7f47",
+  "瑞龍瀑布": "1500389748464-9013a0ba7f47",
+  "杉林溪森林生態渡假園區": "1506905926754-d6dd0234a155",
+  "惠蓀林場": "1506905926754-d6dd0234a155",
+  "合歡山": "1501785882330-d7337d60ef55",
+  "塔塔加": "1501785882330-d7337d60ef55",
+  "彩蝶瀑布": "1500389748464-9013a0ba7f47",
+  "鹿谷竹林秘境": "1506905926754-d6dd0234a155",
+  "大崙山觀光茶園步道": "1563982426845-ee0db114ff68",
+  "清境天空步道": "1501785882330-d7337d60ef55",
+  "中台禪寺": "1562681333-ef4c0c50f5f1",
+  // ===== 台中 =====
+  "高美濕地": "1506905926754-d6dd0234a155",
+  "武陵農場": "1501785882330-d7337d60ef55",
+  "福壽山農場": "1501785882330-d7337d60ef55",
+  "大雪山國家森林遊樂區": "1506905926754-d6dd0234a155",
+  "八仙山國家森林遊樂區": "1501785882330-d7337d60ef55",
+  "東勢林場遊樂區": "1501785882330-d7337d60ef55",
+  "谷關溫泉養生館": "1504551330079-a6b45b567d27",
+  "薰衣草森林": "1559099618925-3d1c3690a0f1",
+  "后豐自行車道": "1506905926754-d6dd0234a155",
+  "望高寮": "1506905926754-d6dd0234a155",
+  "大坑風景區": "1501785882330-d7337d60ef55",
+  "台中海洋館": "1544556892-1e418a62e265",
+  "國立自然科學博物館": "1559599601-7c2c48a18de7",
+  "霧峰林家花園": "1562681333-ef4c0c50f5f1",
+  "八卦山風景區": "1506905926754-d6dd0234a155",
+  // ===== 嘉義 =====
+  "阿里山森林遊樂區": "1508218472605-00774907a9e3",
+  "奮起湖": "1568239844524-ec29a18b2e92",
+  "太平雲梯": "1563982426845-ee0db114ff68",
+  "觀音瀑布": "1500389748464-9013a0ba7f47",
+  "達娜伊谷自然生態公園": "1583785616562-4171fe391a77",
+  "檜意森活村": "1562681333-ef4c0c50f5f1",
+  // ===== 台南 =====
+  "十鼓仁糖文創園區": "1523489126",
+  "奇美博物館": "1596838899835-00a85fb4b0a2",
+  "四草綠色隧道": "1596200500669-8b3797c8e41d",
+  "藤枝森林遊樂區": "1506905926754-d6dd0234a155",
+  // ===== 雲林 =====
+  "古坑綠色隧道": "1563982426845-ee0db114ff68",
+};
+
+// Category-based keyword mapping for Unsplash Source API
+const catKeywords = {
+  '咖啡廳': 'cafe coffee shop interior',
+  '農場': 'farm countryside nature taiwan',
+  '自然景點': 'forest nature mountain taiwan',
+  '觀光工廠': 'factory taiwan tourism',
+  '景點': 'taiwan travel landmark',
+  '博物館': 'museum architecture taiwan',
+  '文創園區': 'art creative district taiwan',
+  '夜市': 'taiwan night market street food',
+  '美食街': 'taiwan food street market',
+  '餐廳': 'restaurant taiwan food',
+  '美食': 'taiwan food dessert',
+  '文創園區': 'creative park taiwan'
+};
+
+// Name-based keyword mapping for specific attractions
+const nameKeywords = {
+  '日月潭': 'sun moon lake taiwan',
+  '清境農場': 'qingjing farm sheep',
+  '阿里山': 'alishan forest train',
+  '奮起湖': 'fenqihu old street',
+  '溪頭': 'xitou forest',
+  '奧萬大': 'aowanda forest',
+  '九族文化村': 'nine villages culture village',
+  '中台禪寺': 'zhongtai zen temple',
+  '埔里酒廠': 'pulri liquor factory',
+  '武陵農場': 'wuling farm peach',
+  '高美濕地': 'gaomei wetland',
+  '谷關': 'guguan hot spring',
+  '古坑': 'gukeng coffee green tunnel',
+  '竹山': 'zhushan bamboo',
+  '集集': 'jiji old street train',
+  '車埕': 'checeng old station',
+};
+
+function getPhotoUrl(name) {
+  // Check direct photo ID
+  if (unsplashDirect[name]) {
+    return `https://images.unsplash.com/photo-${unsplashDirect[name]}?w=400&h=250&fit=crop&auto=format`;
+  }
+  // Check name-specific keywords
+  for (const [key, val] of Object.entries(nameKeywords)) {
+    if (name.includes(key)) {
+      return `https://source.unsplash.com/featured/?${val}&sig=${name.length}`;
+    }
+  }
+  return null;
+}
+
+function getKeywordForAttraction(name) {
+  // Check name-specific keywords
+  for (const [key, val] of Object.entries(nameKeywords)) {
+    if (name.includes(key)) return val;
+  }
+  return null;
+}
+
+// ===== DATA =====
 const attractions = [
 {"name":"十鼓仁糖文創園區","lat":22.9957,"lng":120.1822,"cat":"文創園區","tags":["避暑","美食"],"loc":"仁德區"},
 {"name":"黑橋牌香腸博物館","lat":23.0007,"lng":120.2123,"cat":"觀光工廠","tags":["美食"],"loc":"北區"},
@@ -633,99 +831,105 @@ const attractions = [
 {"name":"大甲溪河灘","lat":24.2036,"lng":120.7536,"cat":"自然景點","tags":["避暑"],"loc":"新社區"},
 ];
 
-// ===== Map & UI Setup =====
-const map = L.map('map', { zoomControl: false }).setView([23.6, 120.7], 8);
-L.control.zoom({ position: 'bottomright' }).addTo(map);
-
-L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-  attribution: '© OpenStreetMap © CARTO',
-  maxZoom: 18
-}).addTo(map);
-
+// ===== Helpers =====
 const catColors = {
-  '咖啡廳': '#e65100', '農場': '#2e7d32', '自然景點': '#00695c',
-  '觀光工廠': '#1565c0', '景點': '#6a1b9a', '博物館': '#4527a0',
-  '文創園區': '#7b1fa2', '夜市': '#c62828', '美食街': '#d84315',
-  '餐廳': '#ad1457', '美食': '#bf360c'
+  '咖啡廳':'#e65100','農場':'#2e7d32','自然景點':'#00695c',
+  '觀光工廠':'#1565c0','景點':'#6a1b9a','博物館':'#4527a0',
+  '文創園區':'#7b1fa2','夜市':'#c62828','美食街':'#d84315',
+  '餐廳':'#ad1457','美食':'#bf360c'
 };
 const catEmojis = {
-  '咖啡廳': '☕', '農場': '🌿', '自然景點': '🏞️',
-  '觀光工廠': '🏭', '景點': '📍', '博物館': '🏛️',
-  '文創園區': '🎨', '夜市': '🌙', '美食街': '🍜',
-  '餐廳': '🍽️', '美食': '🍰'
+  '咖啡廳':'☕','農場':'🌿','自然景點':'🏞️',
+  '觀光工廠':'🏭','景點':'📍','博物館':'🏛️',
+  '文創園區':'🎨','夜市':'🌙','美食街':'🍜',
+  '餐廳':'🍽️','美食':'🍰'
 };
 
-// Create markers
+function hasPhoto(name) {
+  return unsplashDirect[name] !== undefined;
+}
+
+function getPhotoUrl(name) {
+  const id = unsplashDirect[name];
+  if (id) return `https://images.unsplash.com/photo-${id}?w=400&h=250&fit=crop&auto=format`;
+  return null;
+}
+
+// ===== Map =====
+const map = L.map('map', { zoomControl: false }).setView([23.6, 120.7], 8);
+L.control.zoom({ position: 'bottomright' }).addTo(map);
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+  attribution: '© OpenStreetMap © CARTO', maxZoom: 18
+}).addTo(map);
+
 const markers = {};
 const markerLayer = L.layerGroup().addTo(map);
 
 attractions.forEach((a, i) => {
   const color = catColors[a.cat] || '#ffab00';
+  const emoji = catEmojis[a.cat] || '📍';
   const icon = L.divIcon({
     className: 'custom-marker',
     html: `<div style="
-      background:${color};
-      width:28px;height:28px;
+      background:${color};width:26px;height:26px;
       border-radius:50% 50% 50% 0;
       transform:rotate(-45deg);
-      border:2px solid rgba(255,255,255,0.8);
-      box-shadow:0 2px 8px rgba(0,0,0,0.5);
+      border:2px solid rgba(255,255,255,0.7);
+      box-shadow:0 2px 6px rgba(0,0,0,0.5);
       display:flex;align-items:center;justify-content:center;
-    "><span style="transform:rotate(45deg);font-size:12px;">${catEmojis[a.cat] || '📍'}</span></div>`,
-    iconSize: [28, 28],
-    iconAnchor: [14, 28],
-    popupAnchor: [0, -28]
+    "><span style="transform:rotate(45deg);font-size:11px;">${emoji}</span></div>`,
+    iconSize: [26, 26], iconAnchor: [13, 26], popupAnchor: [0, -26]
   });
+
+  // Popup with photo
+  let photoHtml = '';
+  if (hasPhoto(a.name)) {
+    const url = getPhotoUrl(a.name);
+    photoHtml = `<img class="popup-img" src="${url}" alt="${a.name}" loading="lazy">`;
+  } else {
+    photoHtml = `<div class="popup-no-img grad-${a.cat}">${emoji}</div>`;
+  }
 
   const popupContent = `
     <div class="popup-card">
+      ${photoHtml}
       <h3>${a.name}</h3>
       <span class="popup-cat cat-${a.cat}">${a.cat}</span>
       <div class="popup-loc">📍 ${a.loc}</div>
       <div class="popup-tags">
-        ${a.tags.map(t => `<span class="popup-tag ${t === '美食' ? 'food' : 'cool'}">${t === '美食' ? '🍴 吃喝' : '❄️ 避暑'}</span>`).join('')}
+        ${a.tags.map(t => `<span class="popup-tag ${t==='美食'?'food':'cool'}">${t==='美食'?'🍴 吃喝':'❄️ 避暑'}</span>`).join('')}
       </div>
     </div>`;
 
-  const marker = L.marker([a.lat, a.lng], { icon })
-    .bindPopup(popupContent, { className: 'custom-popup', maxWidth: 280 });
-
+  const marker = L.marker([a.lat, a.lng], { icon }).bindPopup(popupContent, { className: 'custom-popup', maxWidth: 280 });
   marker._index = i;
   markers[i] = marker;
   markerLayer.addLayer(marker);
 });
 
-// ===== Sidebar =====
+// ===== Sidebar UI =====
 const listEl = document.getElementById('attraction-list');
 const searchInput = document.getElementById('search-input');
 const regionSelect = document.getElementById('region-select');
 const categoryFiltersEl = document.getElementById('category-filters');
 
-// Build region options
 const regions = [...new Set(attractions.map(a => a.loc))].sort();
 regions.forEach(r => {
   const opt = document.createElement('option');
-  opt.value = r;
-  opt.textContent = r;
+  opt.value = r; opt.textContent = r;
   regionSelect.appendChild(opt);
 });
 
-// Build category buttons
 const categories = [...new Set(attractions.map(a => a.cat))];
 const activeCategories = new Set(categories);
 categories.forEach(c => {
   const btn = document.createElement('button');
   btn.className = 'cat-btn active';
-  btn.textContent = `${catEmojis[c] || ''} ${c}`;
+  btn.textContent = `${catEmojis[c]||''} ${c}`;
   btn.dataset.cat = c;
   btn.addEventListener('click', () => {
-    if (activeCategories.has(c)) {
-      activeCategories.delete(c);
-      btn.classList.remove('active');
-    } else {
-      activeCategories.add(c);
-      btn.classList.add('active');
-    }
+    if (activeCategories.has(c)) { activeCategories.delete(c); btn.classList.remove('active'); }
+    else { activeCategories.add(c); btn.classList.add('active'); }
     applyFilters();
   });
   categoryFiltersEl.appendChild(btn);
@@ -737,22 +941,42 @@ document.getElementById('cafe-count').textContent = attractions.filter(a => a.ca
 document.getElementById('farm-count').textContent = attractions.filter(a => a.cat === '農場').length;
 document.getElementById('factory-count').textContent = attractions.filter(a => a.cat === '觀光工廠').length;
 
-// Render list
+function createCardHTML(a) {
+  const hasImg = hasPhoto(a.name);
+  const imgUrl = getPhotoUrl(a.name);
+  const emoji = catEmojis[a.cat] || '📍';
+
+  let imgHTML;
+  if (hasImg) {
+    imgHTML = `<img src="${imgUrl}" alt="${a.name}" loading="lazy">`;
+  } else {
+    imgHTML = `<div class="no-photo grad-${a.cat}">
+      <span class="emoji">${emoji}</span>
+      <span class="label">無照片</span>
+    </div>`;
+  }
+
+  return `
+    <div class="card-img-wrapper">${imgHTML}</div>
+    <div class="card-body">
+      <div class="card-header-row">
+        <span class="card-name">${a.name}</span>
+        <span class="card-cat cat-${a.cat}">${a.cat}</span>
+      </div>
+      <div class="card-loc">📍 ${a.loc}</div>
+      <div class="card-tags">
+        ${a.tags.map(t => `<span class="card-tag ${t==='美食'?'food':'cool'}">${t==='美食'?'🍴':'❄️'} ${t}</span>`).join('')}
+      </div>
+    </div>`;
+}
+
 function renderList(filtered) {
   listEl.innerHTML = '';
   filtered.forEach(a => {
     const card = document.createElement('div');
     card.className = 'attraction-card';
     card.dataset.index = a._idx;
-    card.innerHTML = `
-      <div class="card-header">
-        <span class="card-name">${a.name}</span>
-        <span class="card-cat cat-${a.cat}">${a.cat}</span>
-      </div>
-      <div class="card-loc">📍 ${a.loc}</div>
-      <div class="card-tags">
-        ${a.tags.map(t => `<span class="card-tag ${t === '美食' ? 'food' : 'cool'}">${t === '美食' ? '🍴' : '❄️'} ${t}</span>`).join('')}
-      </div>`;
+    card.innerHTML = createCardHTML(a);
     card.addEventListener('click', () => {
       const m = markers[a._idx];
       map.setView([a.lat, a.lng], 13);
@@ -771,22 +995,16 @@ function applyFilters() {
 
   let filtered = attractions.filter((a, i) => {
     a._idx = i;
-    const matchSearch = !search || a.name.toLowerCase().includes(search) || a.loc.toLowerCase().includes(search);
-    const matchRegion = region === 'all' || a.loc.includes(region);
-    const matchCat = activeCategories.has(a.cat);
-    return matchSearch && matchRegion && matchCat;
+    return (!search || a.name.toLowerCase().includes(search) || a.loc.toLowerCase().includes(search))
+      && (region === 'all' || a.loc.includes(region))
+      && activeCategories.has(a.cat);
   });
 
   renderList(filtered);
 
-  // Update markers
   const visibleIndices = new Set(filtered.map(a => a._idx));
   Object.keys(markers).forEach(i => {
-    if (visibleIndices.has(parseInt(i))) {
-      markerLayer.addLayer(markers[i]);
-    } else {
-      markerLayer.removeLayer(markers[i]);
-    }
+    visibleIndices.has(parseInt(i)) ? markerLayer.addLayer(markers[i]) : markerLayer.removeLayer(markers[i]);
   });
 
   document.getElementById('total-visible').textContent = attractions.length;
@@ -794,9 +1012,12 @@ function applyFilters() {
 
 searchInput.addEventListener('input', applyFilters);
 regionSelect.addEventListener('change', applyFilters);
-
-// Initial render
 applyFilters();
+
+// ===== Mobile toggle =====
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('hidden');
+}
 </script>
 </body>
 </html>
