@@ -1,0 +1,971 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>南部避暑慢遊 51 選｜Pin 版</title>
+<style>
+  :root {
+    --bg:#0f172a; --text:#e5e7eb; --muted:#94a3b8; --line:rgba(148,163,184,.18);
+    --accent:#38bdf8; --accent2:#34d399; --panel:rgba(17,24,39,.88);
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Noto Sans TC', sans-serif; color:var(--text); background:radial-gradient(circle at top,#1e293b,var(--bg) 55%); }
+  .wrap { max-width:1360px; margin:0 auto; padding:32px 18px 56px; }
+  .hero { background:linear-gradient(135deg, rgba(56,189,248,.18), rgba(52,211,153,.12)); border:1px solid var(--line); border-radius:24px; padding:28px; box-shadow:0 20px 60px rgba(0,0,0,.25); }
+  h1 { margin:0 0 10px; font-size:clamp(28px,4vw,48px); line-height:1.05; }
+  .hero p { margin:0; color:var(--muted); line-height:1.7; max-width:980px; }
+  .stats { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin-top:18px; }
+  .stat { background:rgba(17,24,39,.8); border:1px solid var(--line); border-radius:18px; padding:14px 16px; }
+  .stat b { display:block; font-size:26px; margin-bottom:4px; }
+  .filters { display:flex; gap:10px; flex-wrap:wrap; margin:18px 0 14px; }
+  .filters input, .filters select, .nav-btn { background:rgba(17,24,39,.92); color:var(--text); border:1px solid var(--line); border-radius:14px; padding:12px 14px; }
+  .filters input, .filters select { min-width:180px; }
+  .hint { color:var(--muted); font-size:14px; margin-bottom:12px; }
+  .section-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin:18px 0 10px; }
+  .section-head h2 { margin:0; font-size:22px; }
+  .section-head .controls { display:flex; gap:8px; }
+  .nav-btn { cursor:pointer; }
+  .rail { display:flex; gap:16px; overflow-x:auto; padding-bottom:12px; scroll-snap-type:x mandatory; scrollbar-color: rgba(148,163,184,.6) transparent; }
+  .rail::-webkit-scrollbar { height: 10px; }
+  .rail::-webkit-scrollbar-thumb { background: rgba(148,163,184,.35); border-radius:999px; }
+  .pin-card { flex:0 0 min(88vw, 380px); scroll-snap-align:start; border:1px solid var(--line); border-radius:22px; overflow:hidden; background:var(--panel); box-shadow:0 16px 38px rgba(0,0,0,.18); }
+  .map { width:100%; height:220px; border:0; background:#0b1020; display:block; }
+  .pin-body { padding:16px; display:flex; flex-direction:column; min-height:240px; }
+  .pin-head { display:flex; justify-content:space-between; gap:10px; align-items:flex-start; }
+  .county { font-size:12px; color:var(--accent2); font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
+  h3 { margin:4px 0 0; font-size:20px; line-height:1.25; }
+  .score { background:rgba(56,189,248,.14); color:#93c5fd; padding:6px 10px; border-radius:999px; font-weight:700; white-space:nowrap; }
+  .tags { display:flex; flex-wrap:wrap; gap:6px; margin:12px 0; }
+  .tag { font-size:12px; border:1px solid var(--line); background:rgba(148,163,184,.08); padding:5px 8px; border-radius:999px; color:#cbd5e1; }
+  p { margin:0 0 14px; color:#cbd5e1; line-height:1.65; }
+  .actions { margin-top:auto; display:flex; gap:8px; flex-wrap:wrap; }
+  .btn { display:inline-flex; align-items:center; justify-content:center; padding:10px 14px; border-radius:12px; text-decoration:none; border:1px solid var(--line); background:rgba(255,255,255,.04); }
+  .btn.primary { background:linear-gradient(135deg, rgba(56,189,248,.22), rgba(52,211,153,.16)); border-color:rgba(56,189,248,.35); }
+  @media (max-width: 760px) { .stats { grid-template-columns:1fr 1fr; } .filters input, .filters select { width:100%; min-width:0; } .section-head { align-items:flex-start; flex-direction:column; } }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <h1>南部避暑慢遊 51 選｜Pin 版</h1>
+      <p>這版改成「左右滑動看每個景點的地圖 pin」。每張卡都有 Google Maps 預覽，可直接滑著看，也能點進單點地圖。</p>
+      <div class="stats">
+        <div class="stat"><b>51</b><span>總點數</span></div>
+        <div class="stat"><b>16</b><span>台南</span></div>
+        <div class="stat"><b>19</b><span>高雄</span></div>
+        <div class="stat"><b>16</b><span>南投</span></div>
+      </div>
+    </section>
+
+    <div class="filters">
+      <input id="q" placeholder="搜尋地點 / 體驗 / 吃 / 室內..." oninput="render()">
+      <select id="county" onchange="render()">
+        <option value="all">全部縣市</option>
+        <option value="台南">台南</option>
+        <option value="高雄">高雄</option>
+        <option value="南投">南投</option>
+      </select>
+    </div>
+    <div class="hint">操作：用底下橫向滑軌看 pin；滑鼠可左右拖、手機可直接滑。想快速定位某一個，輸入關鍵字即可過濾。</div>
+
+    <div class="section-head">
+      <h2>地圖 Pin 滑軌</h2>
+      <div class="controls">
+        <button class="nav-btn" onclick="moveRail(-1)">← 左移</button>
+        <button class="nav-btn" onclick="moveRail(1)">右移 →</button>
+      </div>
+    </div>
+
+    <div id="rail" class="rail">
+      
+      <article class="pin-card" id="spot-01" data-county="台南" data-search="國立臺灣歷史博物館 台南 室內 親子 展覽 冷氣 大型室內館，走動量低，適合避暑慢逛。">
+        <iframe class="map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=%E5%9C%8B%E7%AB%8B%E8%87%BA%E7%81%A3%E6%AD%B7%E5%8F%B2%E5%8D%9A%E7%89%A9%E9%A4%A8+%E5%8F%B0%E5%8D%97+%E5%8F%B0%E7%81%A3&amp;output=embed"></iframe>
+        <div class="pin-body">
+          <div class="pin-head">
+            <div>
+              <div class="county">台南</div>
+              <h3>國立臺灣歷史博物館</h3>
+            </div>
+            <div class="score">3★</div>
+          </div>
+          <div class="tags"><span class="tag">室內</span><span class="tag">親子</span><span class="tag">展覽</span><span class="tag">冷氣</span></div>
+          <p>大型室內館，走動量低，適合避暑慢逛。</p>
+          <div class="actions">
+            <a class="btn primary" href="https://www.google.com/maps/search/?api=1&amp;query=%E5%9C%8B%E7%AB%8B%E8%87%BA%E7%81%A3%E6%AD%B7%E5%8F%B2%E5%8D%9A%E7%89%A9%E9%A4%A8+%E5%8F%B0%E5%8D%97+%E5%8F%B0%E7%81%A3" target="_blank" rel="noopener">Google Maps</a>
+          </div>
+        </div>
+      </article>
+      <article class="pin-card" id="spot-02" data-county="台南" data-search="黑橋牌香腸博物館 台南 觀光工廠 吃 diy 室內 看製程、買肉乾香腸，吃東西很方便。">
+        <iframe class="map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=%E9%BB%91%E6%A9%8B%E7%89%8C%E9%A6%99%E8%85%B8%E5%8D%9A%E7%89%A9%E9%A4%A8+%E5%8F%B0%E5%8D%97+%E5%8F%B0%E7%81%A3&amp;output=embed"></iframe>
+        <div class="pin-body">
+          <div class="pin-head">
+            <div>
+              <div class="county">台南</div>
+              <h3>黑橋牌香腸博物館</h3>
+            </div>
+            <div class="score">3★</div>
+          </div>
+          <div class="tags"><span class="tag">觀光工廠</span><span class="tag">吃</span><span class="tag">DIY</span><span class="tag">室內</span></div>
+          <p>看製程、買肉乾香腸，吃東西很方便。</p>
+          <div class="actions">
+            <a class="btn primary" href="https://www.google.com/maps/search/?api=1&amp;query=%E9%BB%91%E6%A9%8B%E7%89%8C%E9%A6%99%E8%85%B8%E5%8D%9A%E7%89%A9%E9%A4%A8+%E5%8F%B0%E5%8D%97+%E5%8F%B0%E7%81%A3" target="_blank" rel="noopener">Google Maps</a>
+          </div>
+        </div>
+      </article>
+      <article class="pin-card" id="spot-03" data-county="台南" data-search="南科考古館 台南 室內 親子 展覽 互動 兒童廳和互動展很適合輕鬆玩。">
+        <iframe class="map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=%E5%8D%97%E7%A7%91%E8%80%83%E5%8F%A4%E9%A4%A8+%E5%8F%B0%E5%8D%97+%E5%8F%B0%E7%81%A3&amp;output=embed"></iframe>
+        <div class="pin-body">
+          <div class="pin-head">
+            <div>
+              <div class="county">台南</div>
+              <h3>南科考古館</h3>
+            </div>
+            <div class="score">2★</div>
+          </div>
+          <div class="tags"><span class="tag">室內</span><span class="tag">親子</span><span class="tag">展覽</span><span class="tag">互動</span></div>
+          <p>兒童廳和互動展很適合輕鬆玩。</p>
+          <div class="actions">
+            <a class="btn primary" href="https://www.google.com/maps/search/?api=1&amp;query=%E5%8D%97%E7%A7%91%E8%80%83%E5%8F%A4%E9%A4%A8+%E5%8F%B0%E5%8D%97+%E5%8F%B0%E7%81%A3" target="_blank" rel="noopener">Google Maps</a>
+          </div>
+        </div>
+      </article>
+      <article class="pin-card" id="spot-04" data-county="台南" data-search="山上花園水道博物館 台南 歷史 園區 拍照 涼爽 可分段逛，停留時間彈性大。">
+        <iframe class="map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=%E5%B1%B1%E4%B8%8A%E8%8A%B1%E5%9C%92%E6%B0%B4%E9%81%93%E5%8D%9A%E7%89%A9%E9%A4%A8+%E5%8F%B0%E5%8D%97+%E5%8F%B0%E7%81%A3&amp;output=embed"></iframe>
+        <div class="pin-body">
+          <div class="pin-head">
+            <div>
+              <div class="county">台南</div>
+              <h3>山上花園水道博物館</h3>
+            </div>
+            <div class="score">0★</div>
+          </div>
+          <div class="tags"><span class="tag">歷史</span><span class="tag">園區</span><span class="tag">拍照</span><span class="tag">涼爽</span></div>
+          <p>可分段逛，停留時間彈性大。</p>
+          <div class="actions">
+            <a class="btn primary" href="https://www.google.com/maps/search/?api=1&amp;query=%E5%B1%B1%E4%B8%8A%E8%8A%B1%E5%9C%92%E6%B0%B4%E9%81%93%E5%8D%9A%E7%89%A9%E9%A4%A8+%E5%8F%B0%E5%8D%97+%E5%8F%B0%E7%81%A3" target="_blank" rel="noopener">Google Maps</a>
+          </div>
+        </div>
+      </article>
+      <article class="pin-card" id="spot-05" data-county="台南" data-search="十鼓仁糖文創園區 台南 體驗 表演 吃 夜遊 有表演與餐飲，玩感強。">
+        <iframe class="map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=%E5%8D%81%E9%BC%93%E4%BB%81%E7%B3%96%E6%96%87%E5%89%B5%E5%9C%92%E5%8D%80+%E5%8F%B0%E5%8D%97+%E5%8F%B0%E7%81%A3&amp;output=embed"></iframe>
+        <div class="pin-body">
+          <div class="pin-head">
+            <div>
+              <div class="county">台南</div>
+              <h3>十鼓仁糖文創園區</h3>
+            </div>
+            <div class="score">2★</div>
+          </div>
+          <div class="tags"><span class="tag">體驗</span><span class="tag">表演</span><span class="tag">吃</span><span class="tag">夜遊</span></div>
+          <p>有表演與餐飲，玩感強。</p>
+          <div class="actions">
+            <a class="btn primary" href="https://www.google.com/maps/search/?api=1&amp;query=%E5%8D%81%E9%BC%93%E4%BB%81%E7%B3%96%E6%96%87%E5%89%B5%E5%9C%92%E5%8D%80+%E5%8F%B0%E5%8D%97+%E5%8F%B0%E7%81%A3" target="_blank" rel="noopener">Google Maps</a>
+          </div>
+        </div>
+      </article>
+      <article class="pin-card" id="spot-06" data-county="台南" data-search="瓜瓜園地瓜生態故事館 台南 觀光工廠 吃 diy 親子 地瓜主題、可買點心和做體驗。">
+        <iframe class="map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=%E7%93%9C%E7%93%9C%E5%9C%92%E5%9C%B0%E7%93%9C%E7%94%9F%E6%85%8B%E6%95%85%E4%BA%8B%E9%A4%A8+%E5%8F%B0%E5%8D%97+%E5%8F%B0%E7%81%A3&amp;output=embed"></iframe>
+        <div class="pin-body">
+          <div class="pin-head">
+            <div>
+              <div class="county">台南</div>
+              <h3>瓜瓜園地瓜生態故事館</h3>
+            </div>
+            <div class="score">3★</div>
+          </div>
+          <div class="tags"><span class="tag">觀光工廠</span><span class="tag">吃</span><span class="tag">DIY</span><span class="tag">親子</span></div>
+          <p>地瓜主題、可買點心和做體驗。</p>
+          <div class="actions">
+            <a class="btn primary" href="https://www.google.com/maps/search/?api=1&amp;query=%E7%93%9C%E7%93%9C%E5%9C%92%E5%9C%B0%E7%93%9C%E7%94%9F%E6%85%8B%E6%95%85%E4%BA%8B%E9%A4%A8+%E5%8F%B0%E5%8D%97+%E5%8F%B0%E7%81%A3" target="_blank" rel="noopener">Google Maps</a>
+          </div>
+        </div>
+      </article>
+      <article class="pin-card" id="spot-07" data-county="台南" data-search="奇美博物館 台南 室內 展覽 餐飲 經典 冷氣足，展覽和餐廳都完整。">
+        <iframe class="map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=%E5%A5%87%E7%BE%8E%E5%8D%9A%E7%89%A9%E9%A4%A8+%E5%8F%B0%E5%8D%97+%E5%8F%B0%E7%81%A3&amp;output=embed"></iframe>
+        <div class="pin-body">
+          <div class="pin-head">
+            <div>
+              <div class="county">台南</div>
+              <h3>奇美博物館</h3>
+            </div>
+            <div class="score">1★</div>
+          </div>
+          <div class="tags"><span class="tag">室內</span><span class="tag">展覽</span><span class="tag">餐飲</span><span class="tag">經典</span></div>
+          <p>冷氣足，展覽和餐廳都完整。</p>
+          <div class="actions">
+            <a class="btn primary" href="https://www.google.com/maps/search/?api=1&amp;query=%E5%A5%87%E7%BE%8E%E5%8D%9A%E7%89%A9%E9%A4%A8+%E5%8F%B0%E5%8D%97+%E5%8F%B0%E7%81%A3" target="_blank" rel="noopener">Google Maps</a>
+          </div>
+        </div>
+      </article>
+      <article class="pin-card" id="spot-08" data-county="台南" data-search="臺南家具產業博物館 台南 diy 室內 文化 親子 木作與家具文化，停留舒服。">
+        <iframe class="map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=%E8%87%BA%E5%8D%97%E5%AE%B6%E5%85%B7%E7%94%A2%E6%A5%AD%E5%8D%9A%E7%89%A9%E9%A4%A8+%E5%8F%B0%E5%8D%97+%E5%8F%B0%E7%81%A3&amp;output=embed"></iframe>
+        <div class="pin-body">
+          <div class="pin-head">
+            <div>
+              <div class="county">台南</div>
+              <h3>臺南家具產業博物館</h3>
+            </div>
+            <div class="score">3★</div>
+          </div>
+          <div class="tags"><span class="tag">DIY</span><span class="tag">室內</span><span class="tag">文化</span><span class="tag">親子</span></div>
+          <p>木作與家具文化，停留舒服。</p>
+          <div class="actions">
+            <a class="btn primary" href="https://www.google.com/maps/search/?api=1&amp;query=%E8%87%BA%E5%8D%97%E5%AE%B6%E5%85%B7%E7%94%A2%E6%A5%AD%E5%8D%9A%E7%89%A9%E9%A4%A8+%E5%8F%B0%E5%8D%97+%E5%8F%B0%E7%81%A3" target="_blank" rel="noopener">Google Maps</a>
+          </div>
+        </div>
+      </article>
+      <article class="pin-card" id="spot-09" data-county="台南" data-search="台灣金屬創意館 台南 diy 觀光工廠 室內 餐飲 金屬主題＋手作體驗。">
+        <iframe class="map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=%E5%8F%B0%E7%81%A3%E9%87%91%E5%B1%AC%E5%89%B5%E6%84%8F%E9%A4%A8+%E5%8F%B0%E5%8D%97+%E5%8F%B0%E7%81%A3&amp;output=embed"></iframe>
+        <div class="pin-body">
+          <div class="pin-head">
+            <div>
+              <div class="county">台南</div>
+              <h3>台灣金屬創意館</h3>
+            </div>
+            <div class="score">2★</div>
+          </div>
+          <div class="tags"><span class="tag">DIY</span><span class="tag">觀光工廠</span><span class="tag">室內</span><span class="tag">餐飲</span></div>
+          <p>金屬主題＋手作體驗。</p>
+          <div class="actions">
+            <a class="btn primary" href="https://www.google.com/maps/search/?api=1&amp;query=%E5%8F%B0%E7%81%A3%E9%87%91%E5%B1%AC%E5%89%B5%E6%84%8F%E9%A4%A8+%E5%8F%B0%E5%8D%97+%E5%8F%B0%E7%81%A3" target="_blank" rel="noopener">Google Maps</a>
+          </div>
+        </div>
+      </article>
+      <article class="pin-card" id="spot-10" data-county="台南" data-search="安平出張所（夕遊出張所） 台南 diy 吃 日式 拍照 生日鹽、水豚與伴手禮很好拍。">
+        <iframe class="map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=%E5%AE%89%E5%B9%B3%E5%87%BA%E5%BC%B5%E6%89%80%EF%BC%88%E5%A4%95%E9%81%8A%E5%87%BA%E5%BC%B5%E6%89%80%EF%BC%89+%E5%8F%B0%E5%8D%97+%E5%8F%B0%E7%81%A3&amp;output=embed"></iframe>
+        <div class="pin-body">
+          <div class="pin-head">
+            <div>
+              <div class="county">台南</div>
+              <h3>安平出張所（夕遊出張所）</h3>
+            </div>
+            <div class="score">2★</div>
+          </div>
+          <div class="tags"><span class="tag">DIY</span><span class="tag">吃</span><span class="tag">日式</span><span class="tag">拍照</span></div>
+          <p>生日鹽、水豚與伴手禮很好拍。</p>
+          <div class="actions">
+            <a class="btn primary" href="https://www.google.com/maps/search/?api=1&amp;query=%E5%AE%89%E5%B9%B3%E5%87%BA%E5%BC%B5%E6%89%80%EF%BC%88%E5%A4%95%E9%81%8A%E5%87%BA%E5%BC%B5%E6%89%80%EF%BC%89+%E5%8F%B0%E5%8D%97+%E5%8F%B0%E7%81%A3" target="_blank" rel="noopener">Google Maps</a>
+          </div>
+        </div>
+      </article>
+      <article class="pin-card" id="spot-11" data-county="台南" data-search="樹谷生活科學館 台南 室內 親子 科學 冷氣 適合不想走太多的人。">
+        <iframe class="map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=%E6%A8%B9%E8%B0%B7%E7%94%9F%E6%B4%BB%E7%A7%91%E5%AD%B8%E9%A4%A8+%E5%8F%B0%E5%8D%97+%E5%8F%B0%E7%81%A3&amp;output=embed"></iframe>
+        <div class="pin-body">
+          <div class="pin-head">
+            <div>
+              <div class="county">台南</div>
+              <h3>樹谷生活科學館</h3>
+            </div>
+            <div class="score">3★</div>
+          </div>
+          <div class="tags"><span class="tag">室內</span><span class="tag">親子</span><span class="tag">科學</span><span class="tag">冷氣</span></div>
+          <p>適合不想走太多的人。</p>
+          <div class="actions">
+            <a class="btn primary" href="https://www.google.com/maps/search/?api=1&amp;query=%E6%A8%B9%E8%B0%B7%E7%94%9F%E6%B4%BB%E7%A7%91%E5%AD%B8%E9%A4%A8+%E5%8F%B0%E5%8D%97+%E5%8F%B0%E7%81%A3" target="_blank" rel="noopener">Google Maps</a>
+          </div>
+        </div>
+      </article>
+      <article class="pin-card" id="spot-12" data-county="台南" data-search="南瀛天文館 台南 室內 親子 夜間 科普 展示與劇場，輕鬆避暑。">
+        <iframe class="map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=%E5%8D%97%E7%80%9B%E5%A4%A9%E6%96%87%E9%A4%A8+%E5%8F%B0%E5%8D%97+%E5%8F%B0%E7%81%A3&amp;output=embed"></iframe>
+        <div class="pin-body">
+          <div class="pin-head">
+            <div>
+              <div class="county">台南</div>
+              <h3>南瀛天文館</h3>
+            </div>
+            <div class="score">2★</div>
+          </div>
+          <div class="tags"><span class="tag">室內</span><span class="tag">親子</span><span class="tag">夜間</span><span class="tag">科普</span></div>
+          <p>展示與劇場，輕鬆避暑。</p>
+          <div class="actions">
+            <a class="btn primary" href="https://www.google.com/maps/search/?api=1&amp;query=%E5%8D%97%E7%80%9B%E5%A4%A9%E6%96%87%E9%A4%A8+%E5%8F%B0%E5%8D%97+%E5%8F%B0%E7%81%A3" target="_blank" rel="noopener">Google Maps</a>
+          </div>
+        </div>
+      </article>
+      <article class="pin-card" id="spot-13" data-county="台南" data-search="臺南市立圖書館總館 台南 室內 冷氣 咖啡 閱讀 喝咖啡看書很放鬆。">
+        <iframe class="map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=%E8%87%BA%E5%8D%97%E5%B8%82%E7%AB%8B%E5%9C%96%E6%9B%B8%E9%A4%A8%E7%B8%BD%E9%A4%A8+%E5%8F%B0%E5%8D%97+%E5%8F%B0%E7%81%A3&amp;output=embed"></iframe>
+        <div class="pin-body">
+          <div class="pin-head">
+            <div>
+              <div class="county">台南</div>
+              <h3>臺南市立圖書館總館</h3>
+            </div>
+            <div class="score">3★</div>
+          </div>
+          <div class="tags"><span class="tag">室內</span><span class="tag">冷氣</span><span class="tag">咖啡</span><span class="tag">閱讀</span></div>
+          <p>喝咖啡看書很放鬆。</p>
+          <div class="actions">
+            <a class="btn primary" href="https://www.google.com/maps/search/?api=1&amp;query=%E8%87%BA%E5%8D%97%E5%B8%82%E7%AB%8B%E5%9C%96%E6%9B%B8%E9%A4%A8%E7%B8%BD%E9%A4%A8+%E5%8F%B0%E5%8D%97+%E5%8F%B0%E7%81%A3" target="_blank" rel="noopener">Google Maps</a>
+          </div>
+        </div>
+      </article>
+      <article class="pin-card" id="spot-14" data-county="台南" data-search="安平定情碼頭德陽艦園區 台南 軍艦 互動 拍照 周邊吃 特別體驗感強，旁邊也好覓食。">
+        <iframe class="map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=%E5%AE%89%E5%B9%B3%E5%AE%9A%E6%83%85%E7%A2%BC%E9%A0%AD%E5%BE%B7%E9%99%BD%E8%89%A6%E5%9C%92%E5%8D%80+%E5%8F%B0%E5%8D%97+%E5%8F%B0%E7%81%A3&amp;output=embed"></iframe>
+        <div class="pin-body">
+          <div class="pin-head">
+            <div>
+              <div class="county">台南</div>
+              <h3>安平定情碼頭德陽艦園區</h3>
+            </div>
+            <div class="score">1★</div>
+          </div>
+          <div class="tags"><span class="tag">軍艦</span><span class="tag">互動</span><span class="tag">拍照</span><span class="tag">周邊吃</span></div>
+          <p>特別體驗感強，旁邊也好覓食。</p>
+          <div class="actions">
+            <a class="btn primary" href="https://www.google.com/maps/search/?api=1&amp;query=%E5%AE%89%E5%B9%B3%E5%AE%9A%E6%83%85%E7%A2%BC%E9%A0%AD%E5%BE%B7%E9%99%BD%E8%89%A6%E5%9C%92%E5%8D%80+%E5%8F%B0%E5%8D%97+%E5%8F%B0%E7%81%A3" target="_blank" rel="noopener">Google Maps</a>
+          </div>
+        </div>
+      </article>
+      <article class="pin-card" id="spot-15" data-county="台南" data-search="台南文化創意產業園區 台南 室內 展覽 選物 咖啡 展覽＋咖啡，適合短停。">
+        <iframe class="map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=%E5%8F%B0%E5%8D%97%E6%96%87%E5%8C%96%E5%89%B5%E6%84%8F%E7%94%A2%E6%A5%AD%E5%9C%92%E5%8D%80+%E5%8F%B0%E5%8D%97+%E5%8F%B0%E7%81%A3&amp;output=embed"></iframe>
+        <div class="pin-body">
+          <div class="pin-head">
+            <div>
+              <div class="county">台南</div>
+              <h3>台南文化創意產業園區</h3>
+            </div>
+            <div class="score">2★</div>
+          </div>
+          <div class="tags"><span class="tag">室內</span><span class="tag">展覽</span><span class="tag">選物</span><span class="tag">咖啡</span></div>
+          <p>展覽＋咖啡，適合短停。</p>
+          <div class="actions">
+            <a class="btn primary" href="https://www.google.com/maps/search/?api=1&amp;query=%E5%8F%B0%E5%8D%97%E6%96%87%E5%8C%96%E5%89%B5%E6%84%8F%E7%94%A2%E6%A5%AD%E5%9C%92%E5%8D%80+%E5%8F%B0%E5%8D%97+%E5%8F%B0%E7%81%A3" target="_blank" rel="noopener">Google Maps</a>
+          </div>
+        </div>
+      </article>
+      <article class="pin-card" id="spot-16" data-county="台南" data-search="臺南市美術館2館 台南 室內 展覽 咖啡 拍照 冷氣、拍照、喝咖啡都可。">
+        <iframe class="map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=%E8%87%BA%E5%8D%97%E5%B8%82%E7%BE%8E%E8%A1%93%E9%A4%A82%E9%A4%A8+%E5%8F%B0%E5%8D%97+%E5%8F%B0%E7%81%A3&amp;output=embed"></iframe>
+        <div class="pin-body">
+          <div class="pin-head">
+            <div>
+              <div class="county">台南</div>
+              <h3>臺南市美術館2館</h3>
+            </div>
+            <div class="score">2★</div>
+          </div>
+          <div class="tags"><span class="tag">室內</span><span class="tag">展覽</span><span class="tag">咖啡</span><span class="tag">拍照</span></div>
+          <p>冷氣、拍照、喝咖啡都可。</p>
+          <div class="actions">
+            <a class="btn primary" href="https://www.google.com/maps/search/?api=1&amp;query=%E8%87%BA%E5%8D%97%E5%B8%82%E7%BE%8E%E8%A1%93%E9%A4%A82%E9%A4%A8+%E5%8F%B0%E5%8D%97+%E5%8F%B0%E7%81%A3" target="_blank" rel="noopener">Google Maps</a>
+          </div>
+        </div>
+      </article>
+      <article class="pin-card" id="spot-17" data-county="高雄" data-search="佛光山佛陀紀念館 高雄 室內 素食 展覽 免費 餐飲多，空間大但可只逛主館。">
+        <iframe class="map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=%E4%BD%9B%E5%85%89%E5%B1%B1%E4%BD%9B%E9%99%80%E7%B4%80%E5%BF%B5%E9%A4%A8+%E9%AB%98%E9%9B%84+%E5%8F%B0%E7%81%A3&amp;output=embed"></iframe>
+        <div class="pin-body">
+          <div class="pin-head">
+            <div>
+              <div class="county">高雄</div>
+              <h3>佛光山佛陀紀念館</h3>
+            </div>
+            <div class="score">3★</div>
+          </div>
+          <div class="tags"><span class="tag">室內</span><span class="tag">素食</span><span class="tag">展覽</span><span class="tag">免費</span></div>
+          <p>餐飲多，空間大但可只逛主館。</p>
+          <div class="actions">
+            <a class="btn primary" href="https://www.google.com/maps/search/?api=1&amp;query=%E4%BD%9B%E5%85%89%E5%B1%B1%E4%BD%9B%E9%99%80%E7%B4%80%E5%BF%B5%E9%A4%A8+%E9%AB%98%E9%9B%84+%E5%8F%B0%E7%81%A3" target="_blank" rel="noopener">Google Maps</a>
+          </div>
+        </div>
+      </article>
+      <article class="pin-card" id="spot-18" data-county="高雄" data-search="國立科學工藝博物館 高雄 室內 親子 展覽 餐飲 展區多，待半天很剛好。">
+        <iframe class="map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=%E5%9C%8B%E7%AB%8B%E7%A7%91%E5%AD%B8%E5%B7%A5%E8%97%9D%E5%8D%9A%E7%89%A9%E9%A4%A8+%E9%AB%98%E9%9B%84+%E5%8F%B0%E7%81%A3&amp;output=embed"></iframe>
+        <div class="pin-body">
+          <div class="pin-head">
+            <div>
+              <div class="county">高雄</div>
+              <h3>國立科學工藝博物館</h3>
+            </div>
+            <div class="score">2★</div>
+          </div>
+          <div class="tags"><span class="tag">室內</span><span class="tag">親子</span><span class="tag">展覽</span><span class="tag">餐飲</span></div>
+          <p>展區多，待半天很剛好。</p>
+          <div class="actions">
+            <a class="btn primary" href="https://www.google.com/maps/search/?api=1&amp;query=%E5%9C%8B%E7%AB%8B%E7%A7%91%E5%AD%B8%E5%B7%A5%E8%97%9D%E5%8D%9A%E7%89%A9%E9%A4%A8+%E9%AB%98%E9%9B%84+%E5%8F%B0%E7%81%A3" target="_blank" rel="noopener">Google Maps</a>
+          </div>
+        </div>
+      </article>
+      <article class="pin-card" id="spot-19" data-county="高雄" data-search="逍遙園 高雄 歷史 室內 拍照 輕鬆 範圍不大，適合慢慢看。">
+        <iframe class="map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=%E9%80%8D%E9%81%99%E5%9C%92+%E9%AB%98%E9%9B%84+%E5%8F%B0%E7%81%A3&amp;output=embed"></iframe>
+        <div class="pin-body">
+          <div class="pin-head">
+            <div>
+              <div class="county">高雄</div>
+              <h3>逍遙園</h3>
+            </div>
+            <div class="score">1★</div>
+          </div>
+          <div class="tags"><span class="tag">歷史</span><span class="tag">室內</span><span class="tag">拍照</span><span class="tag">輕鬆</span></div>
+          <p>範圍不大，適合慢慢看。</p>
+          <div class="actions">
+            <a class="btn primary" href="https://www.google.com/maps/search/?api=1&amp;query=%E9%80%8D%E9%81%99%E5%9C%92+%E9%AB%98%E9%9B%84+%E5%8F%B0%E7%81%A3" target="_blank" rel="noopener">Google Maps</a>
+          </div>
+        </div>
+      </article>
+      <article class="pin-card" id="spot-20" data-county="高雄" data-search="美濃客家文物館 高雄 室內 文化 diy 餐飲 客家文化＋體驗，走路不多。">
+        <iframe class="map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=%E7%BE%8E%E6%BF%83%E5%AE%A2%E5%AE%B6%E6%96%87%E7%89%A9%E9%A4%A8+%E9%AB%98%E9%9B%84+%E5%8F%B0%E7%81%A3&amp;output=embed"></iframe>
+        <div class="pin-body">
+          <div class="pin-head">
+            <div>
+              <div class="county">高雄</div>
+              <h3>美濃客家文物館</h3>
+            </div>
+            <div class="score">2★</div>
+          </div>
+          <div class="tags"><span class="tag">室內</span><span class="tag">文化</span><span class="tag">DIY</span><span class="tag">餐飲</span></div>
+          <p>客家文化＋體驗，走路不多。</p>
+          <div class="actions">
+            <a class="btn primary" href="https://www.google.com/maps/search/?api=1&amp;query=%E7%BE%8E%E6%BF%83%E5%AE%A2%E5%AE%B6%E6%96%87%E7%89%A9%E9%A4%A8+%E9%AB%98%E9%9B%84+%E5%8F%B0%E7%81%A3" target="_blank" rel="noopener">Google Maps</a>
+          </div>
+        </div>
+      </article>
+      <article class="pin-card" id="spot-21" data-county="高雄" data-search="美濃民俗村 高雄 吃 diy 客家 伴手禮 擂茶、紙傘、清冰很完整。">
+        <iframe class="map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=%E7%BE%8E%E6%BF%83%E6%B0%91%E4%BF%97%E6%9D%91+%E9%AB%98%E9%9B%84+%E5%8F%B0%E7%81%A3&amp;output=embed"></iframe>
+        <div class="pin-body">
+          <div class="pin-head">
+            <div>
+              <div class="county">高雄</div>
+              <h3>美濃民俗村</h3>
+            </div>
+            <div class="score">2★</div>
+          </div>
+          <div class="tags"><span class="tag">吃</span><span class="tag">DIY</span><span class="tag">客家</span><span class="tag">伴手禮</span></div>
+          <p>擂茶、紙傘、清冰很完整。</p>
+          <div class="actions">
+            <a class="btn primary" href="https://www.google.com/maps/search/?api=1&amp;query=%E7%BE%8E%E6%BF%83%E6%B0%91%E4%BF%97%E6%9D%91+%E9%AB%98%E9%9B%84+%E5%8F%B0%E7%81%A3" target="_blank" rel="noopener">Google Maps</a>
+          </div>
+        </div>
+      </article>
+      <article class="pin-card" id="spot-22" data-county="高雄" data-search="旗山糖廠 高雄 冰品 懷舊 拍照 親子 吃冰＋看糖業，很快樂。">
+        <iframe class="map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=%E6%97%97%E5%B1%B1%E7%B3%96%E5%BB%A0+%E9%AB%98%E9%9B%84+%E5%8F%B0%E7%81%A3&amp;output=embed"></iframe>
+        <div class="pin-body">
+          <div class="pin-head">
+            <div>
+              <div class="county">高雄</div>
+              <h3>旗山糖廠</h3>
+            </div>
+            <div class="score">1★</div>
+          </div>
+          <div class="tags"><span class="tag">冰品</span><span class="tag">懷舊</span><span class="tag">拍照</span><span class="tag">親子</span></div>
+          <p>吃冰＋看糖業，很快樂。</p>
+          <div class="actions">
+            <a class="btn primary" href="https://www.google.com/maps/search/?api=1&amp;query=%E6%97%97%E5%B1%B1%E7%B3%96%E5%BB%A0+%E9%AB%98%E9%9B%84+%E5%8F%B0%E7%81%A3" target="_blank" rel="noopener">Google Maps</a>
+          </div>
+        </div>
+      </article>
+      <article class="pin-card" id="spot-23" data-county="高雄" data-search="橋頭糖廠 高雄 冰品 五分車 懷舊 吃 坐車、吃冰、散步都可。">
+        <iframe class="map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=%E6%A9%8B%E9%A0%AD%E7%B3%96%E5%BB%A0+%E9%AB%98%E9%9B%84+%E5%8F%B0%E7%81%A3&amp;output=embed"></iframe>
+        <div class="pin-body">
+          <div class="pin-head">
+            <div>
+              <div class="county">高雄</div>
+              <h3>橋頭糖廠</h3>
+            </div>
+            <div class="score">1★</div>
+          </div>
+          <div class="tags"><span class="tag">冰品</span><span class="tag">五分車</span><span class="tag">懷舊</span><span class="tag">吃</span></div>
+          <p>坐車、吃冰、散步都可。</p>
+          <div class="actions">
+            <a class="btn primary" href="https://www.google.com/maps/search/?api=1&amp;query=%E6%A9%8B%E9%A0%AD%E7%B3%96%E5%BB%A0+%E9%AB%98%E9%9B%84+%E5%8F%B0%E7%81%A3" target="_blank" rel="noopener">Google Maps</a>
+          </div>
+        </div>
+      </article>
+      <article class="pin-card" id="spot-24" data-county="高雄" data-search="哈瑪星台灣鐵道館 高雄 室內 鐵道 親子 冷氣 火車迷很適合，體驗感強。">
+        <iframe class="map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=%E5%93%88%E7%91%AA%E6%98%9F%E5%8F%B0%E7%81%A3%E9%90%B5%E9%81%93%E9%A4%A8+%E9%AB%98%E9%9B%84+%E5%8F%B0%E7%81%A3&amp;output=embed"></iframe>
+        <div class="pin-body">
+          <div class="pin-head">
+            <div>
+              <div class="county">高雄</div>
+              <h3>哈瑪星台灣鐵道館</h3>
+            </div>
+            <div class="score">3★</div>
+          </div>
+          <div class="tags"><span class="tag">室內</span><span class="tag">鐵道</span><span class="tag">親子</span><span class="tag">冷氣</span></div>
+          <p>火車迷很適合，體驗感強。</p>
+          <div class="actions">
+            <a class="btn primary" href="https://www.google.com/maps/search/?api=1&amp;query=%E5%93%88%E7%91%AA%E6%98%9F%E5%8F%B0%E7%81%A3%E9%90%B5%E9%81%93%E9%A4%A8+%E9%AB%98%E9%9B%84+%E5%8F%B0%E7%81%A3" target="_blank" rel="noopener">Google Maps</a>
+          </div>
+        </div>
+      </article>
+      <article class="pin-card" id="spot-25" data-county="高雄" data-search="岡山航空教育展示館 高雄 室內 軍機 親子 展覽 看飛機和模型，不太曬。">
+        <iframe class="map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=%E5%B2%A1%E5%B1%B1%E8%88%AA%E7%A9%BA%E6%95%99%E8%82%B2%E5%B1%95%E7%A4%BA%E9%A4%A8+%E9%AB%98%E9%9B%84+%E5%8F%B0%E7%81%A3&amp;output=embed"></iframe>
+        <div class="pin-body">
+          <div class="pin-head">
+            <div>
+              <div class="county">高雄</div>
+              <h3>岡山航空教育展示館</h3>
+            </div>
+            <div class="score">2★</div>
+          </div>
+          <div class="tags"><span class="tag">室內</span><span class="tag">軍機</span><span class="tag">親子</span><span class="tag">展覽</span></div>
+          <p>看飛機和模型，不太曬。</p>
+          <div class="actions">
+            <a class="btn primary" href="https://www.google.com/maps/search/?api=1&amp;query=%E5%B2%A1%E5%B1%B1%E8%88%AA%E7%A9%BA%E6%95%99%E8%82%B2%E5%B1%95%E7%A4%BA%E9%A4%A8+%E9%AB%98%E9%9B%84+%E5%8F%B0%E7%81%A3" target="_blank" rel="noopener">Google Maps</a>
+          </div>
+        </div>
+      </article>
+      <article class="pin-card" id="spot-26" data-county="高雄" data-search="紅頂穀創穀物文創樂園 高雄 觀光工廠 吃 diy 咖啡 吃飯＋手作＋買伴手禮。">
+        <iframe class="map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=%E7%B4%85%E9%A0%82%E7%A9%80%E5%89%B5%E7%A9%80%E7%89%A9%E6%96%87%E5%89%B5%E6%A8%82%E5%9C%92+%E9%AB%98%E9%9B%84+%E5%8F%B0%E7%81%A3&amp;output=embed"></iframe>
+        <div class="pin-body">
+          <div class="pin-head">
+            <div>
+              <div class="county">高雄</div>
+              <h3>紅頂穀創穀物文創樂園</h3>
+            </div>
+            <div class="score">3★</div>
+          </div>
+          <div class="tags"><span class="tag">觀光工廠</span><span class="tag">吃</span><span class="tag">DIY</span><span class="tag">咖啡</span></div>
+          <p>吃飯＋手作＋買伴手禮。</p>
+          <div class="actions">
+            <a class="btn primary" href="https://www.google.com/maps/search/?api=1&amp;query=%E7%B4%85%E9%A0%82%E7%A9%80%E5%89%B5%E7%A9%80%E7%89%A9%E6%96%87%E5%89%B5%E6%A8%82%E5%9C%92+%E9%AB%98%E9%9B%84+%E5%8F%B0%E7%81%A3" target="_blank" rel="noopener">Google Maps</a>
+          </div>
+        </div>
+      </article>
+      <article class="pin-card" id="spot-27" data-county="高雄" data-search="鳳儀書院 高雄 歷史 拍照 文化 小吃 範圍不大，順路很好逛。">
+        <iframe class="map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=%E9%B3%B3%E5%84%80%E6%9B%B8%E9%99%A2+%E9%AB%98%E9%9B%84+%E5%8F%B0%E7%81%A3&amp;output=embed"></iframe>
+        <div class="pin-body">
+          <div class="pin-head">
+            <div>
+              <div class="county">高雄</div>
+              <h3>鳳儀書院</h3>
+            </div>
+            <div class="score">1★</div>
+          </div>
+          <div class="tags"><span class="tag">歷史</span><span class="tag">拍照</span><span class="tag">文化</span><span class="tag">小吃</span></div>
+          <p>範圍不大，順路很好逛。</p>
+          <div class="actions">
+            <a class="btn primary" href="https://www.google.com/maps/search/?api=1&amp;query=%E9%B3%B3%E5%84%80%E6%9B%B8%E9%99%A2+%E9%AB%98%E9%9B%84+%E5%8F%B0%E7%81%A3" target="_blank" rel="noopener">Google Maps</a>
+          </div>
+        </div>
+      </article>
+      <article class="pin-card" id="spot-28" data-county="高雄" data-search="高雄市客家文物館 高雄 室內 文化 親子 冷氣 可認識客家文化，輕鬆。">
+        <iframe class="map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=%E9%AB%98%E9%9B%84%E5%B8%82%E5%AE%A2%E5%AE%B6%E6%96%87%E7%89%A9%E9%A4%A8+%E9%AB%98%E9%9B%84+%E5%8F%B0%E7%81%A3&amp;output=embed"></iframe>
+        <div class="pin-body">
+          <div class="pin-head">
+            <div>
+              <div class="county">高雄</div>
+              <h3>高雄市客家文物館</h3>
+            </div>
+            <div class="score">3★</div>
+          </div>
+          <div class="tags"><span class="tag">室內</span><span class="tag">文化</span><span class="tag">親子</span><span class="tag">冷氣</span></div>
+          <p>可認識客家文化，輕鬆。</p>
+          <div class="actions">
+            <a class="btn primary" href="https://www.google.com/maps/search/?api=1&amp;query=%E9%AB%98%E9%9B%84%E5%B8%82%E5%AE%A2%E5%AE%B6%E6%96%87%E7%89%A9%E9%A4%A8+%E9%AB%98%E9%9B%84+%E5%8F%B0%E7%81%A3" target="_blank" rel="noopener">Google Maps</a>
+          </div>
+        </div>
+      </article>
+      <article class="pin-card" id="spot-29" data-county="高雄" data-search="衛武營國家藝術文化中心 高雄 室內 藝術 咖啡 建築 建築漂亮，周邊餐飲也多。">
+        <iframe class="map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=%E8%A1%9B%E6%AD%A6%E7%87%9F%E5%9C%8B%E5%AE%B6%E8%97%9D%E8%A1%93%E6%96%87%E5%8C%96%E4%B8%AD%E5%BF%83+%E9%AB%98%E9%9B%84+%E5%8F%B0%E7%81%A3&amp;output=embed"></iframe>
+        <div class="pin-body">
+          <div class="pin-head">
+            <div>
+              <div class="county">高雄</div>
+              <h3>衛武營國家藝術文化中心</h3>
+            </div>
+            <div class="score">2★</div>
+          </div>
+          <div class="tags"><span class="tag">室內</span><span class="tag">藝術</span><span class="tag">咖啡</span><span class="tag">建築</span></div>
+          <p>建築漂亮，周邊餐飲也多。</p>
+          <div class="actions">
+            <a class="btn primary" href="https://www.google.com/maps/search/?api=1&amp;query=%E8%A1%9B%E6%AD%A6%E7%87%9F%E5%9C%8B%E5%AE%B6%E8%97%9D%E8%A1%93%E6%96%87%E5%8C%96%E4%B8%AD%E5%BF%83+%E9%AB%98%E9%9B%84+%E5%8F%B0%E7%81%A3" target="_blank" rel="noopener">Google Maps</a>
+          </div>
+        </div>
+      </article>
+      <article class="pin-card" id="spot-30" data-county="高雄" data-search="大東文化藝術中心 高雄 室內 展演 咖啡 拍照 吹冷氣看展演，節奏慢。">
+        <iframe class="map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=%E5%A4%A7%E6%9D%B1%E6%96%87%E5%8C%96%E8%97%9D%E8%A1%93%E4%B8%AD%E5%BF%83+%E9%AB%98%E9%9B%84+%E5%8F%B0%E7%81%A3&amp;output=embed"></iframe>
+        <div class="pin-body">
+          <div class="pin-head">
+            <div>
+              <div class="county">高雄</div>
+              <h3>大東文化藝術中心</h3>
+            </div>
+            <div class="score">2★</div>
+          </div>
+          <div class="tags"><span class="tag">室內</span><span class="tag">展演</span><span class="tag">咖啡</span><span class="tag">拍照</span></div>
+          <p>吹冷氣看展演，節奏慢。</p>
+          <div class="actions">
+            <a class="btn primary" href="https://www.google.com/maps/search/?api=1&amp;query=%E5%A4%A7%E6%9D%B1%E6%96%87%E5%8C%96%E8%97%9D%E8%A1%93%E4%B8%AD%E5%BF%83+%E9%AB%98%E9%9B%84+%E5%8F%B0%E7%81%A3" target="_blank" rel="noopener">Google Maps</a>
+          </div>
+        </div>
+      </article>
+      <article class="pin-card" id="spot-31" data-county="高雄" data-search="內惟藝術中心 高雄 室內 展覽 咖啡 美術 新式藝文空間，短停很適合。">
+        <iframe class="map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=%E5%85%A7%E6%83%9F%E8%97%9D%E8%A1%93%E4%B8%AD%E5%BF%83+%E9%AB%98%E9%9B%84+%E5%8F%B0%E7%81%A3&amp;output=embed"></iframe>
+        <div class="pin-body">
+          <div class="pin-head">
+            <div>
+              <div class="county">高雄</div>
+              <h3>內惟藝術中心</h3>
+            </div>
+            <div class="score">2★</div>
+          </div>
+          <div class="tags"><span class="tag">室內</span><span class="tag">展覽</span><span class="tag">咖啡</span><span class="tag">美術</span></div>
+          <p>新式藝文空間，短停很適合。</p>
+          <div class="actions">
+            <a class="btn primary" href="https://www.google.com/maps/search/?api=1&amp;query=%E5%85%A7%E6%83%9F%E8%97%9D%E8%A1%93%E4%B8%AD%E5%BF%83+%E9%AB%98%E9%9B%84+%E5%8F%B0%E7%81%A3" target="_blank" rel="noopener">Google Maps</a>
+          </div>
+        </div>
+      </article>
+      <article class="pin-card" id="spot-32" data-county="高雄" data-search="高雄市立圖書館總館 高雄 室內 冷氣 閱讀 咖啡 休息感很強，適合降溫。">
+        <iframe class="map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=%E9%AB%98%E9%9B%84%E5%B8%82%E7%AB%8B%E5%9C%96%E6%9B%B8%E9%A4%A8%E7%B8%BD%E9%A4%A8+%E9%AB%98%E9%9B%84+%E5%8F%B0%E7%81%A3&amp;output=embed"></iframe>
+        <div class="pin-body">
+          <div class="pin-head">
+            <div>
+              <div class="county">高雄</div>
+              <h3>高雄市立圖書館總館</h3>
+            </div>
+            <div class="score">3★</div>
+          </div>
+          <div class="tags"><span class="tag">室內</span><span class="tag">冷氣</span><span class="tag">閱讀</span><span class="tag">咖啡</span></div>
+          <p>休息感很強，適合降溫。</p>
+          <div class="actions">
+            <a class="btn primary" href="https://www.google.com/maps/search/?api=1&amp;query=%E9%AB%98%E9%9B%84%E5%B8%82%E7%AB%8B%E5%9C%96%E6%9B%B8%E9%A4%A8%E7%B8%BD%E9%A4%A8+%E9%AB%98%E9%9B%84+%E5%8F%B0%E7%81%A3" target="_blank" rel="noopener">Google Maps</a>
+          </div>
+        </div>
+      </article>
+      <article class="pin-card" id="spot-33" data-county="高雄" data-search="高雄市立美術館 高雄 室內 展覽 散步 咖啡 以展覽為主，走法彈性大。">
+        <iframe class="map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=%E9%AB%98%E9%9B%84%E5%B8%82%E7%AB%8B%E7%BE%8E%E8%A1%93%E9%A4%A8+%E9%AB%98%E9%9B%84+%E5%8F%B0%E7%81%A3&amp;output=embed"></iframe>
+        <div class="pin-body">
+          <div class="pin-head">
+            <div>
+              <div class="county">高雄</div>
+              <h3>高雄市立美術館</h3>
+            </div>
+            <div class="score">2★</div>
+          </div>
+          <div class="tags"><span class="tag">室內</span><span class="tag">展覽</span><span class="tag">散步</span><span class="tag">咖啡</span></div>
+          <p>以展覽為主，走法彈性大。</p>
+          <div class="actions">
+            <a class="btn primary" href="https://www.google.com/maps/search/?api=1&amp;query=%E9%AB%98%E9%9B%84%E5%B8%82%E7%AB%8B%E7%BE%8E%E8%A1%93%E9%A4%A8+%E9%AB%98%E9%9B%84+%E5%8F%B0%E7%81%A3" target="_blank" rel="noopener">Google Maps</a>
+          </div>
+        </div>
+      </article>
+      <article class="pin-card" id="spot-34" data-county="高雄" data-search="旗津貝殼館 高雄 室內 親子 海洋 展覽 可和海邊行程搭配。">
+        <iframe class="map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=%E6%97%97%E6%B4%A5%E8%B2%9D%E6%AE%BC%E9%A4%A8+%E9%AB%98%E9%9B%84+%E5%8F%B0%E7%81%A3&amp;output=embed"></iframe>
+        <div class="pin-body">
+          <div class="pin-head">
+            <div>
+              <div class="county">高雄</div>
+              <h3>旗津貝殼館</h3>
+            </div>
+            <div class="score">2★</div>
+          </div>
+          <div class="tags"><span class="tag">室內</span><span class="tag">親子</span><span class="tag">海洋</span><span class="tag">展覽</span></div>
+          <p>可和海邊行程搭配。</p>
+          <div class="actions">
+            <a class="btn primary" href="https://www.google.com/maps/search/?api=1&amp;query=%E6%97%97%E6%B4%A5%E8%B2%9D%E6%AE%BC%E9%A4%A8+%E9%AB%98%E9%9B%84+%E5%8F%B0%E7%81%A3" target="_blank" rel="noopener">Google Maps</a>
+          </div>
+        </div>
+      </article>
+      <article class="pin-card" id="spot-35" data-county="高雄" data-search="高雄市皮影戲館 高雄 室內 文化 親子 展演 小而美，適合短時間玩。">
+        <iframe class="map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=%E9%AB%98%E9%9B%84%E5%B8%82%E7%9A%AE%E5%BD%B1%E6%88%B2%E9%A4%A8+%E9%AB%98%E9%9B%84+%E5%8F%B0%E7%81%A3&amp;output=embed"></iframe>
+        <div class="pin-body">
+          <div class="pin-head">
+            <div>
+              <div class="county">高雄</div>
+              <h3>高雄市皮影戲館</h3>
+            </div>
+            <div class="score">2★</div>
+          </div>
+          <div class="tags"><span class="tag">室內</span><span class="tag">文化</span><span class="tag">親子</span><span class="tag">展演</span></div>
+          <p>小而美，適合短時間玩。</p>
+          <div class="actions">
+            <a class="btn primary" href="https://www.google.com/maps/search/?api=1&amp;query=%E9%AB%98%E9%9B%84%E5%B8%82%E7%9A%AE%E5%BD%B1%E6%88%B2%E9%A4%A8+%E9%AB%98%E9%9B%84+%E5%8F%B0%E7%81%A3" target="_blank" rel="noopener">Google Maps</a>
+          </div>
+        </div>
+      </article>
+      <article class="pin-card" id="spot-36" data-county="南投" data-search="溪頭自然教育園區 南投 山林 避暑 步道 涼爽 真涼，但可只走主路線。">
+        <iframe class="map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=%E6%BA%AA%E9%A0%AD%E8%87%AA%E7%84%B6%E6%95%99%E8%82%B2%E5%9C%92%E5%8D%80+%E5%8D%97%E6%8A%95+%E5%8F%B0%E7%81%A3&amp;output=embed"></iframe>
+        <div class="pin-body">
+          <div class="pin-head">
+            <div>
+              <div class="county">南投</div>
+              <h3>溪頭自然教育園區</h3>
+            </div>
+            <div class="score">0★</div>
+          </div>
+          <div class="tags"><span class="tag">山林</span><span class="tag">避暑</span><span class="tag">步道</span><span class="tag">涼爽</span></div>
+          <p>真涼，但可只走主路線。</p>
+          <div class="actions">
+            <a class="btn primary" href="https://www.google.com/maps/search/?api=1&amp;query=%E6%BA%AA%E9%A0%AD%E8%87%AA%E7%84%B6%E6%95%99%E8%82%B2%E5%9C%92%E5%8D%80+%E5%8D%97%E6%8A%95+%E5%8F%B0%E7%81%A3" target="_blank" rel="noopener">Google Maps</a>
+          </div>
+        </div>
+      </article>
+      <article class="pin-card" id="spot-37" data-county="南投" data-search="妖怪村 南投 吃 拍照 日式 商店街 商店街好逛，食物選擇多。">
+        <iframe class="map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=%E5%A6%96%E6%80%AA%E6%9D%91+%E5%8D%97%E6%8A%95+%E5%8F%B0%E7%81%A3&amp;output=embed"></iframe>
+        <div class="pin-body">
+          <div class="pin-head">
+            <div>
+              <div class="county">南投</div>
+              <h3>妖怪村</h3>
+            </div>
+            <div class="score">1★</div>
+          </div>
+          <div class="tags"><span class="tag">吃</span><span class="tag">拍照</span><span class="tag">日式</span><span class="tag">商店街</span></div>
+          <p>商店街好逛，食物選擇多。</p>
+          <div class="actions">
+            <a class="btn primary" href="https://www.google.com/maps/search/?api=1&amp;query=%E5%A6%96%E6%80%AA%E6%9D%91+%E5%8D%97%E6%8A%95+%E5%8F%B0%E7%81%A3" target="_blank" rel="noopener">Google Maps</a>
+          </div>
+        </div>
+      </article>
+      <article class="pin-card" id="spot-38" data-county="南投" data-search="hohocha喝喝茶 南投 茶體驗 吃 室內 伴手禮 喝茶、吃蛋、買茶都方便。">
+        <iframe class="map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=HOHOCHA%E5%96%9D%E5%96%9D%E8%8C%B6+%E5%8D%97%E6%8A%95+%E5%8F%B0%E7%81%A3&amp;output=embed"></iframe>
+        <div class="pin-body">
+          <div class="pin-head">
+            <div>
+              <div class="county">南投</div>
+              <h3>HOHOCHA喝喝茶</h3>
+            </div>
+            <div class="score">3★</div>
+          </div>
+          <div class="tags"><span class="tag">茶體驗</span><span class="tag">吃</span><span class="tag">室內</span><span class="tag">伴手禮</span></div>
+          <p>喝茶、吃蛋、買茶都方便。</p>
+          <div class="actions">
+            <a class="btn primary" href="https://www.google.com/maps/search/?api=1&amp;query=HOHOCHA%E5%96%9D%E5%96%9D%E8%8C%B6+%E5%8D%97%E6%8A%95+%E5%8F%B0%E7%81%A3" target="_blank" rel="noopener">Google Maps</a>
+          </div>
+        </div>
+      </article>
+      <article class="pin-card" id="spot-39" data-county="南投" data-search="車埕木業展示館 南投 木桶便當 diy 鐵道 輕鬆 車站周邊平地好走。">
+        <iframe class="map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=%E8%BB%8A%E5%9F%95%E6%9C%A8%E6%A5%AD%E5%B1%95%E7%A4%BA%E9%A4%A8+%E5%8D%97%E6%8A%95+%E5%8F%B0%E7%81%A3&amp;output=embed"></iframe>
+        <div class="pin-body">
+          <div class="pin-head">
+            <div>
+              <div class="county">南投</div>
+              <h3>車埕木業展示館</h3>
+            </div>
+            <div class="score">1★</div>
+          </div>
+          <div class="tags"><span class="tag">木桶便當</span><span class="tag">DIY</span><span class="tag">鐵道</span><span class="tag">輕鬆</span></div>
+          <p>車站周邊平地好走。</p>
+          <div class="actions">
+            <a class="btn primary" href="https://www.google.com/maps/search/?api=1&amp;query=%E8%BB%8A%E5%9F%95%E6%9C%A8%E6%A5%AD%E5%B1%95%E7%A4%BA%E9%A4%A8+%E5%8D%97%E6%8A%95+%E5%8F%B0%E7%81%A3" target="_blank" rel="noopener">Google Maps</a>
+          </div>
+        </div>
+      </article>
+      <article class="pin-card" id="spot-40" data-county="南投" data-search="半山夢工廠 南投 室內 吃 體驗 親子 室內多，設施與餐飲都完整。">
+        <iframe class="map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=%E5%8D%8A%E5%B1%B1%E5%A4%A2%E5%B7%A5%E5%BB%A0+%E5%8D%97%E6%8A%95+%E5%8F%B0%E7%81%A3&amp;output=embed"></iframe>
+        <div class="pin-body">
+          <div class="pin-head">
+            <div>
+              <div class="county">南投</div>
+              <h3>半山夢工廠</h3>
+            </div>
+            <div class="score">4★</div>
+          </div>
+          <div class="tags"><span class="tag">室內</span><span class="tag">吃</span><span class="tag">體驗</span><span class="tag">親子</span></div>
+          <p>室內多，設施與餐飲都完整。</p>
+          <div class="actions">
+            <a class="btn primary" href="https://www.google.com/maps/search/?api=1&amp;query=%E5%8D%8A%E5%B1%B1%E5%A4%A2%E5%B7%A5%E5%BB%A0+%E5%8D%97%E6%8A%95+%E5%8F%B0%E7%81%A3" target="_blank" rel="noopener">Google Maps</a>
+          </div>
+        </div>
+      </article>
+      <article class="pin-card" id="spot-41" data-county="南投" data-search="九族文化村 南投 文化 纜車 餐飲 體驗 可搭纜車，體驗感很強。">
+        <iframe class="map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=%E4%B9%9D%E6%97%8F%E6%96%87%E5%8C%96%E6%9D%91+%E5%8D%97%E6%8A%95+%E5%8F%B0%E7%81%A3&amp;output=embed"></iframe>
+        <div class="pin-body">
+          <div class="pin-head">
+            <div>
+              <div class="county">南投</div>
+              <h3>九族文化村</h3>
+            </div>
+            <div class="score">1★</div>
+          </div>
+          <div class="tags"><span class="tag">文化</span><span class="tag">纜車</span><span class="tag">餐飲</span><span class="tag">體驗</span></div>
+          <p>可搭纜車，體驗感很強。</p>
+          <div class="actions">
+            <a class="btn primary" href="https://www.google.com/maps/search/?api=1&amp;query=%E4%B9%9D%E6%97%8F%E6%96%87%E5%8C%96%E6%9D%91+%E5%8D%97%E6%8A%95+%E5%8F%B0%E7%81%A3" target="_blank" rel="noopener">Google Maps</a>
+          </div>
+        </div>
+      </article>
+      <article class="pin-card" id="spot-42" data-county="南投" data-search="南投酒廠 南投 酒香 室內 吃 伴手禮 試飲和伴手禮很方便。">
+        <iframe class="map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=%E5%8D%97%E6%8A%95%E9%85%92%E5%BB%A0+%E5%8D%97%E6%8A%95+%E5%8F%B0%E7%81%A3&amp;output=embed"></iframe>
+        <div class="pin-body">
+          <div class="pin-head">
+            <div>
+              <div class="county">南投</div>
+              <h3>南投酒廠</h3>
+            </div>
+            <div class="score">2★</div>
+          </div>
+          <div class="tags"><span class="tag">酒香</span><span class="tag">室內</span><span class="tag">吃</span><span class="tag">伴手禮</span></div>
+          <p>試飲和伴手禮很方便。</p>
+          <div class="actions">
+            <a class="btn primary" href="https://www.google.com/maps/search/?api=1&amp;query=%E5%8D%97%E6%8A%95%E9%85%92%E5%BB%A0+%E5%8D%97%E6%8A%95+%E5%8F%B0%E7%81%A3" target="_blank" rel="noopener">Google Maps</a>
+          </div>
+        </div>
+      </article>
+      <article class="pin-card" id="spot-43" data-county="南投" data-search="廣興紙寮 南投 diy 造紙 室內 親子 手工紙體驗很適合短停。">
+        <iframe class="map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=%E5%BB%A3%E8%88%88%E7%B4%99%E5%AF%AE+%E5%8D%97%E6%8A%95+%E5%8F%B0%E7%81%A3&amp;output=embed"></iframe>
+        <div class="pin-body">
+          <div class="pin-head">
+            <div>
+              <div class="county">南投</div>
+              <h3>廣興紙寮</h3>
+            </div>
+            <div class="score">3★</div>
+          </div>
+          <div class="tags"><span class="tag">DIY</span><span class="tag">造紙</span><span class="tag">室內</span><span class="tag">親子</span></div>
+          <p>手工紙體驗很適合短停。</p>
+          <div class="actions">
+            <a class="btn primary" href="https://www.google.com/maps/search/?api=1&amp;query=%E5%BB%A3%E8%88%88%E7%B4%99%E5%AF%AE+%E5%8D%97%E6%8A%95+%E5%8F%B0%E7%81%A3" target="_blank" rel="noopener">Google Maps</a>
+          </div>
+        </div>
+      </article>
+      <article class="pin-card" id="spot-44" data-county="南投" data-search="18度c巧克力工房 南投 吃 甜點 伴手禮 休息 甜點補給很適合。">
+        <iframe class="map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=18%E5%BA%A6C%E5%B7%A7%E5%85%8B%E5%8A%9B%E5%B7%A5%E6%88%BF+%E5%8D%97%E6%8A%95+%E5%8F%B0%E7%81%A3&amp;output=embed"></iframe>
+        <div class="pin-body">
+          <div class="pin-head">
+            <div>
+              <div class="county">南投</div>
+              <h3>18度C巧克力工房</h3>
+            </div>
+            <div class="score">2★</div>
+          </div>
+          <div class="tags"><span class="tag">吃</span><span class="tag">甜點</span><span class="tag">伴手禮</span><span class="tag">休息</span></div>
+          <p>甜點補給很適合。</p>
+          <div class="actions">
+            <a class="btn primary" href="https://www.google.com/maps/search/?api=1&amp;query=18%E5%BA%A6C%E5%B7%A7%E5%85%8B%E5%8A%9B%E5%B7%A5%E6%88%BF+%E5%8D%97%E6%8A%95+%E5%8F%B0%E7%81%A3" target="_blank" rel="noopener">Google Maps</a>
+          </div>
+        </div>
+      </article>
+      <article class="pin-card" id="spot-45" data-county="南投" data-search="日月老茶廠 南投 茶體驗 吃 日式 拍照 茶香和導覽都很有特色。">
+        <iframe class="map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=%E6%97%A5%E6%9C%88%E8%80%81%E8%8C%B6%E5%BB%A0+%E5%8D%97%E6%8A%95+%E5%8F%B0%E7%81%A3&amp;output=embed"></iframe>
+        <div class="pin-body">
+          <div class="pin-head">
+            <div>
+              <div class="county">南投</div>
+              <h3>日月老茶廠</h3>
+            </div>
+            <div class="score">2★</div>
+          </div>
+          <div class="tags"><span class="tag">茶體驗</span><span class="tag">吃</span><span class="tag">日式</span><span class="tag">拍照</span></div>
+          <p>茶香和導覽都很有特色。</p>
+          <div class="actions">
+            <a class="btn primary" href="https://www.google.com/maps/search/?api=1&amp;query=%E6%97%A5%E6%9C%88%E8%80%81%E8%8C%B6%E5%BB%A0+%E5%8D%97%E6%8A%95+%E5%8F%B0%E7%81%A3" target="_blank" rel="noopener">Google Maps</a>
+          </div>
+        </div>
+      </article>
+      <article class="pin-card" id="spot-46" data-county="南投" data-search="埔里紙教堂 南投 建築 拍照 咖啡 散步 以拍照和喝飲料為主。">
+        <iframe class="map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=%E5%9F%94%E9%87%8C%E7%B4%99%E6%95%99%E5%A0%82+%E5%8D%97%E6%8A%95+%E5%8F%B0%E7%81%A3&amp;output=embed"></iframe>
+        <div class="pin-body">
+          <div class="pin-head">
+            <div>
+              <div class="county">南投</div>
+              <h3>埔里紙教堂</h3>
+            </div>
+            <div class="score">1★</div>
+          </div>
+          <div class="tags"><span class="tag">建築</span><span class="tag">拍照</span><span class="tag">咖啡</span><span class="tag">散步</span></div>
+          <p>以拍照和喝飲料為主。</p>
+          <div class="actions">
+            <a class="btn primary" href="https://www.google.com/maps/search/?api=1&amp;query=%E5%9F%94%E9%87%8C%E7%B4%99%E6%95%99%E5%A0%82+%E5%8D%97%E6%8A%95+%E5%8F%B0%E7%81%A3" target="_blank" rel="noopener">Google Maps</a>
+          </div>
+        </div>
+      </article>
+      <article class="pin-card" id="spot-47" data-county="南投" data-search="元首館 南投 拍照 吃 伴手禮 親子 好拍也能順便買點心。">
+        <iframe class="map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=%E5%85%83%E9%A6%96%E9%A4%A8+%E5%8D%97%E6%8A%95+%E5%8F%B0%E7%81%A3&amp;output=embed"></iframe>
+        <div class="pin-body">
+          <div class="pin-head">
+            <div>
+              <div class="county">南投</div>
+              <h3>元首館</h3>
+            </div>
+            <div class="score">2★</div>
+          </div>
+          <div class="tags"><span class="tag">拍照</span><span class="tag">吃</span><span class="tag">伴手禮</span><span class="tag">親子</span></div>
+          <p>好拍也能順便買點心。</p>
+          <div class="actions">
+            <a class="btn primary" href="https://www.google.com/maps/search/?api=1&amp;query=%E5%85%83%E9%A6%96%E9%A4%A8+%E5%8D%97%E6%8A%95+%E5%8F%B0%E7%81%A3" target="_blank" rel="noopener">Google Maps</a>
+          </div>
+        </div>
+      </article>
+      <article class="pin-card" id="spot-48" data-county="南投" data-search="妮娜巧克力夢想城堡 南投 甜點 diy 室內 拍照 巧克力主題，體驗感夠。">
+        <iframe class="map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=%E5%A6%AE%E5%A8%9C%E5%B7%A7%E5%85%8B%E5%8A%9B%E5%A4%A2%E6%83%B3%E5%9F%8E%E5%A0%A1+%E5%8D%97%E6%8A%95+%E5%8F%B0%E7%81%A3&amp;output=embed"></iframe>
+        <div class="pin-body">
+          <div class="pin-head">
+            <div>
+              <div class="county">南投</div>
+              <h3>妮娜巧克力夢想城堡</h3>
+            </div>
+            <div class="score">2★</div>
+          </div>
+          <div class="tags"><span class="tag">甜點</span><span class="tag">DIY</span><span class="tag">室內</span><span class="tag">拍照</span></div>
+          <p>巧克力主題，體驗感夠。</p>
+          <div class="actions">
+            <a class="btn primary" href="https://www.google.com/maps/search/?api=1&amp;query=%E5%A6%AE%E5%A8%9C%E5%B7%A7%E5%85%8B%E5%8A%9B%E5%A4%A2%E6%83%B3%E5%9F%8E%E5%A0%A1+%E5%8D%97%E6%8A%95+%E5%8F%B0%E7%81%A3" target="_blank" rel="noopener">Google Maps</a>
+          </div>
+        </div>
+      </article>
+      <article class="pin-card" id="spot-49" data-county="南投" data-search="車埕林班道 南投 伴手禮 diy 吃 木作 和車埕可一起玩。">
+        <iframe class="map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=%E8%BB%8A%E5%9F%95%E6%9E%97%E7%8F%AD%E9%81%93+%E5%8D%97%E6%8A%95+%E5%8F%B0%E7%81%A3&amp;output=embed"></iframe>
+        <div class="pin-body">
+          <div class="pin-head">
+            <div>
+              <div class="county">南投</div>
+              <h3>車埕林班道</h3>
+            </div>
+            <div class="score">2★</div>
+          </div>
+          <div class="tags"><span class="tag">伴手禮</span><span class="tag">DIY</span><span class="tag">吃</span><span class="tag">木作</span></div>
+          <p>和車埕可一起玩。</p>
+          <div class="actions">
+            <a class="btn primary" href="https://www.google.com/maps/search/?api=1&amp;query=%E8%BB%8A%E5%9F%95%E6%9E%97%E7%8F%AD%E9%81%93+%E5%8D%97%E6%8A%95+%E5%8F%B0%E7%81%A3" target="_blank" rel="noopener">Google Maps</a>
+          </div>
+        </div>
+      </article>
+      <article class="pin-card" id="spot-50" data-county="南投" data-search="日月潭纜車站 南投 纜車 風景 輕鬆 交通 搭纜車輕鬆看景，不用走太多。">
+        <iframe class="map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=%E6%97%A5%E6%9C%88%E6%BD%AD%E7%BA%9C%E8%BB%8A%E7%AB%99+%E5%8D%97%E6%8A%95+%E5%8F%B0%E7%81%A3&amp;output=embed"></iframe>
+        <div class="pin-body">
+          <div class="pin-head">
+            <div>
+              <div class="county">南投</div>
+              <h3>日月潭纜車站</h3>
+            </div>
+            <div class="score">0★</div>
+          </div>
+          <div class="tags"><span class="tag">纜車</span><span class="tag">風景</span><span class="tag">輕鬆</span><span class="tag">交通</span></div>
+          <p>搭纜車輕鬆看景，不用走太多。</p>
+          <div class="actions">
+            <a class="btn primary" href="https://www.google.com/maps/search/?api=1&amp;query=%E6%97%A5%E6%9C%88%E6%BD%AD%E7%BA%9C%E8%BB%8A%E7%AB%99+%E5%8D%97%E6%8A%95+%E5%8F%B0%E7%81%A3" target="_blank" rel="noopener">Google Maps</a>
+          </div>
+        </div>
+      </article>
+      <article class="pin-card" id="spot-51" data-county="南投" data-search="日月潭水社遊客中心 南投 室內 服務 休息 餐飲 休息和補給的好中繼點。">
+        <iframe class="map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=%E6%97%A5%E6%9C%88%E6%BD%AD%E6%B0%B4%E7%A4%BE%E9%81%8A%E5%AE%A2%E4%B8%AD%E5%BF%83+%E5%8D%97%E6%8A%95+%E5%8F%B0%E7%81%A3&amp;output=embed"></iframe>
+        <div class="pin-body">
+          <div class="pin-head">
+            <div>
+              <div class="county">南投</div>
+              <h3>日月潭水社遊客中心</h3>
+            </div>
+            <div class="score">2★</div>
+          </div>
+          <div class="tags"><span class="tag">室內</span><span class="tag">服務</span><span class="tag">休息</span><span class="tag">餐飲</span></div>
+          <p>休息和補給的好中繼點。</p>
+          <div class="actions">
+            <a class="btn primary" href="https://www.google.com/maps/search/?api=1&amp;query=%E6%97%A5%E6%9C%88%E6%BD%AD%E6%B0%B4%E7%A4%BE%E9%81%8A%E5%AE%A2%E4%B8%AD%E5%BF%83+%E5%8D%97%E6%8A%95+%E5%8F%B0%E7%81%A3" target="_blank" rel="noopener">Google Maps</a>
+          </div>
+        </div>
+      </article>
+    </div>
+  </div>
+
+<script>
+  const rail = document.getElementById('rail');
+  const cards = [...document.querySelectorAll('.pin-card')];
+  function moveRail(dir) {
+    const amount = Math.min(420, Math.max(280, window.innerWidth * 0.8));
+    rail.scrollBy({left: dir * amount, behavior: 'smooth'});
+  }
+  function render() {
+    const q = document.getElementById('q').value.trim().toLowerCase();
+    const county = document.getElementById('county').value;
+    cards.forEach(card => {
+      const okCounty = county === 'all' || card.dataset.county === county;
+      const okQ = !q || card.dataset.search.includes(q);
+      card.style.display = (okCounty && okQ) ? '' : 'none';
+    });
+  }
+  render();
+</script>
+</body>
+</html>
