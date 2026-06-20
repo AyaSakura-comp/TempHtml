@@ -9,84 +9,86 @@
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: 'Noto Sans TC', sans-serif; background: #0a0a1a; color: #e0e0e0; }
+  body { font-family: 'Noto Sans TC', 'Hiragino Sans', 'Yu Gothic', sans-serif; background: #f5f0e8; color: #3a3a3a; }
 
   #header {
-    background: linear-gradient(135deg, #0d47a1, #1a237e, #4a148c);
+    background: linear-gradient(135deg, #e8d5b7, #f5e6d3, #e6c9a8);
     padding: 16px 20px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     flex-wrap: wrap;
     gap: 10px;
-    border-bottom: 3px solid #ffab00;
+    border-bottom: 3px solid #c9a96e;
     position: sticky; top: 0; z-index: 1000;
+    box-shadow: 0 2px 10px rgba(201,169,110,0.2);
   }
-  #header h1 { font-size: 1.3em; color: #fff; }
-  #header h1 span { color: #ffab00; }
+  #header h1 { font-size: 1.3em; color: #4a3728; }
+  #header h1 span { color: #c97b3f; }
   #stats { display: flex; gap: 10px; flex-wrap: wrap; }
   .stat-badge {
-    background: rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.7);
     border-radius: 20px; padding: 4px 12px;
     font-size: 0.8em;
     display: flex; align-items: center; gap: 4px;
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255,255,255,0.2);
+    border: 1px solid #e6c9a8;
+    color: #4a3728;
   }
-  .stat-badge .num { color: #ffab00; font-weight: bold; }
+  .stat-badge .num { color: #c97b3f; font-weight: bold; }
 
   /* ===== DESKTOP ===== */
   #sidebar {
     position: fixed; left: 0; top: 0;
     width: 340px; height: 100vh;
-    background: #111827;
+    background: #faf6f0;
     overflow-y: auto; z-index: 999;
-    border-right: 2px solid #1e3a5f;
+    border-right: 2px solid #e6c9a8;
     display: flex; flex-direction: column;
+    box-shadow: 2px 0 15px rgba(0,0,0,0.05);
   }
   #filter-panel {
-    padding: 12px; background: #0d1b2a;
-    border-bottom: 1px solid #1e3a5f;
+    padding: 12px; background: #f5ede0;
+    border-bottom: 1px solid #e6c9a8;
     position: sticky; top: 0; z-index: 10;
   }
-  #filter-panel h3 { color: #ffab00; margin-bottom: 8px; font-size: 0.9em; }
+  #filter-panel h3 { color: #8b6914; margin-bottom: 8px; font-size: 0.9em; }
   .filter-group { margin-bottom: 10px; }
-  .filter-group label { display: block; color: #90a4ae; font-size: 0.75em; margin-bottom: 3px; }
+  .filter-group label { display: block; color: #6b5b45; font-size: 0.75em; margin-bottom: 3px; font-weight: 500; }
   .filter-group input, .filter-group select {
     width: 100%; padding: 6px 10px;
-    background: #1a2332; border: 1px solid #263238;
-    color: #e0e0e0; border-radius: 6px; font-size: 0.85em;
+    background: #fff; border: 1px solid #d4c4a8;
+    color: #3a3a3a; border-radius: 6px; font-size: 0.85em;
   }
-  .filter-group input:focus, .filter-group select:focus { outline: none; border-color: #ffab00; }
+  .filter-group input:focus, .filter-group select:focus { outline: none; border-color: #c97b3f; }
   #category-filters { display: flex; flex-wrap: wrap; gap: 3px; }
   .cat-btn {
     padding: 3px 8px; border-radius: 12px;
-    border: 1px solid #263238; background: #1a2332;
-    color: #b0bec5; cursor: pointer; font-size: 0.7em;
+    border: 1px solid #d4c4a8; background: #fff;
+    color: #6b5b45; cursor: pointer; font-size: 0.7em;
     transition: all 0.2s;
   }
-  .cat-btn:hover { border-color: #ffab00; }
-  .cat-btn.active { background: #ffab00; color: #000; border-color: #ffab00; font-weight: bold; }
+  .cat-btn:hover { border-color: #c97b3f; }
+  .cat-btn.active { background: #c97b3f; color: #fff; border-color: #c97b3f; font-weight: bold; }
 
   #attraction-list { flex: 1; overflow-y: auto; padding: 8px; }
 
   .attraction-card {
-    background: #1a2332;
+    background: #fff;
     border-radius: 10px;
-    border: 1px solid #263238;
+    border: 1px solid #e6c9a8;
     cursor: pointer;
     transition: all 0.2s;
     overflow: hidden;
     margin-bottom: 6px;
   }
   .attraction-card:hover {
-    border-color: #ffab00;
+    border-color: #c97b3f;
     transform: translateX(3px);
-    box-shadow: 0 4px 15px rgba(255,171,0,0.1);
+    box-shadow: 0 4px 15px rgba(201,123,63,0.15);
   }
   .attraction-card.active {
-    border-color: #ffab00;
-    background: #1e3444;
+    border-color: #c97b3f;
+    background: #fef5eb;
   }
   .card-body { padding: 8px 10px; }
   .card-header-row {
@@ -94,7 +96,7 @@
     align-items: flex-start; gap: 6px;
   }
   .card-name {
-    font-weight: 700; font-size: 0.85em; color: #e3f2fd;
+    font-weight: 700; font-size: 0.85em; color: #4a3728;
     line-height: 1.3; flex: 1;
   }
   .card-cat {
@@ -102,14 +104,14 @@
     border-radius: 8px; white-space: nowrap;
     font-weight: bold; flex-shrink: 0;
   }
-  .card-loc { font-size: 0.7em; color: #78909c; margin-top: 3px; }
+  .card-loc { font-size: 0.7em; color: #8b7b65; margin-top: 3px; }
   .card-tags { display: flex; gap: 3px; margin-top: 5px; flex-wrap: wrap; }
   .card-tag {
     font-size: 0.6em; padding: 1px 6px;
     border-radius: 4px;
   }
-  .card-tag.food { background: #4a148c; color: #ce93d8; }
-  .card-tag.cool { background: #0d47a1; color: #90caf9; }
+  .card-tag.food { background: #e8b4b8; color: #8b4557; }
+  .card-tag.cool { background: #b8d4e3; color: #2c5f7c; }
   .gmaps-link {
     display: inline-flex; align-items: center; gap: 3px;
     text-decoration: none; color: #fff;
@@ -119,30 +121,30 @@
   .gmaps-link:hover { filter: brightness(1.2); }
 
   /* Category colors */
-  .cat-咖啡廳 { background: #e65100; }
-  .cat-農場 { background: #2e7d32; }
-  .cat-自然景點 { background: #00695c; }
-  .cat-觀光工廠 { background: #1565c0; }
-  .cat-景點 { background: #6a1b9a; }
-  .cat-博物館 { background: #4527a0; }
-  .cat-夜市 { background: #c62828; }
-  .cat-美食街 { background: #d84315; }
-  .cat-餐廳 { background: #ad1457; }
-  .cat-美食 { background: #bf360c; }
-  .cat-文創園區 { background: #7b1fa2; }
+  .cat-咖啡廳 { background: #d4a373; color: #fff; }
+  .cat-農場 { background: #81b214; color: #fff; }
+  .cat-自然景點 { background: #588157; color: #fff; }
+  .cat-觀光工廠 { background: #5b8fb9; color: #fff; }
+  .cat-景點 { background: #b565a7; color: #fff; }
+  .cat-博物館 { background: #7c629b; color: #fff; }
+  .cat-夜市 { background: #e07a5f; color: #fff; }
+  .cat-美食街 { background: #d4845a; color: #fff; }
+  .cat-餐廳 { background: #c06c84; color: #fff; }
+  .cat-美食 { background: #d4a373; color: #fff; }
+  .cat-文創園區 { background: #9a67a8; color: #fff; }
 
 
 
   /* Popup */
   .custom-popup .leaflet-popup-content-wrapper {
-    background: #1a2332; color: #e0e0e0;
-    border-radius: 12px; border: 1px solid #ffab00;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    background: #fef8f0; color: #3a3a3a;
+    border-radius: 12px; border: 2px solid #c9a96e;
+    box-shadow: 0 4px 20px rgba(201,169,110,0.25);
   }
-  .custom-popup .leaflet-popup-tip { background: #1a2332; }
+  .custom-popup .leaflet-popup-tip { background: #fef8f0; }
   .custom-popup .leaflet-popup-content { margin: 12px; }
   .popup-card { min-width: 200px; }
-  .popup-card h3 { color: #ffab00; font-size: 0.95em; margin-bottom: 4px; }
+  .popup-card h3 { color: #8b6914; font-size: 0.95em; margin-bottom: 4px; }
   .popup-card .popup-cat {
     display: inline-block; padding: 2px 8px;
     border-radius: 8px; font-size: 0.7em;
@@ -163,10 +165,10 @@
     font-weight: bold; color: #fff;
     transition: all 0.2s;
   }
-  .popup-card .gmaps-link.gmaps { background: #1565c0; }
-  .popup-card .gmaps-link.gmaps:hover { background: #1976d2; }
-  .popup-card .gmaps-link.nav { background: #2e7d32; }
-  .popup-card .gmaps-link.nav:hover { background: #388e3c; }
+  .popup-card .gmaps-link.gmaps { background: #5b8fb9; }
+  .popup-card .gmaps-link.gmaps:hover { background: #4a7fa9; }
+  .popup-card .gmaps-link.nav { background: #588157; }
+  .popup-card .gmaps-link.nav:hover { background: #4a6d48; }
 
   /* Map */
   #map-container {
@@ -179,21 +181,23 @@
   /* Legend */
   #legend {
     position: fixed; bottom: 16px; right: 16px;
-    background: #111827ee; border-radius: 10px;
+    background: #fef8f0ee; border-radius: 10px;
     padding: 10px 14px; z-index: 999;
-    border: 1px solid #263238; font-size: 0.7em;
+    border: 1px solid #e6c9a8; font-size: 0.7em;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
   }
-  #legend h4 { color: #ffab00; margin-bottom: 6px; font-size: 0.9em; }
+  #legend h4 { color: #8b6914; margin-bottom: 6px; font-size: 0.9em; }
   .legend-item { display: flex; align-items: center; gap: 5px; margin-bottom: 2px; }
   .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
   #counter {
     position: fixed; top: 72px; right: 16px;
-    background: #111827ee; border-radius: 8px;
+    background: #fef8f0ee; border-radius: 8px;
     padding: 6px 12px; z-index: 999;
-    border: 1px solid #263238;
-    font-size: 0.75em; color: #90a4ae;
+    border: 1px solid #e6c9a8;
+    font-size: 0.75em; color: #6b5b45;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
   }
-  #counter .count { color: #ffab00; font-weight: bold; }
+  #counter .count { color: #c97b3f; font-weight: bold; }
 
   /* ===== MOBILE ===== */
   @media (max-width: 768px) {
@@ -224,12 +228,11 @@
     }
     #map { width: 100%; height: 100%; }
 
-    /* Header overlay on mobile */
     #header {
       position: fixed; top: 0; left: 0;
       width: 100%; z-index: 1001;
       border-bottom: none;
-      background: linear-gradient(180deg, #0d47a1ee 60%, #0d47a100);
+      background: linear-gradient(180deg, #f5e6d3ee 60%, #f5e6d300);
     }
 
     #attraction-list { padding: 6px; }
@@ -240,15 +243,15 @@
       display: block;
       position: fixed; bottom: 16px; left: 16px;
       z-index: 1002;
-      background: #111827;
-      border: 2px solid #ffab00;
-      color: #ffab00;
+      background: #fef8f0;
+      border: 2px solid #c97b3f;
+      color: #c97b3f;
       padding: 8px 16px;
       border-radius: 20px;
       font-size: 0.8em;
       font-weight: bold;
       cursor: pointer;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     }
     #toggle-sidebar::before { content: '☰ '; }
 
@@ -671,10 +674,10 @@ const attractions = [
 
 // ===== Helpers =====
 const catColors = {
-  '咖啡廳':'#e65100','農場':'#2e7d32','自然景點':'#00695c',
-  '觀光工廠':'#1565c0','景點':'#6a1b9a','博物館':'#4527a0',
-  '文創園區':'#7b1fa2','夜市':'#c62828','美食街':'#d84315',
-  '餐廳':'#ad1457','美食':'#bf360c'
+  '咖啡廳':'#d4a373','農場':'#81b214','自然景點':'#588157',
+  '觀光工廠':'#5b8fb9','景點':'#b565a7','博物館':'#7c629b',
+  '文創園區':'#9a67a8','夜市':'#e07a5f','美食街':'#d4845a',
+  '餐廳':'#c06c84','美食':'#d4a373'
 };
 const catEmojis = {
   '咖啡廳':'☕','農場':'🌿','自然景點':'🏞️',
@@ -695,8 +698,8 @@ function getGoogleMapsDirectionsUrl(name, lat, lng) {
 // ===== Map Setup =====
 const map = L.map('map', { zoomControl: false }).setView([23.6, 120.7], 8);
 L.control.zoom({ position: 'bottomright' }).addTo(map);
-L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-  attribution: '© OpenStreetMap © CARTO', maxZoom: 18
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '© OpenStreetMap contributors', maxZoom: 18
 }).addTo(map);
 
 const markers = {};
