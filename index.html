@@ -1,247 +1,512 @@
 <!doctype html>
 <html lang="zh-Hant">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>南部避暑慢遊 200 選｜單張地圖版</title>
-<link rel="preconnect" href="https://unpkg.com">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="anonymous">
-<style>
-  :root {
-    --bg:#08111f; --panel:rgba(11,18,32,.88); --line:rgba(148,163,184,.18); --text:#e5e7eb; --muted:#94a3b8;
-    --teal:#22d3ee; --green:#34d399; --amber:#fbbf24; --violet:#a78bfa;
-  }
-  * { box-sizing:border-box; }
-  html, body { margin:0; height:100%; font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Noto Sans TC', sans-serif; background: radial-gradient(circle at top, #14213d, var(--bg) 62%); color: var(--text); }
-  .app { min-height:100vh; display:flex; flex-direction:column; }
-  .hero { padding: 24px 18px 12px; max-width: 1400px; margin: 0 auto; width:100%; }
-  .hero-card { border:1px solid var(--line); background:linear-gradient(135deg, rgba(56,189,248,.14), rgba(52,211,153,.10)); border-radius:24px; padding:22px; box-shadow:0 20px 60px rgba(0,0,0,.24); }
-  h1 { margin:0 0 8px; font-size:clamp(28px,4vw,48px); line-height:1.05; }
-  .sub { color:var(--muted); line-height:1.7; margin:0; max-width:980px; }
-  .stats { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin-top:16px; }
-  .stat { background:rgba(17,24,39,.82); border:1px solid var(--line); border-radius:18px; padding:14px 16px; }
-  .stat b { display:block; font-size:26px; margin-bottom:4px; }
-  .controls { max-width:1400px; margin:0 auto; width:100%; padding: 0 18px 14px; display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
-  .controls input, .controls select, .controls button { background:rgba(11,18,32,.9); color:var(--text); border:1px solid var(--line); border-radius:14px; padding:12px 14px; }
-  .controls input, .controls select { min-width:180px; }
-  .controls button { cursor:pointer; }
-  .layout { max-width:1400px; margin:0 auto; width:100%; padding: 0 18px 18px; display:grid; gap:14px; grid-template-columns: 1fr; flex:1; }
-  #map { height: 72vh; min-height: 560px; border-radius:24px; border:1px solid var(--line); overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,.2); }
-  .bottom { border:1px solid var(--line); background:var(--panel); border-radius:24px; padding:14px; overflow:hidden; }
-  .bottom-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:10px; }
-  .bottom-head h2 { margin:0; font-size:18px; }
-  .count { color:var(--muted); font-size:14px; }
-  .rail { display:flex; gap:12px; overflow-x:auto; padding-bottom:6px; scroll-snap-type:x mandatory; }
-  .rail::-webkit-scrollbar { height:10px; }
-  .rail::-webkit-scrollbar-thumb { background:rgba(148,163,184,.35); border-radius:999px; }
-  .card { flex:0 0 min(88vw, 320px); scroll-snap-align:start; border:1px solid var(--line); border-radius:18px; overflow:hidden; background:rgba(17,24,39,.92); cursor:pointer; }
-  .card.active { outline:2px solid rgba(56,189,248,.45); box-shadow:0 0 0 2px rgba(56,189,248,.1) inset; }
-  .card-top { padding:10px 12px; display:flex; justify-content:space-between; align-items:flex-start; gap:10px; border-bottom:1px solid var(--line); }
-  .county { font-size:12px; color:var(--teal); font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
-  .card h3 { margin:4px 0 0; font-size:18px; line-height:1.25; }
-  .pin-dot { width:16px; height:16px; border-radius:50%; margin-top:4px; flex:0 0 auto; box-shadow:0 0 0 4px rgba(255,255,255,.05); }
-  .card-body { padding:12px; }
-  .tags { display:flex; flex-wrap:wrap; gap:6px; margin:0 0 10px; }
-  .tag { font-size:12px; padding:5px 8px; border:1px solid var(--line); border-radius:999px; color:#cbd5e1; background:rgba(148,163,184,.08); }
-  .note { margin:0 0 10px; color:#cbd5e1; line-height:1.6; font-size:14px; }
-  .actions { display:flex; gap:8px; flex-wrap:wrap; }
-  .btn { text-decoration:none; color:inherit; padding:10px 12px; border-radius:12px; border:1px solid var(--line); background:rgba(255,255,255,.04); display:inline-flex; align-items:center; justify-content:center; }
-  .btn.primary { background:linear-gradient(135deg, rgba(56,189,248,.22), rgba(52,211,153,.16)); border-color:rgba(56,189,248,.35); }
-  .legend { display:flex; gap:10px; flex-wrap:wrap; margin-top:8px; color:var(--muted); font-size:13px; }
-  .legend span { display:inline-flex; gap:6px; align-items:center; }
-  .legend i { width:10px; height:10px; border-radius:50%; display:inline-block; }
-  .hint { color:var(--muted); font-size:14px; margin-top:-2px; }
-  .popup h3 { margin:0 0 6px; font-size:16px; }
-  .popup p { margin:0 0 8px; color:#cbd5e1; }
-  .marker { width:24px; height:24px; border-radius:50% 50% 50% 0; transform: rotate(-45deg); border:2px solid rgba(255,255,255,.65); box-shadow:0 10px 18px rgba(0,0,0,.25); position:relative; }
-  .marker::after { content:attr(data-n); transform: rotate(45deg); position:absolute; inset:0; display:grid; place-items:center; color:#09111d; font-weight:900; font-size:12px; }
-  .marker[data-county="台南"] { background:var(--teal); }
-  .marker[data-county="高雄"] { background:var(--green); }
-  .marker[data-county="南投"] { background:var(--amber); }
-  .marker[data-county="雲林"] { background:var(--violet); }
-  .marker[data-county="嘉義"] { background:#fb923c; }
-  .marker[data-county="咖啡"] { background:#ff6b9d; }
-  .marker[data-county="農場"] { background:#4ade80; }
-  @media (max-width: 768px) {
-    .stats { grid-template-columns:1fr 1fr; }
-    #map { height: 58vh; min-height: 420px; }
-    .controls input, .controls select { width:100%; min-width:0; flex:1 1 100%; }
-  }
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>山海漫旅｜台灣慢遊提案</title>
+  <style>
+    :root{
+      --bg:#07111d;
+      --panel:rgba(11,18,32,.82);
+      --panel-2:rgba(15,23,42,.92);
+      --line:rgba(148,163,184,.18);
+      --text:#e5eefc;
+      --muted:#9fb1c8;
+      --brand:#67e8f9;
+      --brand-2:#34d399;
+      --accent:#fbbf24;
+      --accent-2:#fb7185;
+      --shadow:0 24px 70px rgba(0,0,0,.28);
+      --radius:24px;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,'Noto Sans TC',sans-serif;background:
+      radial-gradient(circle at top, rgba(56,189,248,.18), transparent 28%),
+      radial-gradient(circle at 20% 20%, rgba(52,211,153,.16), transparent 24%),
+      radial-gradient(circle at 80% 0%, rgba(251,191,36,.14), transparent 22%),
+      linear-gradient(180deg,#09121f 0%, #07111d 100%);color:var(--text)}
+    a{color:inherit}
+    .app{max-width:1440px;margin:0 auto;padding:20px 16px 28px}
+    .hero{position:relative;overflow:hidden;border:1px solid var(--line);border-radius:32px;background:linear-gradient(135deg, rgba(8,15,28,.92), rgba(14,25,43,.8));box-shadow:var(--shadow);padding:28px}
+    .hero::before,.hero::after{content:"";position:absolute;inset:auto;pointer-events:none;border-radius:999px;filter:blur(40px);opacity:.55}
+    .hero::before{width:260px;height:260px;background:rgba(103,232,249,.18);top:-80px;right:-40px}
+    .hero::after{width:240px;height:240px;background:rgba(52,211,153,.15);left:-100px;bottom:-110px}
+    .hero-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:24px;align-items:center;position:relative;z-index:1}
+    .eyebrow{display:inline-flex;gap:8px;align-items:center;padding:7px 12px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:#c8d8ee;font-size:13px;letter-spacing:.04em}
+    h1{margin:14px 0 10px;font-size:clamp(34px,6vw,66px);line-height:1.02;letter-spacing:-.04em}
+    .lead{margin:0;max-width:68ch;color:var(--muted);font-size:clamp(15px,1.8vw,18px);line-height:1.8}
+    .hero-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 16px;border-radius:16px;border:1px solid var(--line);text-decoration:none;background:rgba(255,255,255,.04);transition:.2s ease;cursor:pointer;color:var(--text)}
+    .btn:hover{transform:translateY(-1px);border-color:rgba(103,232,249,.38)}
+    .btn.primary{background:linear-gradient(135deg, rgba(103,232,249,.22), rgba(52,211,153,.16));border-color:rgba(103,232,249,.28)}
+    .hero-side{display:grid;gap:14px}
+    .mini-card{border:1px solid var(--line);border-radius:24px;padding:18px;background:rgba(10,18,33,.9)}
+    .mini-card h3{margin:0 0 8px;font-size:16px}
+    .mini-card p{margin:0;color:var(--muted);line-height:1.7;font-size:14px}
+    .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:18px}
+    .stat{padding:14px;border-radius:18px;border:1px solid var(--line);background:rgba(255,255,255,.04)}
+    .stat b{display:block;font-size:28px;line-height:1;margin-bottom:6px}
+    .stat span{color:var(--muted);font-size:13px}
+
+    .toolbar{display:grid;grid-template-columns:1.2fr .8fr;gap:14px;margin:16px 0}
+    .searchbar,.filters{border:1px solid var(--line);border-radius:24px;background:var(--panel);box-shadow:var(--shadow);padding:14px}
+    .search-row{display:flex;gap:10px;flex-wrap:wrap}
+    .search-row input,.search-row select{flex:1 1 220px;min-width:0;background:rgba(255,255,255,.04);color:var(--text);border:1px solid var(--line);border-radius:14px;padding:12px 14px;outline:none}
+    .search-row input::placeholder{color:#7f93ad}
+    .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+    .chip{border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--text);padding:9px 12px;border-radius:999px;font-size:13px;cursor:pointer;transition:.2s ease}
+    .chip:hover,.chip.active{border-color:rgba(103,232,249,.45);background:rgba(103,232,249,.12)}
+    .filters{display:flex;flex-direction:column;justify-content:space-between;gap:12px}
+    .filters-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+    .count{font-size:13px;color:var(--muted)}
+    .legend{display:flex;flex-wrap:wrap;gap:8px}
+    .legend span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.04);border:1px solid var(--line);font-size:12px;color:#d7e3f2}
+    .legend i{width:10px;height:10px;border-radius:50%}
+
+    .main{display:grid;grid-template-columns:1.15fr .85fr;gap:14px;align-items:start}
+    .feature,.rail,.routes{border:1px solid var(--line);border-radius:28px;background:var(--panel-2);box-shadow:var(--shadow)}
+    .feature{overflow:hidden;position:relative;min-height:640px}
+    .feature-visual{position:relative;height:300px;background:linear-gradient(135deg, rgba(103,232,249,.12), rgba(52,211,153,.06));overflow:hidden}
+    .feature-visual img{width:100%;height:100%;object-fit:cover;display:block;filter:saturate(1.06) contrast(1.02)}
+    .feature-visual::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg, transparent 0%, rgba(7,17,29,.18) 34%, rgba(7,17,29,.88) 100%)}
+    .badge{position:absolute;left:18px;top:18px;z-index:1;display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;background:rgba(7,17,29,.72);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.12);font-size:13px}
+    .feature-body{padding:22px}
+    .feature h2{margin:0;font-size:clamp(26px,3vw,40px);line-height:1.08}
+    .feature-meta{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0}
+    .pill{display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border-radius:999px;background:rgba(255,255,255,.05);border:1px solid var(--line);font-size:12px;color:#d5e3f2}
+    .feature p{margin:0;color:#bfd0e4;line-height:1.8}
+    .feature-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px}
+    .info{padding:14px;border:1px solid var(--line);border-radius:18px;background:rgba(255,255,255,.04)}
+    .info b{display:block;margin-bottom:6px;font-size:13px;color:#dbeafe}
+    .info span{color:var(--muted);font-size:13px;line-height:1.7}
+    .feature-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+
+    .rail{padding:16px}
+    .rail-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px}
+    .rail-head h3,.routes h3{margin:0;font-size:18px}
+    .rail-list{display:flex;flex-direction:column;gap:12px;max-height:606px;overflow:auto;padding-right:2px}
+    .card{display:grid;grid-template-columns:120px 1fr;gap:12px;padding:10px;border-radius:20px;border:1px solid var(--line);background:rgba(255,255,255,.04);cursor:pointer;transition:.2s ease}
+    .card:hover{transform:translateY(-1px);border-color:rgba(103,232,249,.28)}
+    .card.active{outline:2px solid rgba(103,232,249,.35);background:rgba(103,232,249,.09)}
+    .thumb{position:relative;border-radius:16px;overflow:hidden;min-height:110px}
+    .thumb img{width:100%;height:100%;object-fit:cover;display:block}
+    .thumb::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg, transparent, rgba(7,17,29,.4))}
+    .card-copy h4{margin:0 0 4px;font-size:16px;line-height:1.2}
+    .card-copy p{margin:0;color:var(--muted);font-size:13px;line-height:1.6}
+    .meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+    .tag{font-size:12px;padding:5px 8px;border-radius:999px;background:rgba(255,255,255,.04);border:1px solid var(--line);color:#d9e7f7}
+
+    .routes{padding:16px;margin-top:14px}
+    .route-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}
+    .route{padding:16px;border:1px solid var(--line);border-radius:20px;background:rgba(255,255,255,.04)}
+    .route b{display:block;font-size:14px;margin-bottom:8px}
+    .route p{margin:0;color:var(--muted);line-height:1.7;font-size:13px}
+    .route small{display:block;color:#d5e3f2;margin-top:10px}
+
+    .footer{padding:18px 4px 0;color:var(--muted);font-size:13px;text-align:center;line-height:1.7}
+    .muted{color:var(--muted)}
+
+    @media (max-width: 1080px){
+      .hero-grid,.toolbar,.main,.route-grid{grid-template-columns:1fr}
+      .feature{min-height:auto}
+      .rail-list{max-height:none}
+    }
+    @media (max-width: 720px){
+      .app{padding:12px}
+      .hero{padding:18px}
+      .stats{grid-template-columns:1fr 1fr}
+      .feature-grid{grid-template-columns:1fr}
+      .card{grid-template-columns:92px 1fr}
+      .route-grid{grid-template-columns:1fr}
+    }
+  </style>
 </head>
 <body>
-<div class="app">
-  <section class="hero">
-    <div class="hero-card">
-      <h1>南部避暑慢遊 200 選｜單張地圖版</h1>
-      <p class="sub">把台南、高雄、南投，外加竹山／名間／斗六的景點全部放進同一張地圖。你可以直接縮放、拖曳、點 pin，下面的卡片也能左右滑著看。</p>
-      <div class="stats">
-        <div class="stat"><b>36</b><span>台南</span></div>
-        <div class="stat"><b>40</b><span>嘉義</span></div>
-        <div class="stat"><b>40</b><span>特色咖啡</span></div>
-        <div class="stat"><b>40</b><span>休閒農場</span></div>
-        <div class="stat"><b>19</b><span>高雄</span></div>
-        <div class="stat"><b>21</b><span>南投</span></div>
-        <div class="stat"><b>4</b><span>雲林</span></div>
+  <div class="app">
+    <header class="hero">
+      <div class="hero-grid">
+        <div>
+          <div class="eyebrow">✈️ 山海漫旅｜台灣慢遊提案</div>
+          <h1>把城市、山林、海線
+          做成一頁好逛的旅遊網站</h1>
+          <p class="lead">從台南老街到南投山景、從嘉義咖啡到高雄港灣，這是一個以「慢遊」為主題的旅遊入口：可搜尋、可篩選、可點選景點卡片，快速找到你的下一段假期靈感。</p>
+          <div class="hero-actions">
+            <a class="btn primary" href="#explore">開始探索</a>
+            <a class="btn" href="#routes">看行程靈感</a>
+          </div>
+          <div class="stats">
+            <div class="stat"><b>12</b><span>精選目的地</span></div>
+            <div class="stat"><b>6</b><span>主題路線</span></div>
+            <div class="stat"><b>100%</b><span>響應式頁面</span></div>
+          </div>
+        </div>
+        <div class="hero-side">
+          <div class="mini-card">
+            <h3>今日推薦</h3>
+            <p>早上去山城喝咖啡，午後轉往海線看夕陽，晚上回到老街吃小吃。這種節奏最適合放慢腳步的週末。</p>
+          </div>
+          <div class="mini-card">
+            <h3>網站特色</h3>
+            <p>支援搜尋與分類篩選、卡片點選切換主視覺、附上 Google Maps 連結，直接就能延伸成可用的旅遊入口頁。</p>
+          </div>
+        </div>
       </div>
-    </div>
-  </section>
+    </header>
 
-  <div class="controls">
-    <input id="q" placeholder="搜尋地點 / 體驗 / 吃 / 室內…">
-    <select id="county">
-      <option value="all">全部縣市</option>
-      <option value="台南">台南</option>
-      <option value="嘉義">嘉義</option>
-      <option value="咖啡">特色咖啡</option>
-      <option value="農場">休閒農場</option>
-      <option value="高雄">高雄</option>
-      <option value="南投">南投</option>
-      <option value="雲林">雲林</option>
-    </select>
-    <button id="fit">回到全圖</button>
-    <button id="next">下一個</button>
-    <div class="hint">操作：點 pin 看介紹；下方卡片可左右滑動；搜尋後地圖與卡片同步過濾。</div>
+    <section class="toolbar" id="explore">
+      <div class="searchbar">
+        <div class="search-row">
+          <input id="q" placeholder="搜尋景點、縣市、玩法，例如：咖啡、老街、親子、海景…">
+          <select id="region">
+            <option value="all">全部區域</option>
+            <option value="北部">北部</option>
+            <option value="中部">中部</option>
+            <option value="南部">南部</option>
+            <option value="東部">東部</option>
+          </select>
+        </div>
+        <div class="chips" id="chips">
+          <button class="chip active" data-tag="all">全部</button>
+          <button class="chip" data-tag="海景">海景</button>
+          <button class="chip" data-tag="山林">山林</button>
+          <button class="chip" data-tag="老街">老街</button>
+          <button class="chip" data-tag="咖啡">咖啡</button>
+          <button class="chip" data-tag="親子">親子</button>
+          <button class="chip" data-tag="美食">美食</button>
+        </div>
+      </div>
+      <div class="filters">
+        <div class="filters-top">
+          <div>
+            <div class="count" id="countText">12 個目的地</div>
+            <strong>篩選同步更新卡片</strong>
+          </div>
+          <a class="btn" href="https://www.google.com/maps" target="_blank" rel="noopener">開啟地圖</a>
+        </div>
+        <div class="legend">
+          <span><i style="background:#67e8f9"></i>海線</span>
+          <span><i style="background:#34d399"></i>山城</span>
+          <span><i style="background:#fbbf24"></i>古城</span>
+          <span><i style="background:#fb7185"></i>夜生活</span>
+        </div>
+      </div>
+    </section>
+
+    <main class="main">
+      <section class="feature" aria-live="polite">
+        <div class="feature-visual">
+          <div class="badge" id="badge">南部 · 海景</div>
+          <img id="featureImage" alt="精選旅遊目的地照片" src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80">
+        </div>
+        <div class="feature-body">
+          <h2 id="featureTitle">台南｜安平港與老街慢旅</h2>
+          <div class="feature-meta" id="featureMeta"></div>
+          <p id="featureDesc">沿著老城區一路散步到海邊，白天吃小吃、看古蹟，傍晚再去港邊吹風。適合安排半日到一日的輕旅行。</p>
+          <div class="feature-grid">
+            <div class="info"><b>最佳時段</b><span id="bestTime">清晨 / 傍晚</span></div>
+            <div class="info"><b>適合族群</b><span id="audience">情侶、朋友、自由行</span></div>
+            <div class="info"><b>延伸玩法</b><span id="extra">老街散步、海港夜景、在地美食</span></div>
+          </div>
+          <div class="feature-actions">
+            <a id="mapsLink" class="btn primary" href="#" target="_blank" rel="noopener">Google Maps</a>
+            <button class="btn" id="nextBtn">下一個目的地</button>
+          </div>
+        </div>
+      </section>
+
+      <aside class="rail">
+        <div class="rail-head">
+          <h3>精選景點卡片</h3>
+          <span class="count" id="railCount">顯示 12 / 12</span>
+        </div>
+        <div class="rail-list" id="railList"></div>
+      </aside>
+    </main>
+
+    <section class="routes" id="routes">
+      <h3>行程靈感</h3>
+      <div class="route-grid">
+        <div class="route">
+          <b>海線一日</b>
+          <p>早上衝海邊看光線，下午回市區吃午茶，晚上留給港口夜景。</p>
+          <small>建議：高雄／台南／東港</small>
+        </div>
+        <div class="route">
+          <b>山城慢兩日</b>
+          <p>咖啡館、步道、住宿都拉到山裡，適合想遠離人潮的旅人。</p>
+          <small>建議：南投／嘉義／台中山區</small>
+        </div>
+        <div class="route">
+          <b>親子輕旅</b>
+          <p>以農場、老街、手作體驗為主，行程不緊湊，長輩小孩都好走。</p>
+          <small>建議：雲林／南投／嘉義</small>
+        </div>
+      </div>
+    </section>
+
+    <div class="footer">靈感取自原始地圖式景點整理頁，重新設計為更像「旅遊網站」的一頁式入口。</div>
   </div>
 
-  <main class="layout">
-    <div id="map"></div>
-    <section class="bottom">
-      <div class="bottom-head">
-        <h2>景點卡片</h2>
-        <div class="count" id="countText">200 個地點</div>
-      </div>
-      <div class="legend">
-        <span><i style="background:var(--teal)"></i>台南</span>
-        <span><i style="background:#fb923c"></i>嘉義</span>
-        <span><i style="background:#ff6b9d"></i>特色咖啡</span>
-        <span><i style="background:#4ade80"></i>休閒農場</span>
-        <span><i style="background:var(--green)"></i>高雄</span>
-        <span><i style="background:var(--amber)"></i>南投</span>
-        <span><i style="background:var(--violet)"></i>雲林</span>
-      </div>
-      <div id="rail" class="rail"></div>
-    </s[{"id": "spot-01","county": "台南","name": "國立臺灣歷史博物館","lat": 23.06,"lng": 120.28,"tags": ["室內","親子","展覽","冷氣"],"note": "大型室內館，走動量低，適合避暑慢逛。","color": "#22d3ee","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E5%9C%8B%E7%AB%8B%E8%87%BA%E7%81%A3%E6%AD%B7%E5%8F%B2%E5%8D%9A%E7%89%A9%E9%A4%A8+%E5%8F%B0%E5%8D%97+%E5%8F%B0%E7%81%A3"},{"id": "spot-02","county": "台南","name": "黑橋牌香腸博物館","lat": 22.99,"lng": 120.18,"tags": ["觀光工廠","吃","DIY","室內"],"note": "看製程、買肉乾香腸，吃東西很方便。","color": "#22d3ee","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E9%BB%91%E6%A9%8B%E7%89%8C%E9%A6%99%E8%85%B8%E5%8D%9A%E7%89%A9%E9%A4%A8+%E5%8F%B0%E5%8D%97+%E5%8F%B0%E7%81%A3"},{"id": "spot-03","county": "台南","name": "南科考古館","lat": 23.08,"lng": 120.29,"tags": ["室內","親子","展覽","互動"],"note": "兒童廳和互動展很適合輕鬆玩。","color": "#22d3ee","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E5%8D%97%E7%A7%91%E8%80%83%E5%8F%A4%E9%A4%A8+%E5%8F%B0%E5%8D%97+%E5%8F%B0%E7%81%A3"},{"id": "spot-04","county": "台南","name": "山上花園水道博物館","lat": 23.08,"lng": 120.36,"tags": ["歷史","園區","拍照","涼爽"],"note": "可分段逛，停留時間彈性大。","color": "#22d3ee","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E5%B1%B1%E4%B8%8A%E8%8A%B1%E5%9C%92%E6%B0%B4%E9%81%93%E5%8D%9A%E7%89%A9%E9%A4%A8+%E5%8F%B0%E5%8D%97+%E5%8F%B0%E7%81%A3"},{"id": "spot-05","county": "台南","name": "十鼓仁糖文創園區","lat": 22.92,"lng": 120.28,"tags": ["體驗","表演","吃","夜遊"],"note": "有表演與餐飲，玩感強。","color": "#22d3ee","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E5%8D%81%E9%BC%93%E4%BB%81%E7%B3%96%E6%96%87%E5%89%B5%E5%9C%92%E5%8D%80+%E5%8F%B0%E5%8D%97+%E5%8F%B0%E7%81%A3"},{"id": "spot-06","county": "台南","name": "瓜瓜園地瓜生態故事館","lat": 23.03,"lng": 120.31,"tags": ["觀光工廠","吃","DIY","親子"],"note": "地瓜主題、可買點心和做體驗。","color": "#22d3ee","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E7%93%9C%E7%93%9C%E5%9C%92%E5%9C%B0%E7%93%9C%E7%94%9F%E6%85%8B%E6%95%85%E4%BA%8B%E9%A4%A8+%E5%8F%B0%E5%8D%97+%E5%8F%B0%E7%81%A3"},{"id": "spot-07","county": "台南","name": "奇美博物館","lat": 22.92,"lng": 120.28,"tags": ["室內","展覽","餐飲","經典"],"note": "冷氣足，展覽和餐廳都完整。","color": "#22d3ee","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E5%A5%87%E7%BE%8E%E5%8D%9A%E7%89%A9%E9%A4%A8+%E5%8F%B0%E5%8D%97+%E5%8F%B0%E7%81%A3"},{"id": "spot-08","county": "台南","name": "臺南家具產業博物館","lat": 22.91,"lng": 120.26,"tags": ["DIY","室內","文化","親子"],"note": "木作與家具文化，停留舒服。","color": "#22d3ee","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E8%87%BA%E5%8D%97%E5%AE%B6%E5%85%B7%E7%94%A2%E6%A5%AD%E5%8D%9A%E7%89%A9%E9%A4%A8+%E5%8F%B0%E5%8D%97+%E5%8F%B0%E7%81%A3"},{"id": "spot-09","county": "台南","name": "台灣金屬創意館","lat": 23.06,"lng": 120.25,"tags": ["DIY","觀光工廠","室內","餐飲"],"note": "金屬主題＋手作體驗。","color": "#22d3ee","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E5%8F%B0%E7%81%A3%E9%87%91%E5%B1%AC%E5%89%B5%E6%84%8F%E9%A4%A8+%E5%8F%B0%E5%8D%97+%E5%8F%B0%E7%81%A3"},{"id": "spot-10","county": "台南","name": "安平出張所（夕遊出張所）","lat": 22.99,"lng": 120.16,"tags": ["DIY","吃","日式","拍照"],"note": "生日鹽、水豚與伴手禮很好拍。","color": "#22d3ee","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E5%AE%89%E5%B9%B3%E5%87%BA%E5%BC%B5%E6%89%80%EF%BC%88%E5%A4%95%E9%81%8A%E5%87%BA%E5%BC%B5%E6%89%80%EF%BC%89+%E5%8F%B0%E5%8D%97+%E5%8F%B0%E7%81%A3"},{"id": "spot-11","county": "台南","name": "樹谷生活科學館","lat": 23.08,"lng": 120.28,"tags": ["室內","親子","科學","冷氣"],"note": "適合不想走太多的人。","color": "#22d3ee","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E6%A8%B9%E8%B0%B7%E7%94%9F%E6%B4%BB%E7%A7%91%E5%AD%B8%E9%A4%A8+%E5%8F%B0%E5%8D%97+%E5%8F%B0%E7%81%A3"},{"id": "spot-12","county": "台南","name": "南瀛天文館","lat": 23.15,"lng": 120.34,"tags": ["室內","親子","夜間","科普"],"note": "展示與劇場，輕鬆避暑。","color": "#22d3ee","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E5%8D%97%E7%80%9B%E5%A4%A9%E6%96%87%E9%A4%A8+%E5%8F%B0%E5%8D%97+%E5%8F%B0%E7%81%A3"},{"id": "spot-13","county": "台南","name": "臺南市立圖書館總館","lat": 23.02,"lng": 120.26,"tags": ["室內","冷氣","咖啡","閱讀"],"note": "喝咖啡看書很放鬆。","color": "#22d3ee","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E8%87%BA%E5%8D%97%E5%B8%82%E7%AB%8B%E5%9C%96%E6%9B%B8%E9%A4%A8%E7%B8%BD%E9%A4%A8+%E5%8F%B0%E5%8D%97+%E5%8F%B0%E7%81%A3"},{"id": "spot-14","county": "台南","name": "安平定情碼頭德陽艦園區","lat": 22.99,"lng": 120.16,"tags": ["軍艦","互動","拍照","周邊吃"],"note": "特別體驗感強，旁邊也好覓食。","color": "#22d3ee","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E5%AE%89%E5%B9%B3%E5%AE%9A%E6%83%85%E7%A2%BC%E9%A0%AD%E5%BE%B7%E9%99%BD%E8%89%A6%E5%9C%92%E5%8D%80+%E5%8F%B0%E5%8D%97+%E5%8F%B0%E7%81%A3"},{"id": "spot-15","county": "台南","name": "台南文化創意產業園區","lat": 22.99,"lng": 120.2,"tags": ["室內","展覽","選物","咖啡"],"note": "展覽＋咖啡，適合短停。","color": "#22d3ee","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E5%8F%B0%E5%8D%97%E6%96%87%E5%8C%96%E5%89%B5%E6%84%8F%E7%94%A2%E6%A5%AD%E5%9C%92%E5%8D%80+%E5%8F%B0%E5%8D%97+%E5%8F%B0%E7%81%A3"},{"id": "spot-16","county": "台南","name": "臺南市美術館2館","lat": 22.99,"lng": 120.2,"tags": ["室內","展覽","咖啡","拍照"],"note": "冷氣、拍照、喝咖啡都可。","color": "#22d3ee","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E8%87%BA%E5%8D%97%E5%B8%82%E7%BE%8E%E8%A1%93%E9%A4%A82%E9%A4%A8+%E5%8F%B0%E5%8D%97+%E5%8F%B0%E7%81%A3"},{"id": "spot-17","county": "高雄","name": "佛光山佛陀紀念館","lat": 22.75,"lng": 120.45,"tags": ["室內","素食","展覽","免費"],"note": "餐飲多，空間大但可只逛主館。","color": "#34d399","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E4%BD%9B%E5%85%89%E5%B1%B1%E4%BD%9B%E9%99%80%E7%B4%80%E5%BF%B5%E9%A4%A8+%E9%AB%98%E9%9B%84+%E5%8F%B0%E7%81%A3"},{"id": "spot-18","county": "高雄","name": "國立科學工藝博物館","lat": 22.65,"lng": 120.33,"tags": ["室內","親子","展覽","餐飲"],"note": "展區多，待半天很剛好。","color": "#34d399","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E5%9C%8B%E7%AB%8B%E7%A7%91%E5%AD%B8%E5%B7%A5%E8%97%9D%E5%8D%9A%E7%89%A9%E9%A4%A8+%E9%AB%98%E9%9B%84+%E5%8F%B0%E7%81%A3"},{"id": "spot-19","county": "高雄","name": "逍遙園","lat": 22.63,"lng": 120.31,"tags": ["歷史","室內","拍照","輕鬆"],"note": "範圍不大，適合慢慢看。","color": "#34d399","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E9%80%8D%E9%81%99%E5%9C%92+%E9%AB%98%E9%9B%84+%E5%8F%B0%E7%81%A3"},{"id": "spot-20","county": "高雄","name": "美濃客家文物館","lat": 22.9,"lng": 120.56,"tags": ["室內","文化","DIY","餐飲"],"note": "客家文化＋體驗，走路不多。","color": "#34d399","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E7%BE%8E%E6%BF%83%E5%AE%A2%E5%AE%B6%E6%96%87%E7%89%A9%E9%A4%A8+%E9%AB%98%E9%9B%84+%E5%8F%B0%E7%81%A3"},{"id": "spot-21","county": "高雄","name": "美濃民俗村","lat": 22.9,"lng": 120.55,"tags": ["吃","DIY","客家","伴手禮"],"note": "擂茶、紙傘、清冰很完整。","color": "#34d399","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E7%BE%8E%E6%BF%83%E6%B0%91%E4%BF%97%E6%9D%91+%E9%AB%98%E9%9B%84+%E5%8F%B0%E7%81%A3"},{"id": "spot-22","county": "高雄","name": "旗山糖廠","lat": 22.89,"lng": 120.48,"tags": ["冰品","懷舊","拍照","親子"],"note": "吃冰＋看糖業，很快樂。","color": "#34d399","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E6%97%97%E5%B1%B1%E7%B3%96%E5%BB%A0+%E9%AB%98%E9%9B%84+%E5%8F%B0%E7%81%A3"},{"id": "spot-23","county": "高雄","name": "橋頭糖廠","lat": 22.75,"lng": 120.31,"tags": ["冰品","五分車","懷舊","吃"],"note": "坐車、吃冰、散步都可。","color": "#34d399","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E6%A9%8B%E9%A0%AD%E7%B3%96%E5%BB%A0+%E9%AB%98%E9%9B%84+%E5%8F%B0%E7%81%A3"},{"id": "spot-24","county": "高雄","name": "哈瑪星台灣鐵道館","lat": 22.62,"lng": 120.29,"tags": ["室內","鐵道","親子","冷氣"],"note": "火車迷很適合，體驗感強。","color": "#34d399","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E5%93%88%E7%91%AA%E6%98%9F%E5%8F%B0%E7%81%A3%E9%90%B5%E9%81%93%E9%A4%A8+%E9%AB%98%E9%9B%84+%E5%8F%B0%E7%81%A3"},{"id": "spot-25","county": "高雄","name": "岡山航空教育展示館","lat": 22.8,"lng": 120.3,"tags": ["室內","軍機","親子","展覽"],"note": "看飛機和模型，不太曬。","color": "#34d399","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E5%B2%A1%E5%B1%B1%E8%88%AA%E7%A9%BA%E6%95%99%E8%82%B2%E5%B1%95%E7%A4%BA%E9%A4%A8+%E9%AB%98%E9%9B%84+%E5%8F%B0%E7%81%A3"},{"id": "spot-26","county": "高雄","name": "紅頂穀創穀物文創樂園","lat": 22.67,"lng": 120.32,"tags": ["觀光工廠","吃","DIY","咖啡"],"note": "吃飯＋手作＋買伴手禮。","color": "#34d399","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E7%B4%85%E9%A0%82%E7%A9%80%E5%89%B5%E7%A9%80%E7%89%A9%E6%96%87%E5%89%B5%E6%A8%82%E5%9C%92+%E9%AB%98%E9%9B%84+%E5%8F%B0%E7%81%A3"},{"id": "spot-27","county": "高雄","name": "鳳儀書院","lat": 22.63,"lng": 120.36,"tags": ["歷史","拍照","文化","小吃"],"note": "範圍不大，順路很好逛。","color": "#34d399","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E9%B3%B3%E5%84%80%E6%9B%B8%E9%99%A2+%E9%AB%98%E9%9B%84+%E5%8F%B0%E7%81%A3"},{"id": "spot-28","county": "高雄","name": "高雄市客家文物館","lat": 22.64,"lng": 120.31,"tags": ["室內","文化","親子","冷氣"],"note": "可認識客家文化，輕鬆。","color": "#34d399","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E9%AB%98%E9%9B%84%E5%B8%82%E5%AE%A2%E5%AE%B6%E6%96%87%E7%89%A9%E9%A4%A8+%E9%AB%98%E9%9B%84+%E5%8F%B0%E7%81%A3"},{"id": "spot-29","county": "高雄","name": "衛武營國家藝術文化中心","lat": 22.64,"lng": 120.36,"tags": ["室內","藝術","咖啡","建築"],"note": "建築漂亮，周邊餐飲也多。","color": "#34d399","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E8%A1%9B%E6%AD%A6%E7%87%9F%E5%9C%8B%E5%AE%B6%E8%97%9D%E8%A1%93%E6%96%87%E5%8C%96%E4%B8%AD%E5%BF%83+%E9%AB%98%E9%9B%84+%E5%8F%B0%E7%81%A3"},{"id": "spot-30","county": "高雄","name": "大東文化藝術中心","lat": 22.63,"lng": 120.36,"tags": ["室內","展演","咖啡","拍照"],"note": "吹冷氣看展演，節奏慢。","color": "#34d399","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E5%A4%A7%E6%9D%B1%E6%96%87%E5%8C%96%E8%97%9D%E8%A1%93%E4%B8%AD%E5%BF%83+%E9%AB%98%E9%9B%84+%E5%8F%B0%E7%81%A3"},{"id": "spot-31","county": "高雄","name": "內惟藝術中心","lat": 22.68,"lng": 120.28,"tags": ["室內","展覽","咖啡","美術"],"note": "新式藝文空間，短停很適合。","color": "#34d399","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E5%85%A7%E6%83%9F%E8%97%9D%E8%A1%93%E4%B8%AD%E5%BF%83+%E9%AB%98%E9%9B%84+%E5%8F%B0%E7%81%A3"},{"id": "spot-32","county": "高雄","name": "高雄市立圖書館總館","lat": 22.62,"lng": 120.3,"tags": ["室內","冷氣","閱讀","咖啡"],"note": "休息感很強，適合降溫。","color": "#34d399","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E9%AB%98%E9%9B%84%E5%B8%82%E7%AB%8B%E5%9C%96%E6%9B%B8%E9%A4%A8%E7%B8%BD%E9%A4%A8+%E9%AB%98%E9%9B%84+%E5%8F%B0%E7%81%A3"},{"id": "spot-33","county": "高雄","name": "高雄市立美術館","lat": 22.67,"lng": 120.29,"tags": ["室內","展覽","散步","咖啡"],"note": "以展覽為主，走法彈性大。","color": "#34d399","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E9%AB%98%E9%9B%84%E5%B8%82%E7%AB%8B%E7%BE%8E%E8%A1%93%E9%A4%A8+%E9%AB%98%E9%9B%84+%E5%8F%B0%E7%81%A3"},{"id": "spot-34","county": "高雄","name": "旗津貝殼館","lat": 22.61,"lng": 120.27,"tags": ["室內","親子","海洋","展覽"],"note": "可和海邊行程搭配。","color": "#34d399","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E6%97%97%E6%B4%A5%E8%B2%9D%E6%AE%BC%E9%A4%A8+%E9%AB%98%E9%9B%84+%E5%8F%B0%E7%81%A3"},{"id": "spot-35","county": "高雄","name": "高雄市皮影戲館","lat": 22.8,"lng": 120.29,"tags": ["室內","文化","親子","展演"],"note": "小而美，適合短時間玩。","color": "#34d399","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E9%AB%98%E9%9B%84%E5%B8%82%E7%9A%AE%E5%BD%B1%E6%88%B2%E9%A4%A8+%E9%AB%98%E9%9B%84+%E5%8F%B0%E7%81%A3"},{"id": "spot-36","county": "南投","name": "溪頭自然教育園區","lat": 23.67,"lng": 120.79,"tags": ["山林","避暑","步道","涼爽"],"note": "真涼，但可只走主路線。","color": "#fbbf24","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E6%BA%AA%E9%A0%AD%E8%87%AA%E7%84%B6%E6%95%99%E8%82%B2%E5%9C%92%E5%8D%80+%E5%8D%97%E6%8A%95+%E5%8F%B0%E7%81%A3"},{"id": "spot-37","county": "南投","name": "妖怪村","lat": 23.67,"lng": 120.79,"tags": ["吃","拍照","日式","商店街"],"note": "商店街好逛，食物選擇多。","color": "#fbbf24","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E5%A6%96%E6%80%AA%E6%9D%91+%E5%8D%97%E6%8A%95+%E5%8F%B0%E7%81%A3"},{"id": "spot-38","county": "南投","name": "HOHOCHA喝喝茶","lat": 23.88,"lng": 120.93,"tags": ["茶體驗","吃","室內","伴手禮"],"note": "喝茶、吃蛋、買茶都方便。","color": "#fbbf24","mapsUrl": "https://www.google.com/maps/search/?api=1&query=HOHOCHA%E5%96%9D%E5%96%9D%E8%8C%B6+%E5%8D%97%E6%8A%95+%E5%8F%B0%E7%81%A3"},{"id": "spot-39","county": "南投","name": "車埕木業展示館","lat": 23.83,"lng": 120.86,"tags": ["木桶便當","DIY","鐵道","輕鬆"],"note": "車站周邊平地好走。","color": "#fbbf24","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E8%BB%8A%E5%9F%95%E6%9C%A8%E6%A5%AD%E5%B1%95%E7%A4%BA%E9%A4%A8+%E5%8D%97%E6%8A%95+%E5%8F%B0%E7%81%A3"},{"id": "spot-40","county": "南投","name": "半山夢工廠","lat": 23.92,"lng": 120.68,"tags": ["室內","吃","體驗","親子"],"note": "室內多，設施與餐飲都完整。","color": "#fbbf24","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E5%8D%8A%E5%B1%B1%E5%A4%A2%E5%B7%A5%E5%BB%A0+%E5%8D%97%E6%8A%95+%E5%8F%B0%E7%81%A3"},{"id": "spot-41","county": "南投","name": "九族文化村","lat": 23.85,"lng": 120.93,"tags": ["文化","纜車","餐飲","體驗"],"note": "可搭纜車，體驗感很強。","color": "#fbbf24","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E4%B9%9D%E6%97%8F%E6%96%87%E5%8C%96%E6%9D%91+%E5%8D%97%E6%8A%95+%E5%8F%B0%E7%81%A3"},{"id": "spot-42","county": "南投","name": "南投酒廠","lat": 23.91,"lng": 120.68,"tags": ["酒香","室內","吃","伴手禮"],"note": "試飲和伴手禮很方便。","color": "#fbbf24","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E5%8D%97%E6%8A%95%E9%85%92%E5%BB%A0+%E5%8D%97%E6%8A%95+%E5%8F%B0%E7%81%A3"},{"id": "spot-43","county": "南投","name": "廣興紙寮","lat": 23.96,"lng": 120.98,"tags": ["DIY","造紙","室內","親子"],"note": "手工紙體驗很適合短停。","color": "#fbbf24","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E5%BB%A3%E8%88%88%E7%B4%99%E5%AF%AE+%E5%8D%97%E6%8A%95+%E5%8F%B0%E7%81%A3"},{"id": "spot-44","county": "南投","name": "18度C巧克力工房","lat": 23.97,"lng": 120.97,"tags": ["吃","甜點","伴手禮","休息"],"note": "甜點補給很適合。","color": "#fbbf24","mapsUrl": "https://www.google.com/maps/search/?api=1&query=18%E5%BA%A6C%E5%B7%A7%E5%85%8B%E5%8A%9B%E5%B7%A5%E6%88%BF+%E5%8D%97%E6%8A%95+%E5%8F%B0%E7%81%A3"},{"id": "spot-45","county": "南投","name": "日月老茶廠","lat": 23.88,"lng": 120.92,"tags": ["茶體驗","吃","日式","拍照"],"note": "茶香和導覽都很有特色。","color": "#fbbf24","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E6%97%A5%E6%9C%88%E8%80%81%E8%8C%B6%E5%BB%A0+%E5%8D%97%E6%8A%95+%E5%8F%B0%E7%81%A3"},{"id": "spot-46","county": "南投","name": "埔里紙教堂","lat": 23.96,"lng": 120.92,"tags": ["建築","拍照","咖啡","散步"],"note": "以拍照和喝飲料為主。","color": "#fbbf24","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E5%9F%94%E9%87%8C%E7%B4%99%E6%95%99%E5%A0%82+%E5%8D%97%E6%8A%95+%E5%8F%B0%E7%81%A3"},{"id": "spot-47","county": "南投","name": "元首館","lat": 23.96,"lng": 120.97,"tags": ["拍照","吃","伴手禮","親子"],"note": "好拍也能順便買點心。","color": "#fbbf24","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E5%85%83%E9%A6%96%E9%A4%A8+%E5%8D%97%E6%8A%95+%E5%8F%B0%E7%81%A3"},{"id": "spot-48","county": "南投","name": "妮娜巧克力夢想城堡","lat": 23.96,"lng": 120.95,"tags": ["甜點","DIY","室內","拍照"],"note": "巧克力主題，體驗感夠。","color": "#fbbf24","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E5%A6%AE%E5%A8%9C%E5%B7%A7%E5%85%8B%E5%8A%9B%E5%A4%A2%E6%83%B3%E5%9F%8E%E5%A0%A1+%E5%8D%97%E6%8A%95+%E5%8F%B0%E7%81%A3"},{"id": "spot-49","county": "南投","name": "車埕林班道","lat": 23.83,"lng": 120.86,"tags": ["伴手禮","DIY","吃","木作"],"note": "和車埕可一起玩。","color": "#fbbf24","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E8%BB%8A%E5%9F%95%E6%9E%97%E7%8F%AD%E9%81%93+%E5%8D%97%E6%8A%95+%E5%8F%B0%E7%81%A3"},{"id": "spot-50","county": "南投","name": "日月潭纜車站","lat": 23.86,"lng": 120.94,"tags": ["纜車","風景","輕鬆","交通"],"note": "搭纜車輕鬆看景，不用走太多。","color": "#fbbf24","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E6%97%A5%E6%9C%88%E6%BD%AD%E7%BA%9C%E8%BB%8A%E7%AB%99+%E5%8D%97%E6%8A%95+%E5%8F%B0%E7%81%A3"},{"id": "spot-51","county": "南投","name": "日月潭水社遊客中心","lat": 23.86,"lng": 120.98,"tags": ["室內","服務","休息","餐飲"],"note": "休息和補給的好中繼點。","color": "#fbbf24","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E6%97%A5%E6%9C%88%E6%BD%AD%E6%B0%B4%E7%A4%BE%E9%81%8A%E5%AE%A2%E4%B8%AD%E5%BF%83+%E5%8D%97%E6%8A%95+%E5%8F%B0%E7%81%A3"},{"id": "spot-52","county": "南投","name": "采棉居寢飾文化舘","lat": 23.76,"lng": 120.68,"tags": ["DIY","觀光工廠","室內","親子"],"note": "寢飾主題觀光工廠，體驗與採買都方便。","color": "#fbbf24","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E9%87%87%E6%A3%89%E5%B1%85%E5%AF%A2%E9%A3%BE%E6%96%87%E5%8C%96%E8%88%98+%E5%8D%97%E6%8A%95+%E5%8F%B0%E7%81%A3"},{"id": "spot-53","county": "南投","name": "車籠埔斷層保存園區","lat": 23.76,"lng": 120.68,"tags": ["室內","科學","親子","展覽"],"note": "世界級斷層槽溝，室內好逛又有教育感。","color": "#fbbf24","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E8%BB%8A%E7%B1%A0%E5%9F%94%E6%96%B7%E5%B1%A4%E4%BF%9D%E5%AD%98%E5%9C%92%E5%8D%80+%E5%8D%97%E6%8A%95+%E5%8F%B0%E7%81%A3"},{"id": "spot-54","county": "南投","name": "竹山紫南宮","lat": 23.76,"lng": 120.7,"tags": ["廟宇","吃","伴手禮","輕鬆"],"note": "求發財金、吃小吃、順遊都方便。","color": "#fbbf24","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E7%AB%B9%E5%B1%B1%E7%B4%AB%E5%8D%97%E5%AE%AE+%E5%8D%97%E6%8A%95+%E5%8F%B0%E7%81%A3"},{"id": "spot-55","county": "南投","name": "茶二指故事館","lat": 23.84,"lng": 120.64,"tags": ["茶體驗","吃","拍照","親子"],"note": "茶園、珍奶裝置和茶體驗都很有趣。","color": "#fbbf24","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E8%8C%B6%E4%BA%8C%E6%8C%87%E6%95%85%E4%BA%8B%E9%A4%A8+%E5%8D%97%E6%8A%95+%E5%8F%B0%E7%81%A3"},{"id": "spot-56","county": "南投","name": "松柏嶺遊客中心","lat": 23.83,"lng": 120.64,"tags": ["茶體驗","室內","免費","休息"],"note": "茶文化主題館，免門票也能喝茶放鬆。","color": "#fbbf24","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E6%9D%BE%E6%9F%8F%E5%B6%BA%E9%81%8A%E5%AE%A2%E4%B8%AD%E5%BF%83+%E5%8D%97%E6%8A%95+%E5%8F%B0%E7%81%A3"},{"id": "spot-57","county": "雲林","name": "大同醬油黑金釀造館","lat": 23.719425,"lng": 120.597991,"tags": ["觀光工廠","吃","DIY","室內"],"note": "醬油試吃、DIY、伴手禮都很完整。","color": "#a78bfa","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E5%A4%A7%E5%90%8C%E9%86%AC%E6%B2%B9%E9%BB%91%E9%87%91%E9%87%80%E9%80%A0%E9%A4%A8+%E9%9B%B2%E6%9E%97+%E5%8F%B0%E7%81%A3"},{"id": "spot-58","county": "雲林","name": "鵝媽媽鵝童樂園","lat": 23.71,"lng": 120.58,"tags": ["親子","吃","DIY","免費"],"note": "免門票又有餐廳和DIY，帶小孩很適合。","color": "#a78bfa","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E9%B5%9D%E5%AA%BD%E5%AA%BD%E9%B5%9D%E7%AB%A5%E6%A8%82%E5%9C%92+%E9%9B%B2%E6%9E%97+%E5%8F%B0%E7%81%A3"},{"id": "spot-59","county": "雲林","name": "斗六行啟記念館","lat": 23.71,"lng": 120.54,"tags": ["歷史","室內","拍照","輕鬆"],"note": "小巧好逛，順遊太平老街很方便。","color": "#a78bfa","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E6%96%97%E5%85%AD%E8%A1%8C%E5%95%9F%E8%A8%98%E5%BF%B5%E9%A4%A8+%E9%9B%B2%E6%9E%97+%E5%8F%B0%E7%81%A3"},{"id": "spot-60","county": "雲林","name": "太平老街","lat": 23.71,"lng": 120.54,"tags": ["吃","拍照","老街","小吃"],"note": "吃小吃、買冰、逛老屋最方便。","color": "#a78bfa","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E5%A4%AA%E5%B9%B3%E8%80%81%E8%A1%97+%E9%9B%B2%E6%9E%97+%E5%8F%B0%E7%81%A3"},{"id": "spot-61","county": "台南","name": "官田區遊客中心","lat": 23.185,"lng": 120.33,"tags": ["室內","冷氣","免費","休息"],"note": "免門票的休憩點，了解官田菱角文化與在地資訊。","color": "#22d3ee","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E5%AE%98%E7%94%B0%E5%8D%80%E9%81%8A%E5%AE%A2%E4%B8%AD%E5%BF%83+%E5%8F%B0%E5%8D%97+%E5%8F%B0%E7%81%A3"},{"id": "spot-62","county": "台南","name": "隆田 CHACHA 文化資產教育園區","lat": 23.19,"lng": 120.35,"tags": ["室內","沉浸式劇場","互動","DIY"],"note": "全台最大沉浸劇場、巨型彈珠台，走路不多超好玩。","color": "#22d3ee","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E9%9A%86%E7%94%B0+CHACHA+%E6%96%87%E5%8C%96%E8%B3%87%E7%94%A2%E6%95%99%E8%82%B2%E5%9C%92%E5%8D%80+%E5%8F%B0%E5%8D%97+%E5%8F%B0%E7%81%A3"},{"id": "spot-63","county": "台南","name": "總爺藝文中心","lat": 23.18,"lng": 120.9,"tags": ["免費","日式建築","拍照","咖啡"],"note": "麻豆糖廠古蹟群，紅磚建築超好拍，下午吹冷氣喝咖啡。","color": "#22d3ee","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E7%B8%BD%E8%88%88%E8%97%9D%E6%96%87%E4%B8%AD%E5%BF%83+%E5%8F%B0%E5%8D%97+%E5%8F%B0%E7%81%A3"},{"id": "spot-64","county": "台南","name": "麻豆代天府","lat": 23.18,"lng": 120.285,"tags": ["廟宇","潮龍宮","拍照","免費"],"note": "全球最大龍雕像，超好拍，廟區周邊美食多。","color": "#22d3ee","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E9%BA%BB%E8%B1%86%E4%BB%A3%E5%A4%AA%E5%BA%99+%E5%8F%B0%E5%8D%97+%E5%8F%B0%E7%81%A3"},{"id": "spot-65","county": "台南","name": "麻豆農會柚兒園","lat": 23.18,"lng": 120.29,"tags": ["拍照","柚子","免費","文創"],"note": "柚子主題倉庫彩繪，IG打卡超萌。","color": "#22d3ee","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E9%BA%BB%E8%B1%86%E8%BE%B2%E6%9C%83%E6%AA%98%E5%84%BF%E5%9C%92+%E5%8F%B0%E5%8D%97+%E5%8F%B0%E7%81%A3"},{"id": "spot-66","county": "台南","name": "善化糖廠（善糖）","lat": 23.13,"lng": 120.38,"tags": ["冰品","懷舊","免費","紅豆牛奶"],"note": "限定紅豆牛奶冰！大樹下乘涼很愜意。","color": "#22d3ee","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E5%96%84%E5%8C%96%E7%B3%96%E5%BB%A0+%E5%8F%B0%E5%8D%97+%E5%8F%B0%E7%81%A3"},{"id": "spot-67","county": "台南","name": "深緣及水文化園區","lat": 23.13,"lng": 120.37,"tags": ["免費","沈光文","火車站","文化"],"note": "紀念沈光文，有復古火車站可以拍。","color": "#22d3ee","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E6%B7%B1%E7%B7%A3%E5%8F%8A%E6%B0%B4%E6%96%87%E5%8C%96%E5%9C%92%E5%8D%80+%E5%8F%B0%E5%8D%97+%E5%8F%B0%E7%81%A3"},{"id": "spot-68","county": "台南","name": "新營太子宮","lat": 23.31,"lng": 120.29,"tags": ["廟宇","拍照","免費","龍雕"],"note": "超大型龍雕廟宇，拍照超震撼，周邊吃也方便。","color": "#22d3ee","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E6%96%B0%E7%87%9F%E5%A4%AA%E5%AD%90%E5%AE%AB+%E5%8F%B0%E5%8D%97+%E5%8F%B0%E7%81%A3"},{"id": "spot-69","county": "台南","name": "新營文化中心（藝文中心）","lat": 23.31,"lng": 120.32,"tags": ["室內","展覽","冷氣","免費"],"note": "展覽＋演講廳，冷氣足適合避暑休息。","color": "#22d3ee","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E6%96%B0%E7%87%9F%E6%96%87%E5%8C%96%E4%B8%AD%E5%BF%83+%E5%8F%B0%E5%8D%97+%E5%8F%B0%E7%81%A3"},{"id": "spot-70","county": "台南","name": "新營鐵道藝術村","lat": 23.31,"lng": 120.325,"tags": ["免費","老屋","拍照","文創"],"note": "舊鐵道宿舍改建，木造老屋超有氛圍。","color": "#22d3ee","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E6%96%B0%E7%87%9F%E9%90%B5%E9%81%93%E8%97%9D%E8%A1%93%E6%9D%91+%E5%8F%B0%E5%8D%97+%E5%8F%B0%E7%81%A3"},{"id": "spot-71","county": "台南","name": "白河蓮花公園","lat": 23.38,"lng": 120.45,"tags": ["戶外","免費","蓮花","拍照"],"note": "夏季蓮花季超美，園區有涼亭可休息。","color": "#22d3ee","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E7%99%BD%E6%B2%AB%E9%80%A3%E8%8A%B1%E5%85%AC%E5%9C%92+%E5%8F%B0%E5%8D%97+%E5%8F%B0%E7%81%A3"},{"id": "spot-72","county": "台南","name": "白河關子嶺溫泉","lat": 23.36,"lng": 120.52,"tags": ["溫泉","泡腳","室內","放鬆"],"note": "火山地熱谷＋溫泉，泡腳步道不用走太多。","color": "#22d3ee","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E7%99%BD%E6%B2%AB%E9%96%BC%E5%AD%90%E5%B3%AD%E6%B8%A9%E6%B3%89+%E5%8F%B0%E5%8D%97+%E5%8F%B0%E7%81%A3"},{"id": "spot-73","county": "台南","name": "後壁黑橋牌香腸文化館","lat": 23.33,"lng": 120.38,"tags": ["觀光工廠","吃","免門票","伴手禮"],"note": "黑橋牌分店＋體驗，買香腸肉乾超方便。","color": "#22d3ee","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E5%BE%8C%E8%BE%95%E9%BB%91%E6%A9%8B%E7%89%8C+%E5%8F%B0%E5%8D%97+%E5%8F%B0%E7%81%A3"},{"id": "spot-74","county": "台南","name": "後壁瓦磘溝生態公園","lat": 23.34,"lng": 120.37,"tags": ["免費","生態","步道","涼爽"],"note": "親水步道有樹蔭，夏天走不太熱。","color": "#22d3ee","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E5%BE%8C%E8%BE%95%E7%93%A6%E7%A0%80%E6%B9%9D%E7%94%9F%E6%85%8B%E5%85%AC%E5%9C%92+%E5%8F%B0%E5%8D%97+%E5%8F%B0%E7%81%A3"},{"id": "spot-75","county": "台南","name": "六甲龍肚福德祠（蛇頭山）","lat": 23.2,"lng": 120.33,"tags": ["廟宇","拍照","免費","自然"],"note": "自然山丘超好拍，附近還有蛇頭山步道。","color": "#22d3ee","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E5%85%AD%E7%94%B2%E9%BE%8D%E8%82%83%E4%BC%8F%E5%BE%B7%E8%BC%BF+%E5%8F%B0%E5%8D%97+%E5%8F%B0%E7%81%A3"},{"id": "spot-76","county": "台南","name": "安定興農休閒農場","lat": 23.16,"lng": 120.15,"tags": ["室內","吃","DIY","親子"],"note": "農場內有餐飲和手作體驗，避暑好去處。","color": "#22d3ee","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E5%AE%9A%E5%AE%89%E8%88%88%E8%BE%B2%E4%BC%91%E9%96%92%E8%BE%B2%E5%A0%B4+%E5%8F%B0%E5%8D%97+%E5%8F%B0%E7%81%A3"},{"id": "spot-77","county": "台南","name": "西港慶安宮","lat": 23.13,"lng": 120.13,"tags": ["廟宇","刈香","免費","文化"],"note": "台灣第一廟，王醮刈香名聞全台，廟內冷氣足。","color": "#22d3ee","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E8%A5%BF%E7%82%AF%E5%A5%A5%E5%AE%89%E5%AE%AE+%E5%8F%B0%E5%8D%97+%E5%8F%B0%E7%81%A3"},{"id": "spot-78","county": "台南","name": "學甲慈濟宮","lat": 23.22,"lng": 120.13,"tags": ["廟宇","免費","歷史","小吃"],"note": "學甲開台第一廟，廟區附近有很多在地小吃。","color": "#22d3ee","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E5%AD%B8%E7%94%B2%E6%85%88%E6%BF%9F%E5%AE%AE+%E5%8F%B0%E5%8D%97+%E5%8F%B0%E7%81%A3"},{"id": "spot-79","county": "台南","name": "佳里陽明公園（藍晒圖文創園區）","lat": 23.14,"lng": 120.22,"tags": ["免費","藍晒圖","拍照","文創"],"note": "全台第一個藍晒圖文創園區，免費好拍。","color": "#22d3ee","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E4%BD%B3%E9%87%8C%E9%99%BD%E6%98%8E%E5%85%AC%E5%9C%92+%E8%97%8D%E4%BA%AE%E5%9C%96+%E5%8F%B0%E5%8D%97+%E5%8F%B0%E7%81%A3"},{"id": "spot-80","county": "台南","name": "北門井仔腳鹽田","lat": 23.26,"lng": 120.04,"tags": ["免費","日落","鹽田","夕照"],"note": "最美夕照之一，傍晚去不曬，鹽田咖啡歇腳。","color": "#22d3ee","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E5%8C%97%E9%96%80%E4%BA%95%E4%BB%94%E8%86%9A%E9%BC%AE%E7%94%B0+%E5%8F%B0%E5%8D%97+%E5%8F%B0%E7%81%A3"},{"id": "spot-81","county": "嘉義","name": "故宮南院（故宮博物院南部院區）","lat": 23.472,"lng": 120.365,"tags": ["室內","展覽","冷氣","經典"],"note": "全台最大博物館之一，冷氣超足，展區多可逛半天。","color": "#f5a623","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E6%95%85%E5%AE%AE%E5%8D%97%E9%99%A2+%E5%8F%B0%E7%81%A3"},{"id": "spot-82","county": "嘉義","name": "台灣花磚博物館","lat": 23.475,"lng": 120.442,"tags": ["室內","花磚","拍照","免費"],"note": "全台唯一花磚主題館，免費入場超好拍。","color": "#f5a623","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E8%87%BA%E7%81%A3%E8%8A%B1%E7%A9%8D%E5%8D%9A%E7%89%A9%E9%A4%A8+%E5%8F%B0%E7%81%A3"},{"id": "spot-83","county": "嘉義","name": "嘉義市立美術館","lat": 23.473,"lng": 120.442,"tags": ["室內","展覽","古蹟","冷氣"],"note": "舊監獄改建的美術館，冷氣足適合避暑看展。","color": "#f5a623","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E8%87%BA%E7%81%A3%E8%8A%B1%E7%A9%8D%E5%8D%9A%E7%89%A9%E9%A4%A8+%E5%8F%B0%E7%81%A3"},{"id": "spot-84","county": "嘉義","name": "嘉義舊監獄（獄政博物館）","lat": 23.472,"lng": 120.44,"tags": ["室內","古蹟","免費","歷史"],"note": "國定古蹟，獄政博物館免費參觀，走動量低。","color": "#f5a623","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E5%98%89%E7%BE%A9%E8%88%87%E6%94%BF%E5%8D%9A%E7%89%A9%E9%A4%A8+%E5%8F%B0%E7%81%A3"},{"id": "spot-85","county": "嘉義","name": "嘉義市立博物館","lat": 23.478,"lng": 120.438,"tags": ["室內","展覽","冷氣","免費"],"note": "展示嘉義歷史文化，冷氣充足適合避暑。","color": "#f5a623","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E5%8F%B0%E7%81%A3%E8%8A%B1%E7%A9%8D%E5%8D%9A%E7%89%A9%E9%A4%A8+%E5%8F%B0%E7%81%A3"},{"id": "spot-86","county": "嘉義","name": "嘉義文學館（東門町1923）","lat": 23.48,"lng": 120.442,"tags": ["室內","免費","閱讀","日式"],"note": "日式木造建築，圖書館+展間，冷氣舒適。","color": "#f5a623","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E5%8A%89%E5%B8%AB%E5%AD%B8%E6%96%87%E9%A4%A8+%E5%8F%B0%E7%81%A3"},{"id": "spot-87","county": "嘉義","name": "嘉義射日塔","lat": 23.48,"lng": 23.482,"tags": ["拍照","免費","城市景觀","電梯"],"note": "搭電梯到頂樓看嘉義市區全景，不用走路。","color": "#f5a623","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E5%8A%89%E5%B8%AB%E5%B0%84%E6%97%A5%E5%A1%94+%E5%8F%B0%E7%81%A3"},{"id": "spot-88","county": "嘉義","name": "KHTOY絨毛玩偶旗艦館","lat": 23.465,"lng": 120.45,"tags": ["室內","拍照","免費","療癒"],"note": "超療癒絨毛玩偶世界，免費拍照超好玩。","color": "#f5a623","mapsUrl": "https://www.google.com/maps/search/?api=1&query=KHTOY+%E8%97%8D%E6%AF%9B%E5%93%94%E5%96%94%E6%97%97%E8%89%A6%E9%A4%A8+%E5%8F%B0%E7%81%A3"},{"id": "spot-89","county": "嘉義","name": "白人牙膏觀光工廠","lat": 23.465,"lng": 120.448,"tags": ["觀光工廠","免費","伴手禮","室內"],"note": "懷舊糖果品牌，免費參觀買伴手禮。","color": "#f5a623","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E7%99%BD%E4%BA%BA%E7%89%99%E5%B8%90+%E8%A7%%%80%E8%A7%80%E5%B7%A5%E5%BB%A0+%E5%8F%B0%E7%81%A3"},{"id": "spot-90","county": "嘉義","name": "新嘉大昆蟲館","lat": 23.47,"lng": 120.47,"tags": ["室內","親子","冷氣","互動"],"note": "嘉大校內昆蟲館，冷氣超強、互動體驗多。","color": "#f5a623","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E6%96%B0%E5%98%89%E5%A4%A7%E8%99%AB%E8%AD%98%E9%A4%A8+%E5%8F%B0%E7%81%A3"},{"id": "spot-91","county": "嘉義","name": "空氣圖書館","lat": 23.52,"lng": 120.51,"tags": ["免費","閱讀","拍照","森林"],"note": "梅山空氣圖書館，森林系閱讀空間超美。","color": "#f5a623","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E7%A9%BA%E6%B0%A3%E5%9C%96%E6%9B%B8%E9%A4%A8+%E5%8F%B0%E7%81%A3"},{"id": "spot-92","county": "嘉義","name": "老楊方城市觀光工廠","lat": 23.51,"lng": 120.475,"tags": ["觀光工廠","免費","吃","伴手禮"],"note": "方塊酥觀光工廠，免費試吃伴手禮超方便。","color": "#f5a623","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E8%80%81%E6%A5%8A%E6%96%B9%E5%9F%8E%E5%B8%82%E8%A7%80%E5%85%89%E5%B7%A5%E5%BB%A0+%E5%8F%B0%E7%81%A3"},{"id": "spot-93","county": "嘉義","name": "歐樂沃築夢城堡","lat": 23.51,"lng": 120.48,"tags": ["觀光工廠","拍照","巧克力","夢幻"],"note": "台灣首座迪士尼城堡，巧克力主題超夢幻。","color": "#f5a623","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E6%AD%90%E6%A8%82%E6%B2%83%E7%AD%96%E5%A4%A2%E5%9F%8E%E5%A0%A1+%E5%8F%B0%E7%81%A3"},{"id": "spot-94","county": "嘉義","name": "佐登妮絲城堡生技園區","lat": 23.512,"lng": 120.478,"tags": ["觀光工廠","拍照","歐風","下午茶"],"note": "30億打造巴洛克城堡，拍照超美有下午茶。","color": "#f5a623","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E4%BD%90%E7%99%BB%E5%A6%AE%E7%B7%9D%E5%9F%8E%E5%A0%A1+%E5%8F%B0%E7%81%A3"},{"id": "spot-95","county": "嘉義","name": "蓋婭莊園","lat": 23.51,"lng": 120.476,"tags": ["觀光工廠","希臘","拍照","下午茶"],"note": "希臘風格美學生技園區，下午茶+拍照超美。","color": "#f5a623","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E8%92%82%E5%A8%85%E8%AA%BF%E5%9C%92+%E5%8F%B0%E7%81%A3"},{"id": "spot-96","county": "嘉義","name": "丸聚星球","lat": 23.508,"lng": 120.478,"tags": ["觀光工廠","貢丸","免費","親子"],"note": "貢丸主題觀光工廠，免費試吃超好玩。","color": "#f5a623","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E4%B8%B8%E8%81%96%E6%98%9F%E7%90%83+%E5%8F%B0%E7%81%A3"},{"id": "spot-97","county": "嘉義","name": "棒棒鯨奇樂園","lat": 23.47,"lng": 120.38,"tags": ["室內","親子","主題樂園","冷氣"],"note": "南台灣最大室內主題樂園，2000坪超大空間。","color": "#f5a623","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E6%A3%92%E6%A3%92%E9%AF%A8%E5%A5%87%E6%A8%82%E5%9C%92+%E5%8F%B0%E7%81%A3"},{"id": "spot-98","county": "嘉義","name": "新港香藝文化園區","lat": 23.558,"lng": 120.43,"tags": ["免費","製香","DIY","廟宇"],"note": "新港奉天宮旁的製香文化園區，免費參觀。","color": "#f5a623","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E6%96%B0%E8%88%88%E9%A6%99%E8%97%9D%E6%96%87%E5%8C%96%E5%9C%92%E5%8D%80+%E5%8F%B0%E7%81%A3"},{"id": "spot-99","county": "嘉義","name": "新港奉天宮","lat": 23.558,"lng": 120.432,"tags": ["廟宇","免費","媽祖","文化"],"note": "全台最著名的媽祖廟之一，廟內冷氣足。","color": "#f5a623","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E6%96%B0%E8%88%88%E5%A5%89%E5%A4%A9%E5%AE%AE+%E5%8F%B0%E7%81%A3"},{"id": "spot-100","county": "嘉義","name": "品皇咖啡觀光工廠新館","lat": 23.49,"lng": 120.455,"tags": ["觀光工廠","咖啡","免費","伴手禮"],"note": "巨無霸咖啡杯超好拍，免費喝咖啡+市集。","color": "#f5a623","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E5%93%81%E7%9A%87%E5%929%E5%95%A1%E8%A7%80%E5%85%89%E5%B7%A5%E5%BB%A0+%E5%8F%B0%E7%81%A3"},{"id": "spot-101","county": "嘉義","name": "北回二館（北回兒童館）","lat": 23.49,"lng": 120.46,"tags": ["親子","免費","冷氣","溜滑梯"],"note": "無重力拍照場景+戶外溜滑梯，免費吹冷氣。","color": "#f5a623","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E5%8C%97%E5%9B%9E%E4%BA%8C%E9%A4%A8+%E5%8F%B0%E7%81%A3"},{"id": "spot-102","county": "嘉義","name": "冷研碳索館","lat": 23.53,"lng": 120.4,"tags": ["室內","親子","氣體","DIY"],"note": "氣體科普館，乾冰瀑布超夢幻、DIY好玩。","color": "#f5a623","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E5%86%B7%E7%A0%94%E7%A2%B3%E7%B4%A2%E9%A4%A8+%E5%8F%B0%E7%81%A3"},{"id": "spot-103","county": "嘉義","name": "六腳蒜頭糖廠","lat": 23.51,"lng": 120.37,"tags": ["免費","冰品","懷舊","火車"],"note": "糖廠冰品+小火車，復古懷舊超好玩。","color": "#f5a623","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E5%85%AD%E8%86%9A%E8%92%9C%E9%A0%AD%E7%B3%96%E5%BB%A0+%E5%8F%B0%E7%81%A3"},{"id": "spot-104","county": "嘉義","name": "梅子元氣館","lat": 23.53,"lng": 120.54,"tags": ["免費","梅子","伴手禮","拍照"],"note": "梅山梅子製品，伴手禮超有名、拍照可愛。","color": "#f5a623","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E6%A2%85%E5%AD%90%E5%85%83%E6%B0%A3%E9%A4%A8+%E5%8F%B0%E7%81%A3"},{"id": "spot-105","county": "嘉義","name": "太平雲梯","lat": 23.53,"lng": 120.55,"tags": ["免費","雲梯","拍照","雲海"],"note": "台灣最高吊橋，云海超美、傍晚去不曬。","color": "#f5a623","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E5%A4%AA%E5%B9%B3%E9%9B%B2%E6%A2%8B+%E5%8F%B0%E7%81%A3"},{"id": "spot-106","county": "嘉義","name": "獨立山車站","lat": 23.52,"lng": 120.51,"tags": ["免費","懷舊","拍照","鐵道"],"note": "日式木造火車站，超有氛圍好拍照。","color": "#f5a623","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E7%8D%A8%E7%AB%8B%E5%B1%B1%E8%BB%8A%E7%AB%99+%E5%8F%B0%E7%81%A3"},{"id": "spot-107","county": "嘉義","name": "觸口遊客中心","lat": 23.49,"lng": 120.51,"tags": ["免費","觸口","自然","室內"],"note": "阿里山入口的遊客中心，免費冷氣休息。","color": "#f5a623","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E8%A7%91%E5%8F%A3%E9%81%8A%E5%AE%A2%E4%B8%AD%E5%BF%83+%E5%8F%B0%E7%81%A3"},{"id": "spot-108","county": "嘉義","name": "奮起湖老街","lat": 23.495,"lng": 120.67,"tags": ["吃","懷舊","便當","老街"],"note": "百年鐵道老街，方塊便當必吃、咖啡歇腳。","color": "#f5a623","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E5%A5%8B%E8%B5%B7%E6%B9%96%E8%80%81%E8%A1%97+%E5%8F%B0%E7%81%A3"},{"id": "spot-109","county": "嘉義","name": "達娜伊谷自然生態園區","lat": 23.47,"lng": 120.65,"tags": ["免費","生態","溪流","自然"],"note": "溪流生態園區，涼爽避暑、魚群超美。","color": "#f5a623","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E9%81%94%E5%A6%AE%E4%BA%95%E8%B0%B7%E8%87%AA%E7%84%B6%E7%94%9F%E6%85%8B%E5%9C%92%E5%8D%80+%E5%8F%B0%E7%81%A3"},{"id": "spot-110","county": "嘉義","name": "山角鐵茶屋","lat": 23.525,"lng": 120.515,"tags": ["茶","拍照","鐵道","懷舊"],"note": "鐵道復古茶屋，好拍好喝有冷氣。","color": "#f5a623","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E5%B1%B1%E8%A7%92%E9%90%B5%E8%8C%B6%E5%B1%8B+%E5%8F%B0%E7%81%A3"},{"id": "spot-111","county": "嘉義","name": "寒溪呢森林","lat": 23.52,"lng": 120.51,"tags": ["拍照","森林","免費","秘境"],"note": "森林系秘境，光影超美、IG打卡熱點。","color": "#f5a623","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E5%AF%92%E6%BA%AA%E5%91%A2%E6%A3%AE%E6%9E%97+%E5%8F%B0%E7%81%A3"},{"id": "spot-112","county": "嘉義","name": "阿里山鄒族文化部落（優遊吧斯）","lat": 23.51,"lng": 120.71,"tags": ["文化","表演","吃","DIY"],"note": "鄒族文化體驗，歌舞表演+原住民美食。","color": "#f5a623","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E5%98%89%E7%BE%A9%E9%83%91%E6%97%8F%E6%96%87%E5%8C%96%E9%83%A8%E8%90%BD+%E5%8F%B0%E7%81%A3"},{"id": "spot-113","county": "嘉義","name": "阿里山國家森林遊樂區","lat": 23.51,"lng": 120.71,"tags": ["山林","避暑","免費","經典"],"note": "海拔高涼爽，阿里山森林自然避暑。","color": "#f5a623","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E9%99%A3%E5%B1%B1%E5%9C%8B%E5%AE%B6%E6%A3%AE%E6%9E%97%E9%81%8A%E6%A8%82%E5%8D%80+%E5%8F%B0%E7%81%A3"},{"id": "spot-114","county": "嘉義","name": "梅山公園","lat": 23.52,"lng": 120.53,"tags": ["免費","公園","拍照","涼爽"],"note": "梅山地標公園，海拔高涼爽適合避暑。","color": "#f5a623","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E6%A2%85%E5%B1%B1%E5%85%AC%E5%9C%92+%E5%8F%B0%E7%81%A3"},{"id": "spot-115","county": "嘉義","name": "民雄鬼神屋","lat": 23.47,"lng": 120.49,"tags": ["室內","免費","拍照","怪談"],"note": "廢墟風格拍照景點，免費入場好獵奇。","color": "#f5a623","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E6%B0%91%E9%9B%84%E9%AC%BC%E7%A5%9E%E5%B1%8B+%E5%8F%B0%E7%81%A3"},{"id": "spot-116","county": "嘉義","name": "大林萬來果園","lat": 23.505,"lng": 120.46,"tags": ["吃","採果","免費","農場"],"note": "在地果園，夏季採水果體驗、消暑好去處。","color": "#f5a623","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E5%A4%A7%E6%9E%97%E8%90%AC%E4%BE%86%E6%9E%9C%E5%9C%92+%E5%8F%B0%E7%81%A3"},{"id": "spot-117","county": "嘉義","name": "義竹牛挑灣曹慶古厝博物館","lat": 23.55,"lng": 120.22,"tags": ["免費","古厝","歷史","文化"],"note": "古厝改建的博物館，免費參觀了解在地歷史。","color": "#f5a623","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E7%BE%A9%E7af%A7%E7%89%9B%E6%8C%91%E6%B9%BE+%E5%8F%B0%E7%81%A3"},{"id": "spot-118","county": "嘉義","name": "太保文化公園","lat": 23.47,"lng": 120.38,"tags": ["免費","公園","拍照","文化"],"note": "故宮南院旁文化公園，綠地涼爽好休息。","color": "#f5a623","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E5%A4%AA%E4%BF%9D%E6%96%87%E5%8C%96%E5%85%AC%E5%9C%92+%E5%8F%B0%E7%81%A3"},{"id": "spot-119","county": "嘉義","name": "水上鄉農會鮮食館","lat": 23.49,"lng": 120.45,"tags": ["吃","免費","農產品","伴手禮"],"note": "在地農會鮮食館，試吃+買伴手禮超方便。","color": "#f5a623","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E6%B0%B4%E4%B8%8A%E9%84%89%E8%BE%B2%E6%9C%83+%E5%8F%B0%E7%81%A3"},{"id": "spot-120","county": "嘉義","name": "義大遊樂世界（附近咖啡廳）","lat": 23.5,"lng": 120.42,"tags": ["室內","咖啡","休息","冷氣"],"note": "義大購物城周边室內咖啡廳，避暑歇腳。","color": "#f5a623","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E7%BE%A9%E5%A4%A7%E9%81%8A%E6%A8%82%E4%B8%96%E7%95%8C+%E5%8F%B0%E7%81%A3"},{"id": "cafe-01","county": "咖啡","name": "南美春室 The POOL（台南）","lat": 23.0,"lng": 120.21,"tags": ["挑高","泳池","網美","打卡"],"note": "挑高空間超寬敞，泳池造景超好拍，IG打卡名店。","color": "#ff6b9d","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E5%8D%97%E7%BE%8E%E6%98%A5%E5%AE%A4+%E5%8F%B0%E5%8D%97"},{"id": "cafe-02","county": "咖啡","name": "秘氏珈琲（台南）","lat": 23.0,"lng": 120.21,"tags": ["老屋","香港風","老宅","打卡"],"note": "老屋改建重現老香港風情，俗女養成記2拍攝場景。","color": "#ff6b9d","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E7%A7%98%E6%B0%8F%E5%92%96%E5%95%A1+%E5%8F%B0%E5%8D%97"},{"id": "cafe-03","county": "咖啡","name": "青苔 Moss Archives（台南）","lat": 23.0,"lng": 120.21,"tags": ["北歐風","質感","咖啡","打卡"],"note": "北歐質感家具裝潢，超chill氛圍文青必訪。","color": "#ff6b9d","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E9%9D%92%E8%97%BE+%E5%8F%B0%E5%8D%97"},{"id": "cafe-04","county": "咖啡","name": "南埕衖事（台南）","lat": 23.0,"lng": 120.2,"tags": ["森林系","冰品","藤本壯介","拍照"],"note": "藤本壯介設計的8層樓冰店，森林系超好拍。","color": "#ff6b9d","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E5%8D%97%E5%9F%95%E8%A1%96%E4%BA%8B+%E5%8F%B0%E5%8D%97"},{"id": "cafe-05","county": "咖啡","name": "CACO Cafe 大耳狗主題（台南）","lat": 23.03,"lng": 120.23,"tags": ["主題","卡娜赫拉","夢幻","打卡"],"note": "大耳狗喜拿主題店，雲朵吊飾天花板超夢幻。","color": "#ff6b9d","mapsUrl": "https://www.google.com/maps/search/?api=1&query=CACO+Cafe+%E5%8F%B0%E5%8D%97"},{"id": "cafe-06","county": "咖啡","name": "褐 Umber（台南）","lat": 22.99,"lng": 120.2,"tags": ["北歐風","質感家具","美式","打卡"],"note": "美術館旁北歐質感咖啡，美式復古氛圍超chill。","color": "#ff6b9d","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E8%A4%B3+Umber+%E5%8F%B0%E5%8D%97"},{"id": "cafe-07","county": "咖啡","name": "StableNice BLDG.（台南）","lat": 23.0,"lng": 120.21,"tags": ["建築","質感","美式","打卡"],"note": "建築感空間設計，美式復古風超有質感。","color": "#ff6b9d","mapsUrl": "https://www.google.com/maps/search/?api=1&query=StableNice+BLDG.+%E5%8F%B0%E5%8D%97"},{"id": "cafe-08","county": "咖啡","name": "三旬三昧（台南）","lat": 23.0,"lng": 120.205,"tags": ["老宅","復古","質感","打卡"],"note": "老宅改建日式復古風，質感家具超chill。","color": "#ff6b9d","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E4%B8%89%E6%98%AC%E4%B8%89%E7%9C%9B+%E5%8F%B0%E5%8D%97"},{"id": "cafe-09","county": "咖啡","name": "尋路。甜（台南）","lat": 23.0,"lng": 120.2,"tags": ["甜點","文青","老宅","打卡"],"note": "巷弄老宅甜點咖啡，文青風格超療癒。","color": "#ff6b9d","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E5%B0%8B%E8%B7%AF+%E7%94%9C+%E5%8F%B0%E5%8D%97"},{"id": "cafe-10","county": "咖啡","name": "錫鼓 Tin Drum（台南）","lat": 23.0,"lng": 120.21,"tags": ["工業風","質感","手沖","打卡"],"note": "工業風手沖咖啡，質感空間超適合放空。","color": "#ff6b9d","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E9%8C%85%E9%BC%93+Tin+Drum+%E5%8F%B0%E5%8D%97"},{"id": "cafe-11","county": "咖啡","name": "二屾 Ershen（嘉義）","lat": 23.475,"lng": 120.445,"tags": ["網美","甜點","打卡","質感"],"note": "嘉義IG網美咖啡，甜點超美超好拍。","color": "#ff6b9d","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E4%BA%8C%E5%B1%91+Ershen+%E5%98%89%E7%BE%A9"},{"id": "cafe-12","county": "咖啡","name": "西瓜珈琲（嘉義）","lat": 23.475,"lng": 120.445,"tags": ["日式","文青","咖啡","打卡"],"note": "日式文青咖啡館，手沖品質超好。","color": "#ff6b9d","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E8%A5%BF%E7%93%9C%E5%92%96%E5%95%A1+%E5%98%89%E7%BE%A9"},{"id": "cafe-13","county": "咖啡","name": "老院子1951（嘉義）","lat": 23.47,"lng": 120.44,"tags": ["老宅","兩百年","復古","打卡"],"note": "兩百年老宅改建，復古氛圍超有味道。","color": "#ff6b9d","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E8%80%81%E9%99%A2%E5%AD%90+1951+%E5%98%89%E7%BE%A9"},{"id": "cafe-14","county": "咖啡","name": "堀川茶事（嘉義）","lat": 23.475,"lng": 120.445,"tags": ["日式","茶","預約制","秘境"],"note": "日料主廚開的預約制喫茶，秘境級好喝。","color": "#ff6b9d","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E8%9D%8E%E5%B7%9D%E8%8C%B6%E4%BA%8B+%E5%98%89%E7%BE%A9"},{"id": "cafe-15","county": "咖啡","name": "國王蝴蝶咖啡（嘉義）","lat": 23.475,"lng": 120.445,"tags": ["紅色","光影","隱藏版","質感"],"note": "紅色主題+光影變化，嘉義人推崇的隱藏版。","color": "#ff6b9d","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E7%8E%8B%E5%BA%AB%E8%9D%B6%E8%9D%B6+%E5%98%89%E7%BE%A9"},{"id": "cafe-16","county": "咖啡","name": "SENSMO 咖啡感獸（嘉義）","lat": 23.48,"lng": 120.445,"tags": ["花磚","旗艦店","日式","打卡"],"note": "花磚打造的旗艦店，日式質感超美。","color": "#ff6b9d","mapsUrl": "https://www.google.com/maps/search/?api=1&query=SENSMO+%E5%98%89%E7%BE%A9"},{"id": "cafe-17","county": "咖啡","name": "仙仙 Coffee&Brunch（嘉義）","lat": 23.475,"lng": 120.44,"tags": ["夢幻","粉紅","早午餐","打卡"],"note": "二樓粉紅夢幻空間，IG打卡超有名。","color": "#ff6b9d","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E4%ED%80%86%E4%ED%80%86+%E5%98%89%E7%BE%A9"},{"id": "cafe-18","county": "咖啡","name": "裕森咖啡（嘉義新港）","lat": 23.56,"lng": 120.42,"tags": ["田中央","秘境","咖啡","療癒"],"note": "隱身新港田中央的咖啡秘境，療癒感滿分。","color": "#ff6b9d","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E8%A4%8E%E6%A3%AE+%E5%98%89%E7%BE%A9"},{"id": "cafe-19","county": "咖啡","name": "空氣圖書館（嘉義梅山）","lat": 23.52,"lng": 120.51,"tags": ["森林","閱讀","免費","夢幻"],"note": "森林系閱讀空間，夢幻光影超美。","color": "#ff6b9d","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E7%A9%BA%E6%B0%A3%E5%9C%96%E6%9B%B8%E9%A4%A8+%E5%8F%B0%E7%81%A3"},{"id": "cafe-20","county": "咖啡","name": "山角鐵茶屋（嘉義竹崎）","lat": 23.525,"lng": 120.515,"tags": ["鐵道","復古","茶","拍照"],"note": "復古鐵道茶屋，好拍好喝超有懷舊味。","color": "#ff6b9d","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E5%B1%B1%E8%A7%92%E9%90%B5%E8%8C%B6%E5%B1%8B+%E5%8F%B0%E7%81%A3"},{"id": "cafe-21","county": "咖啡","name": "阿將的家23咖啡館（嘉義阿里山）","lat": 23.51,"lng": 120.71,"tags": ["景觀","鄒族","美食","山景"],"note": "阿里山景觀咖啡，鄒族美食超美味。","color": "#ff6b9d","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E9%98%BF%E5%B0%87%E7%9A%84%E5%AE%B6+%E5%98%89%E7%BE%A9"},{"id": "cafe-22","county": "咖啡","name": "永心浮島（高雄）","lat": 22.65,"lng": 120.3,"tags": ["白色","夢幻","打卡","浮島"],"note": "白色浮島造型超夢幻，IG打卡名店。","color": "#ff6b9d","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E6%B0%B8%E5%BF%83%E6%B5%AE%E5%B3%B6+%E9%AB%98%E9%9B%84"},{"id": "cafe-23","county": "咖啡","name": "Gooday Cafe & Roof（高雄）","lat": 22.62,"lng": 120.32,"tags": ["森林","露天","老屋","寵物友善"],"note": "老屋改建森林系秘境，露天花園天台超美。","color": "#ff6b9d","mapsUrl": "https://www.google.com/maps/search/?api=1&query=Gooday+Cafe+%E9%AB%98%E9%9B%84"},{"id": "cafe-24","county": "咖啡","name": "神諭咖啡（高雄鳳山）","lat": 22.78,"lng": 120.34,"tags": ["黃埔新村","日式","懷舊","眷村"],"note": "黃埔新村眷村風咖啡，日式懷舊超有味道。","color": "#ff6b9d","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E7%A5%9E%E8%AA%9E+%E9%AB%98%E9%9B%84"},{"id": "cafe-25","county": "咖啡","name": "致日子咖啡（高雄鳳山）","lat": 22.78,"lng": 120.34,"tags": ["黃埔新村","咖啡","文青","懷舊"],"note": "黃埔新村文青咖啡，懷舊氛圍超治愈。","color": "#ff6b9d","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E8%87%B4%E6%97%A5%E5%AD%90+%E9%AB%98%E9%9B%84"},{"id": "cafe-26","county": "咖啡","name": "也香咖飛（高雄美濃）","lat": 22.94,"lng": 120.54,"tags": ["稻田","森林系","玻璃屋","秘境"],"note": "稻田間的森林系玻璃屋，植物環繞超美。","color": "#ff6b9d","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E4%B9%9F%E9%A6%99+%E9%AB%98%E9%9B%84"},{"id": "cafe-27","county": "咖啡","name": "橋頭糖廠咖啡（高雄橋頭）","lat": 22.75,"lng": 120.31,"tags": ["糖廠","鹿角蕨","玻璃屋","植物"],"note": "鹿角蕨+觀葉植物打造的玻璃屋，像小叢林。","color": "#ff6b9d","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E6%A9%8B%E9%A0%AD%E7%B3%96%E5%BB%A0+%E9%AB%98%E9%9B%84"},{"id": "cafe-28","county": "咖啡","name": "白色戀人貨櫃屋（高雄）","lat": 22.63,"lng": 120.3,"tags": ["貨櫃","白色","拍照","打卡"],"note": "白色貨櫃屋超好拍，海島風超有feel。","color": "#ff6b9d","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E7%99%BD%E8%89%B2%E6%81%8B%E4%BA%BA+%E9%AB%98%E9%9B%84"},{"id": "cafe-29","county": "咖啡","name": "林老師卡好咖啡（高雄茂林）","lat": 22.72,"lng": 120.63,"tags": ["原鄉","部落","咖啡","風景"],"note": "茂林原鄉咖啡，部落風味超有特色。","color": "#ff6b9d","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E6%9E%97%E8%80%81%E5%B8%AB+%E9%AB%98%E9%9B%84"},{"id": "cafe-30","county": "咖啡","name": "來福居景觀咖啡（南投清境）","lat": 23.99,"lng": 121.2,"tags": ["景觀","櫻花","山景","夢幻"],"note": "清境櫻花餐廳，180度環山景觀超夢幻。","color": "#ff6b9d","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E4%BE%86%E7%A6%8F%E5%B1%85+%E5%8D%97%E6%8A%92"},{"id": "cafe-31","county": "咖啡","name": "春秋山林（南投清境）","lat": 23.99,"lng": 121.2,"tags": ["春水堂","山景","景觀","質感"],"note": "春水堂品牌在山區的景觀咖啡，質感超好。","color": "#ff6b9d","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E6%98%A5%E7%A7%8B%E5%B1%B1%E6%9E%97+%E5%8D%97%E6%8A%92"},{"id": "cafe-32","county": "咖啡","name": "鹿篙咖啡莊園（南投魚池）","lat": 23.92,"lng": 120.94,"tags": ["咖啡樹","莊園","山景","平台"],"note": "萬棵咖啡樹+茶樹，觀景平台超療癒。","color": "#ff6b9d","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E9%B9%BF%E7%B9%91+%E5%8D%97%E6%8A%92"},{"id": "cafe-33","county": "咖啡","name": "蠻荒咖啡（南投）","lat": 23.9,"lng": 120.9,"tags": ["秘境","山林","手沖","療癒"],"note": "山林秘境咖啡，手沖品質超好超療癒。","color": "#ff6b9d","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E8%9B%9F%E8%8D%92+%E5%8D%97%E6%8A%92"},{"id": "cafe-34","county": "咖啡","name": "隱茶Steam（南投）","lat": 23.9,"lng": 120.9,"tags": ["隱藏版","茶","秘境","質感"],"note": "隱藏版茶館，蒸汽感空間超有質感。","color": "#ff6b9d","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E9%9A%B1%E8%8C%B6+Steam+%E5%8D%97%E6%8A%92"},{"id": "cafe-35","county": "咖啡","name": "Mountain Bica Cafe（南投清境）","lat": 23.99,"lng": 121.2,"tags": ["玻璃屋","山景","網美","第一排"],"note": "山景第一排玻璃屋，每一區都好拍。","color": "#ff6b9d","mapsUrl": "https://www.google.com/maps/search/?api=1&query=Mountain+Bica+%E5%8D%97%E6%8A%92"},{"id": "cafe-36","county": "咖啡","name": "澄香堂（雲林古坑）","lat": 23.65,"lng": 120.53,"tags": ["古坑","景觀","咖啡","雲海"],"note": "古坑景觀咖啡，雲海咖啡超療癒。","color": "#ff6b9d","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E6%BF%95%E9%A6%99%E5%A0%82+%E9%9B%B2%E6%9E%97"},{"id": "cafe-37","county": "咖啡","name": "56號藍色公路咖啡（雲林古坑）","lat": 23.64,"lng": 120.52,"tags": ["藍色","公路","古坑","景觀"],"note": "藍色公路咖啡，古坑山景超美。","color": "#ff6b9d","mapsUrl": "https://www.google.com/maps/search/?api=1&query=56%E8%99%9F+%E9%9B%B2%E6%9E%97"},{"id": "cafe-38","county": "咖啡","name": "永光故事屋（雲林古坑）","lat": 23.64,"lng": 120.53,"tags": ["檜木","老宅","日式","隨興"],"note": "日式檜木老宅，隨興咖啡超有味道。","color": "#ff6b9d","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E6%B0%B8%E5%85%89%E6%95%85%E4%BA%8B%E5%B1%8B+%E9%9B%B2%E6%9E%97"},{"id": "cafe-39","county": "咖啡","name": "桂林映象會館（雲林古坑）","lat": 23.64,"lng": 120.53,"tags": ["桂林","城堡","異國","拍照"],"note": "桂林風格異國會館，拍照超有fu。","color": "#ff6b9d","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E6%A1%82%E6%9E%97+%E9%9B%B2%E6%9E%97"},{"id": "cafe-40","county": "咖啡","name": "凹凸咖啡（雲林斗六）","lat": 23.71,"lng": 120.54,"tags": ["日式老宅","貓咪","警察宿舍","可愛"],"note": "日治警察宿舍改建，可愛貓咪服務生超療癒。","color": "#ff6b9d","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E5%87%B8%E5%87%B8+%E9%9B%B2%E6%9E%97"},{"id": "farm-01","county": "農場","name": "走馬瀨農場（台南玉井）","lat": 23.26,"lng": 120.57,"tags": ["120公頃","紐西蘭","草原","水上游"],"note": "120公頃超大農場，紐西蘭風情牧草草原，水上游艇超好玩。","color": "#4ade80","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E8%B5%B0%E9%A6%AC%E7%80%8F%E8%BE%B2%E5%A0%B4+%E5%8F%B0%E5%8D%97"},{"id": "farm-02","county": "農場","name": "仙湖休閒農場（台南東山）","lat": 23.28,"lng": 120.49,"tags": ["瞭望台","柑橘","花海","拍照"],"note": "大地標瞭望台超好拍，花海橘園超美。","color": "#4ade80","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E4%BB%99%E6%B9%96%E4%BC%91%E9%96%92%E8%BE%B2%E5%A0%B4+%E5%8F%B0%E5%8D%97"},{"id": "farm-03","county": "農場","name": "大坑休閒農場（台南山上）","lat": 23.09,"lng": 120.36,"tags": ["山林","生態","田媽媽","步道"],"note": "山林療癒農場，生態步道+田媽媽料理超好吃。","color": "#4ade80","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E5%A4%A7%E5%9D%91%E4%BC%91%E9%96%92%E8%BE%B2%E5%A0%B4+%E5%8F%B0%E5%8D%97"},{"id": "farm-04","county": "農場","name": "南元休閒農場（台南白河）","lat": 23.38,"lng": 120.45,"tags": ["渡假花園","花海","拍照","最美"],"note": "亞洲最美渡假花園，花海超美IG打卡名店。","color": "#4ade80","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E5%8D%97%E5%85%83%E4%BC%91%E9%96%92%E8%BE%B2%E5%A0%B4+%E5%8F%B0%E5%8D%97"},{"id": "farm-05","county": "農場","name": "台南鴨莊（台南大內）","lat": 23.26,"lng": 120.42,"tags": ["百年","菜鴨","鴨蛋","文化"],"note": "百年養鴨祖傳三代，鴨蛋加工+生態導覽超有趣。","color": "#4ade80","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E5%8F%B0%E5%8D%97%E9%B4%A8%E8%BE%B2+%E5%8F%B0%E5%8D%97"},{"id": "farm-06","county": "農場","name": "樹谷農場（台南仁德）","lat": 22.95,"lng": 120.28,"tags": ["樹溜滑梯","沙坑","餵食","親子"],"note": "樹溜滑梯+沙坑+餵動物，小孩超愛。","color": "#4ade80","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E6%A8%B9%E8%B0%B7%E8%BE%B2%E5%A0%B4+%E5%8F%B0%E5%8D%97"},{"id": "farm-07","county": "農場","name": "湖濱療癒森林（台南將軍）","lat": 23.18,"lng": 120.0,"tags": ["森林","湖畔","療癒","拍照"],"note": "森林湖畔療癒系，拍照超美超放鬆。","color": "#4ade80","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E6%B9%96%E9%83%A8%E7%96%97%E6%86%91%E6%A3%AE%E6%9E%97+%E5%8F%B0%E5%8D%97"},{"id": "farm-08","county": "農場","name": "吉園休閒農場（台南官田）","lat": 23.18,"lng": 120.35,"tags": ["草原","動物","拍照","親子"],"note": "草原風情+可愛動物，拍照超美。","color": "#4ade80","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E5%90%89%E5%9C%92%E4%BC%91%E9%96%92%E8%BE%B2%E5%A0%B4+%E5%8F%B0%E5%8D%97"},{"id": "farm-09","county": "農場","name": "關子嶺開心農場","lat": 23.36,"lng": 120.52,"tags": ["溫泉","動物","親子","農村"],"note": "溫泉區的開心農場，動物+農村體驗超療癒。","color": "#4ade80","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E9%97%9C%E5%AD%90%E5%B2%AD%E9%96%8B%E5%BF%83%E8%BE%B2%E5%A0%B4+%E5%8F%B0%E5%8D%97"},{"id": "farm-10","county": "農場","name": "烏樹林五分車（台南學甲）","lat": 23.23,"lng": 120.12,"tags": ["五分車","懷舊","鐵道","親子"],"note": "復古五分車體驗，懷舊鐵道超好玩。","color": "#4ade80","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E7%83%8F%E6%A8%93%E6%9E%97+%E5%85%AB%E5%88%86%E8%BB%8A+%E5%8F%B0%E5%8D%97"},{"id": "farm-11","county": "農場","name": "三隻小豬觀光農場（嘉義中埔）","lat": 23.48,"lng": 120.56,"tags": ["童話","動物","親子","CP值"],"note": "童話故事主題，豬豬造型建築+20種小動物超可愛。","color": "#4ade80","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E4%B8%89%E5%8F%AA%E5%B0%8F%E7%8C%AA+%E8%A7%80%E5%85%89%E8%BE%B2%E5%A0%B4+%E5%98%89%E7%BE%A9"},{"id": "farm-12","county": "農場","name": "海賊庄休閒農場（嘉義新港）","lat": 23.55,"lng": 120.43,"tags": ["海賊王","城堡","咖啡","拍照"],"note": "海賊王主題城堡，咖啡廳超好拍。","color": "#4ade80","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E6%B5%B7%E8%B2%BC%E5%BA%84+%E5%8F%B0%E7%81%A3"},{"id": "farm-13","county": "農場","name": "獨角仙休閒農場（嘉義中埔）","lat": 23.47,"lng": 120.57,"tags": ["獨角仙","大自然","親子","生態"],"note": "獨角仙零距離接觸，大自然生態超有趣。","color": "#4ade80","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E7%8D%A8%E8%A6%BA%E4%BB%99+%E8%BE%B2%E5%A0%B4+%E5%98%89%E7%BE%A9"},{"id": "farm-14","county": "農場","name": "果然茶香觀光園區（嘉義中埔）","lat": 23.48,"lng": 120.56,"tags": ["茶園","採茶","品茶","親子"],"note": "茶園採茶品茶體驗，茶香四溢超療癒。","color": "#4ade80","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E6%9E%9C%E7%84%B6%E8%8C%B6%E9%A6%99+%E5%8F%B0%E7%81%A3"},{"id": "farm-15","county": "農場","name": "中埔穀倉農創園區（嘉義中埔）","lat": 23.48,"lng": 120.55,"tags": ["復古","文創","穀倉","拍照"],"note": "復古穀倉文創園區，懷舊拍照超有fu。","color": "#4ade80","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E4%B8%AD%E8%BE%95%E8%AD%9A%E4%BB%94+%E8%BE%B2%E5%9C%92+%E5%8F%B0%E7%81%A3"},{"id": "farm-16","county": "農場","name": "淨園農場（高雄小港）","lat": 22.55,"lng": 120.36,"tags": ["看飛機","水豚","羊駝","機場"],"note": "近距離看飛機起降+水豚羊駝超療癒，超人氣。","color": "#4ade80","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E5%87%80%E5%9C%92%E8%BE%B2%E5%A0%B4+%E9%AB%98%E9%9B%84"},{"id": "farm-17","county": "農場","name": "鹿活森林親子農場（高雄燕巢）","lat": 22.79,"lng": 120.32,"tags": ["鹿","親子","餵食","拍照"],"note": "鹿群餵食+森林步道，親子超愛。","color": "#4ade80","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E9%B9%BF%E6%B4%BB%E6%A3%AE%E6%9E%97+%E9%AB%98%E9%9B%84"},{"id": "farm-18","county": "農場","name": "布布農場（高雄內門）","lat": 23.12,"lng": 120.46,"tags": ["兔子","親子","花園","拍照"],"note": "兔子農場+花園造景，可愛到不行。","color": "#4ade80","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E4%BD%83%E4%BD%83%E8%BE%B2%E5%A0%B4+%E9%AB%98%E9%9B%84"},{"id": "farm-19","county": "農場","name": "千巧谷牛樂園牧場（雲林古坑）","lat": 23.65,"lng": 120.53,"tags": ["牛","餵食","DIY","親子"],"note": "全台最大牛樂園，餵牛+DIY超好玩。","color": "#4ade80","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E5%8D%83%E5%B7%A7%E8%B0%B7%E7%89%9B%E6%A8%82%E5%9C%92+%E9%9B%B2%E6%9E%97"},{"id": "farm-20","county": "農場","name": "綠金蕃茄南瓜農場（雲林古坑）","lat": 23.65,"lng": 120.52,"tags": ["蕃茄","南瓜","採果","拍照"],"note": "蕃茄南瓜主題農場，採果+拍照超療癒。","color": "#4ade80","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E7%B7%BC%E9%87%91%E8%8C%AC%E8%8C%AC+%E8%BE%B2%E5%A0%B4+%E9%9B%B2%E6%9E%97"},{"id": "farm-21","county": "農場","name": "虎珍堂森之院（雲林褒忠）","lat": 23.72,"lng": 120.45,"tags": ["森林","療癒","寵物友善","咖啡"],"note": "森林療癒系農場，寵物友善超放鬆。","color": "#4ade80","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E8%99%8E%E7%8F%8D%E5%A0%82%E6%A3%AE%E4%B9%8B%E9%99%A2+%E9%9B%B2%E6%9E%97"},{"id": "farm-22","county": "農場","name": "鹿營親子農場（雲林古坑）","lat": 23.64,"lng": 120.53,"tags": ["鹿","親子","遊戲","餐廳"],"note": "全新鹿營親子農場，動物餵食+室內餐廳。","color": "#4ade80","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E9%B9%BF%E7%87%DF+%E8%BE%B2%E5%A0%B4+%E9%9B%B2%E6%9E%97"},{"id": "farm-23","county": "農場","name": "近水樓台湖畔森林咖啡（雲林古坑）","lat": 23.65,"lng": 120.53,"tags": ["湖畔","南洋風","盪鞦韆","咖啡"],"note": "湖畔南洋風+盪鞦韆，草皮休憩超悠閒。","color": "#4ade80","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E8%BF%91%E6%B0%B4%E6%A9%8B%E5%8F%B0+%E9%9B%B2%E6%9E%97"},{"id": "farm-24","county": "農場","name": "華南天空之夜養生泡腳咖啡（雲林古坑）","lat": 23.65,"lng": 120.53,"tags": ["泡腳","星空","養生","咖啡"],"note": "星空泡腳咖啡，養生超療癒。","color": "#4ade80","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E8%8F%AF%E5%8D%97%E7%A9%BA%E4%B8%AD%E4%B9%8B%E5%A4%9C+%E9%9B%B2%E6%9E%97"},{"id": "farm-25","county": "農場","name": "溪頭自然教育園區（南投竹山）","lat": 23.67,"lng": 23.67,"tags": ["森林","涼爽","步道","避暑"],"note": "真實涼爽山林，森林浴超避暑。","color": "#4ade80","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E6%BA%AA%E9%A0%AD+%E5%8D%97%E6%8A%92"},{"id": "farm-26","county": "農場","name": "台一生態休閒農場（南投埔里）","lat": 23.97,"lng": 121.02,"tags": ["四星","水上小木屋","花園","日月潭"],"note": "四星級渡假村，水上小木屋+環形花園超美。","color": "#4ade80","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E5%8F%B0%E4%B8%80+%E5%8D%97%E6%8A%92"},{"id": "farm-27","county": "農場","name": "日月山景休閒農場（南投埔里）","lat": 23.96,"lng": 121.02,"tags": ["草坪","乳牛","鮮奶","八卦山"],"note": "廣闊草坪+乳牛放牧區，鮮奶製品超好吃。","color": "#4ade80","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E6%97%A5%E6%9C%88%E5%B1%B1%E6%99%AF+%E5%8D%97%E6%8A%92"},{"id": "farm-28","county": "農場","name": "果丘（南投埔里）","lat": 23.96,"lng": 121.02,"tags": ["繡球花","霜淇淋","香氛蠟燭","文青"],"note": "繡球花霜淇淋+香氛蠟燭DIY，文青超愛。","color": "#4ade80","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E6%9E%9C%E4%B8%98+%E5%8D%97%E6%8A%92"},{"id": "farm-29","county": "農場","name": "清境農場（南投清境）","lat": 23.92,"lng": 121.16,"tags": ["綿羊","高山","雲海","經典"],"note": "台灣最高山農場，綿羊+雲海超美。","color": "#4ade80","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E6%B8%85%E4%BE%BD%E8%BE%B2%E5%A0%B4+%E5%8D%97%E6%8A%92"},{"id": "farm-30","county": "農場","name": "兆豐農場（南投名間）","lat": 23.83,"lng": 120.76,"tags": ["花海","乳牛","鮮奶","拍照"],"note": "花海秘境+乳牛生態區，波斯菊超美。","color": "#4ade80","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E5%85%86%E8%B2%B4%E8%BE%B2%E5%A0%B4+%E5%8D%97%E6%8A%92"},{"id": "farm-31","county": "農場","name": "大里休閒農場（高雄田寮）","lat": 22.89,"lng": 120.43,"tags": ["螢火蟲","親子","生態","夜間"],"note": "螢火蟲生態農場，夜間超震撼。","color": "#4ade80","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E5%A4%A7%E8%88%88%E8%BE%B2%E5%A0%B4+%E9%AB%98%E9%9B%84"},{"id": "farm-32","county": "農場","name": "阿力伊甸園農場（高雄田寮）","lat": 22.89,"lng": 120.43,"tags": ["動物","親子","草原","拍照"],"note": "草原動物園，可愛動物超療癒。","color": "#4ade80","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E9%98%BF%E5%8A%9B%E4%BC%8A%E7%94%B8%E5%9C%92+%E9%AB%98%E9%9B%84"},{"id": "farm-33","county": "農場","name": "龍環葡韻（高雄前金）","lat": 22.62,"lng": 120.7,"tags": ["葡式","建築","拍照","文青"],"note": "葡式建築超好拍，文青必訪。","color": "#4ade80","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E9%BE%8D%E7%8D%B4%E8%91%A1%E9%81%95+%E9%AB%98%E9%9B%84"},{"id": "farm-34","county": "農場","name": "春園親子農場（台南學甲）","lat": 23.23,"lng": 120.12,"tags": ["親子","生態","稻草人","拍照"],"note": "稻草人主題農場，親子生態超療癒。","color": "#4ade80","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E6%98%A5%E5%9C%92+%E8%BE%B2%E5%A0%B4+%E5%8F%B0%E5%8D%97"},{"id": "farm-35","county": "農場","name": "七股鹽山（台南七股）","lat": 23.15,"lng": 120.0,"tags": ["鹽山","拍照","免費","日落"],"note": "白色鹽山超好拍，日落超美。","color": "#4ade80","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E4%B8%83%E8%82%A1%E9%BC%AE%E5%B1%B1+%E5%8F%B0%E5%8D%97"},{"id": "farm-36","county": "農場","name": "小南海風景區（台南新化）","lat": 23.05,"lng": 120.36,"tags": ["湖泊","自然","步道","免費"],"note": "天然湖泊+自然步道，免費避暑好去處。","color": "#4ade80","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E5%B0%8F%E5%8D%97%E6%B5%B7%E9%A8%8E%E6%99%AF%E5%8D%80+%E5%8F%B0%E5%8D%97"},{"id": "farm-37","county": "農場","name": "水交社文化園區（台南南區）","lat": 22.99,"lng": 120.22,"tags": ["眷村","戰鬥機","免費","拍照"],"note": "最美眷村+F-5E戰鬥機，免費好拍。","color": "#4ade80","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E6%B0%B4%E4%BA%A4%E7%A4%BE+%E5%8F%B0%E5%8D%97"},{"id": "farm-38","county": "農場","name": "飛鼠咖啡（嘉義阿里山）","lat": 23.51,"lng": 120.71,"tags": ["飛鼠","景觀","咖啡","阿里山"],"note": "阿里山景觀咖啡+飛鼠生態超療癒。","color": "#4ade80","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E9%A3%9B%E9%BC%A0+%E5%98%89%E7%BE%A9"},{"id": "farm-39","county": "農場","name": "耍廢特區（嘉義朴子）","lat": 23.46,"lng": 120.22,"tags": ["耍廢","拍照","免費","打卡"],"note": "超有梗耍廢拍照區，免費IG打卡熱點。","color": "#4ade80","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E6%8F%8A%E5%BB%BC+%E5%8F%B0%E7%81%A3"},{"id": "farm-40","county": "農場","name": "綠野仙蹤農場（雲林虎尾）","lat": 23.76,"lng": 120.36,"tags": ["綠野","花園","拍照","療癒"],"note": "綠野仙蹤花園造景，拍照超美超療癒。","color": "#4ade80","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E7%B7%BC%E9%87%8E%E5%85%88%E8%B8%AA+%E9%9B%B2%E6%9E%97"}]": "最美夕照之一，傍晚去不曬，鹽田咖啡歇腳。","color": "#22d3ee","mapsUrl": "https://www.google.com/maps/search/?api=1&query=%E5%8C%97%E9%96%80%E4%BA%95%E4%BB%94%E8%86%9A%E9%BC%AE%E7%94%B0+%E5%8F%B0%E5%8D%97+%E5%8F%B0%E7%81%A3"}];
-const map = L.map('map', { zoomControl: true, scrollWheelZoom: true });
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  maxZoom: 18,
-  attribution: '&copy; OpenStreetMap contributors'
-}).addTo(map);
+  <script>
+    const destinations = [
+      {
+        name: '台南｜安平港與老街慢旅',
+        region: '南部',
+        vibe: ['海景', '老街', '美食'],
+        desc: '沿著老城區一路散步到海邊，白天吃小吃、看古蹟，傍晚再去港邊吹風。',
+        bestTime: '清晨 / 傍晚',
+        audience: '情侶、朋友、自由行',
+        extra: '老街散步、海港夜景、在地小吃',
+        image: 'https://images.unsplash.com/photo-1542219550-5aef3c5ed4f6?auto=format&fit=crop&w=1200&q=80',
+        color: '#67e8f9'
+      },
+      {
+        name: '南投｜溪頭森林氧旅',
+        region: '中部',
+        vibe: ['山林', '親子'],
+        desc: '走進濃綠森林，把步道、芬多精與住宿安排成一趟真正放空的旅行。',
+        bestTime: '春夏 / 雨後',
+        audience: '家庭、登山初學者',
+        extra: '森林步道、避暑、自然觀察',
+        image: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80',
+        color: '#34d399'
+      },
+      {
+        name: '嘉義｜阿里山日出路線',
+        region: '南部',
+        vibe: ['山林', '美食'],
+        desc: '用一晚山上住宿換一場日出與雲海，回程再接嘉義市區美食。',
+        bestTime: '秋冬',
+        audience: '攝影、登山、情侶',
+        extra: '日出列車、雲海、山城美食',
+        image: 'https://images.unsplash.com/photo-1493246507139-91e8fad9978e?auto=format&fit=crop&w=1200&q=80',
+        color: '#fbbf24'
+      },
+      {
+        name: '高雄｜港灣夜生活散策',
+        region: '南部',
+        vibe: ['海景', '夜景', '美食'],
+        desc: '白天逛展、傍晚看夕陽，晚上到港灣走一圈，感受城市的亮與慢。',
+        bestTime: '傍晚 / 夜間',
+        audience: '朋友、約會、城市旅人',
+        extra: '港邊散步、觀景平台、夜市',
+        image: 'https://images.unsplash.com/photo-1519501025264-65ba15a82390?auto=format&fit=crop&w=1200&q=80',
+        color: '#fb7185'
+      },
+      {
+        name: '雲林｜農村手作小旅行',
+        region: '中部',
+        vibe: ['親子', '美食', '老街'],
+        desc: '把農場、體驗課程與鄉間小路串成一條輕鬆、不趕路的周末線。',
+        bestTime: '上午 / 下午',
+        audience: '親子、長輩',
+        extra: '農場體驗、DIY、在地餐桌',
+        image: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1200&q=80',
+        color: '#34d399'
+      },
+      {
+        name: '台北｜城市博物館與咖啡行',
+        region: '北部',
+        vibe: ['咖啡', '美食'],
+        desc: '雨天也能好玩的市區路線：展覽、咖啡館、書店與夜間甜點一次收。',
+        bestTime: '全年',
+        audience: '獨旅、上班族',
+        extra: '博物館、咖啡館、書店巡禮',
+        image: 'https://images.unsplash.com/photo-1518548419970-58e3b4079ab2?auto=format&fit=crop&w=1200&q=80',
+        color: '#c084fc'
+      },
+      {
+        name: '宜蘭｜海岸公路與溫泉',
+        region: '東部',
+        vibe: ['海景', '親子'],
+        desc: '沿海岸線一路開，吃海鮮、看浪、泡湯，節奏舒服得剛剛好。',
+        bestTime: '秋冬',
+        audience: '家庭、慢旅行',
+        extra: '海岸公路、溫泉、海鮮餐桌',
+        image: 'https://images.unsplash.com/photo-1464278533981-50106e6ec0d7?auto=format&fit=crop&w=1200&q=80',
+        color: '#67e8f9'
+      },
+      {
+        name: '台中｜藝術與甜點散步',
+        region: '中部',
+        vibe: ['咖啡', '美食', '城市'],
+        desc: '在美術館、老宅咖啡與甜點店之間移動，是最適合拍照的一日城市旅行。',
+        bestTime: '下午',
+        audience: '情侶、閨蜜',
+        extra: '藝文空間、老宅咖啡、甜點',
+        image: 'https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=1200&q=80',
+        color: '#f59e0b'
+      },
+      {
+        name: '花蓮｜山海縱谷公路',
+        region: '東部',
+        vibe: ['山林', '海景'],
+        desc: '讓海岸、峽谷、田野一次排進車窗景色，適合租車慢慢玩。',
+        bestTime: '春秋',
+        audience: '自駕、攝影',
+        extra: '海岸公路、縱谷、景觀餐廳',
+        image: 'https://images.unsplash.com/photo-1527576539890-dfa815648363?auto=format&fit=crop&w=1200&q=80',
+        color: '#22d3ee'
+      },
+      {
+        name: '高雄｜親子樂園與港都漫遊',
+        region: '南部',
+        vibe: ['親子', '城市'],
+        desc: '白天跑景點、晚上吃夜市，行程短但內容豐富，很適合帶小孩出遊。',
+        bestTime: '週末',
+        audience: '家庭',
+        extra: '親子館、港邊步道、夜市',
+        image: 'https://images.unsplash.com/photo-1505761671935-60b3a7427bad?auto=format&fit=crop&w=1200&q=80',
+        color: '#34d399'
+      },
+      {
+        name: '嘉義｜老城咖啡與小吃巡禮',
+        region: '南部',
+        vibe: ['老街', '咖啡', '美食'],
+        desc: '用步行把老屋、咖啡店與雞肉飯串起來，輕鬆但很有味道。',
+        bestTime: '上午 / 下午',
+        audience: '城市旅人、獨旅',
+        extra: '老城漫步、咖啡巡禮、在地小吃',
+        image: 'https://images.unsplash.com/photo-1498654896293-37aacf113fd9?auto=format&fit=crop&w=1200&q=80',
+        color: '#f97316'
+      },
+      {
+        name: '南投｜清境草原日落',
+        region: '中部',
+        vibe: ['山林', '親子', '海拔風景'],
+        desc: '高海拔草原、雲霧與晚霞一次收集，適合放空跟拍照。',
+        bestTime: '日落前',
+        audience: '情侶、家庭',
+        extra: '草原步道、景觀民宿、夕陽',
+        image: 'https://images.unsplash.com/photo-1458668383970-8ddd3927deed?auto=format&fit=crop&w=1200&q=80',
+        color: '#a78bfa'
+      },
+      {
+        name: '台南｜巷弄小吃與老宅住宿',
+        region: '南部',
+        vibe: ['老街', '美食', '城市'],
+        desc: '把早餐、午茶、晚餐全交給在地小店，再用一晚老宅住宿收尾。',
+        bestTime: '全天',
+        audience: '美食控、慢旅行',
+        extra: '巷弄美食、老宅民宿、古蹟散步',
+        image: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=1200&q=80',
+        color: '#67e8f9'
+      }
+    ];
 
-const markers = new Map();
-const cards = new Map();
-const rail = document.getElementById('rail');
-const countText = document.getElementById('countText');
-let activeList = spots.slice();
-let currentIndex = 0;
+    const els = {
+      q: document.getElementById('q'),
+      region: document.getElementById('region'),
+      chips: document.getElementById('chips'),
+      railList: document.getElementById('railList'),
+      railCount: document.getElementById('railCount'),
+      countText: document.getElementById('countText'),
+      featureImage: document.getElementById('featureImage'),
+      featureTitle: document.getElementById('featureTitle'),
+      featureMeta: document.getElementById('featureMeta'),
+      featureDesc: document.getElementById('featureDesc'),
+      bestTime: document.getElementById('bestTime'),
+      audience: document.getElementById('audience'),
+      extra: document.getElementById('extra'),
+      badge: document.getElementById('badge'),
+      mapsLink: document.getElementById('mapsLink'),
+      nextBtn: document.getElementById('nextBtn')
+    };
 
-function markerHtml(spot, n) {
-  return `<div class="marker" data-county="${spot.county}" data-n="${n}"></div>`;
-}
+    let activeTag = 'all';
+    let activeIndex = 0;
+    let filtered = destinations.slice();
 
-function popupHtml(spot) {
-  const tags = spot.tags.map(t => `<span class="tag">${t}</span>`).join('');
-  return `
-    <div class="popup">
-      <h3>${spot.name}</h3>
-      <p><b>${spot.county}</b> · ${spot.note}</p>
-      <div style="display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 10px;">${tags}</div>
-      <a class="btn primary" href="${spot.mapsUrl}" target="_blank" rel="noopener">Google Maps</a>
-    </div>`;
-}
+    const mapsUrl = (name) => `https://www.google.com/maps/search/${encodeURIComponent(name)}`;
 
-function build() {
-  rail.innerHTML = '';
-  spots.forEach((spot, idx) => {
-    const icon = L.divIcon({
-      className: '',
-      html: markerHtml(spot, idx + 1),
-      iconSize: [24, 24],
-      iconAnchor: [12, 24],
-      popupAnchor: [0, -20]
+    function renderCards(list) {
+      els.railList.innerHTML = '';
+      list.forEach((d, idx) => {
+        const card = document.createElement('article');
+        card.className = 'card';
+        card.dataset.index = String(idx);
+        card.innerHTML = `
+          <div class="thumb"><img src="${d.image}" alt="${d.name}"></div>
+          <div class="card-copy">
+            <h4>${d.name}</h4>
+            <p>${d.desc}</p>
+            <div class="meta">
+              <span class="tag">${d.region}</span>
+              ${d.vibe.map(v => `<span class="tag">${v}</span>`).join('')}
+            </div>
+          </div>
+        `;
+        card.addEventListener('click', () => selectDestination(idx));
+        els.railList.appendChild(card);
+      });
+      els.railCount.textContent = `顯示 ${list.length} / ${destinations.length}`;
+      document.querySelectorAll('.card').forEach((c, idx) => c.classList.toggle('active', idx === activeIndex));
+    }
+
+    function renderFeature(d) {
+      els.featureImage.src = d.image;
+      els.featureImage.alt = d.name;
+      els.featureTitle.textContent = d.name;
+      els.featureDesc.textContent = d.desc;
+      els.bestTime.textContent = d.bestTime;
+      els.audience.textContent = d.audience;
+      els.extra.textContent = d.extra;
+      els.badge.textContent = `${d.region} · ${d.vibe[0]}`;
+      els.badge.style.boxShadow = `0 0 0 1px rgba(255,255,255,.08), 0 0 0 999px color-mix(in srgb, ${d.color} 10%, transparent)`;
+      els.featureMeta.innerHTML = [d.region, ...d.vibe].map(v => `<span class="pill">${v}</span>`).join('');
+      els.mapsLink.href = mapsUrl(d.name);
+    }
+
+    function selectDestination(idx) {
+      activeIndex = idx;
+      const d = filtered[idx];
+      if (!d) return;
+      renderFeature(d);
+      document.querySelectorAll('.card').forEach((c, i) => c.classList.toggle('active', i === idx));
+      cScrollIntoView(idx);
+    }
+
+    function cScrollIntoView(idx) {
+      const card = document.querySelector(`.card[data-index="${idx}"]`);
+      if (card) card.scrollIntoView({behavior:'smooth', block:'nearest'});
+    }
+
+    function applyFilters() {
+      const q = els.q.value.trim().toLowerCase();
+      filtered = destinations.filter(d => {
+        const matchesRegion = els.region.value === 'all' || d.region === els.region.value;
+        const matchesTag = activeTag === 'all' || d.vibe.includes(activeTag);
+        const matchesQuery = !q || `${d.name} ${d.region} ${d.vibe.join(' ')} ${d.desc} ${d.bestTime} ${d.audience} ${d.extra}`.toLowerCase().includes(q);
+        return matchesRegion && matchesTag && matchesQuery;
+      });
+      els.countText.textContent = `${filtered.length} 個目的地`;
+      activeIndex = 0;
+      renderCards(filtered);
+      if (filtered.length) selectDestination(0);
+      else {
+        els.railList.innerHTML = '<div class="muted" style="padding:14px">沒有符合條件的目的地，換個關鍵字試試。</div>';
+      }
+    }
+
+    els.q.addEventListener('input', applyFilters);
+    els.region.addEventListener('change', applyFilters);
+    els.chips.addEventListener('click', (e) => {
+      const btn = e.target.closest('.chip');
+      if (!btn) return;
+      activeTag = btn.dataset.tag;
+      document.querySelectorAll('.chip').forEach(ch => ch.classList.toggle('active', ch === btn));
+      applyFilters();
     });
-    const marker = L.marker([spot.lat, spot.lng], { icon }).addTo(map).bindPopup(popupHtml(spot), { maxWidth: 280 });
-    marker.on('click', () => activateSpot(spot.id));
-    markers.set(spot.id, marker);
 
-    const card = document.createElement('article');
-    card.className = 'card';
-    card.dataset.id = spot.id;
-    card.dataset.county = spot.county;
-    card.dataset.search = `${spot.name} ${spot.county} ${spot.tags.join(' ')} ${spot.note}`.toLowerCase();
-    card.innerHTML = `
-      <div class="card-top">
-        <div>
-          <div class="county">${spot.county}</div>
-          <h3>${spot.name}</h3>
-        </div>
-        <div class="pin-dot" style="background:${spot.color}"></div>
-      </div>
-      <div class="card-body">
-        <div class="tags">${spot.tags.map(t => `<span class="tag">${t}</span>`).join('')}</div>
-        <p class="note">${spot.note}</p>
-        <div class="actions">
-          <a class="btn primary" href="${spot.mapsUrl}" target="_blank" rel="noopener">Google Maps</a>
-        </div>
-      </div>`;
-    card.addEventListener('click', (e) => {
-      if (e.target.closest('a')) return;
-      activateSpot(spot.id, true);
+    els.nextBtn.addEventListener('click', () => {
+      if (!filtered.length) return;
+      activeIndex = (activeIndex + 1) % filtered.length;
+      selectDestination(activeIndex);
     });
-    rail.appendChild(card);
-    cards.set(spot.id, card);
-  });
-}
 
-function applyFilter() {
-  const q = document.getElementById('q').value.trim().toLowerCase();
-  const county = document.getElementById('county').value;
-  activeList = spots.filter(s => {
-    const countyOk = county === 'all' || s.county === county;
-    const qOk = !q || `${s.name} ${s.county} ${s.tags.join(' ')} ${s.note}`.toLowerCase().includes(q);
-    return countyOk && qOk;
-  });
-  spots.forEach(s => {
-    const visible = activeList.some(x => x.id === s.id);
-    markers.get(s.id).setOpacity(visible ? 1 : 0.15);
-    cards.get(s.id).style.display = visible ? '' : 'none';
-  });
-  countText.textContent = `${activeList.length} 個地點`;
-  if (activeList.length) {
-    map.fitBounds(L.latLngBounds(activeList.map(s => [s.lat, s.lng])), { padding: [30, 30] });
-    currentIndex = 0;
-    activateSpot(activeList[0].id, false);
-  }
-}
-
-function activateSpot(id, pan=false) {
-  cards.forEach(c => c.classList.toggle('active', c.dataset.id === id));
-  const spot = spots.find(s => s.id === id);
-  if (!spot) return;
-  const marker = markers.get(id);
-  if (pan) map.flyTo([spot.lat, spot.lng], Math.max(map.getZoom(), 11), { duration: 0.8 });
-  marker.openPopup();
-  const card = cards.get(id);
-  if (card) card.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-}
-
-function focusCurrent(delta) {
-  if (!activeList.length) return;
-  currentIndex = (currentIndex + delta + activeList.length) % activeList.length;
-  activateSpot(activeList[currentIndex].id, true);
-}
-
-document.getElementById('q').addEventListener('input', applyFilter);
-document.getElementById('county').addEventListener('change', applyFilter);
-document.getElementById('fit').addEventListener('click', () => {
-  const allBounds = L.latLngBounds(spots.map(s => [s.lat, s.lng]));
-  map.fitBounds(allBounds, { padding: [30, 30] });
-});
-document.getElementById('next').addEventListener('click', () => focusCurrent(1));
-
-build();
-applyFilter();
-map.fitBounds(L.latLngBounds(spots.map(s => [s.lat, s.lng])), { padding: [30, 30] });
-</script>
+    renderCards(filtered);
+    renderFeature(filtered[0]);
+    els.mapsLink.href = mapsUrl(filtered[0].name);
+  </script>
 </body>
 </html>
