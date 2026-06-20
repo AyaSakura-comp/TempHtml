@@ -70,7 +70,6 @@
 
   #attraction-list { flex: 1; overflow-y: auto; padding: 8px; }
 
-  /* Card with image */
   .attraction-card {
     background: #1a2332;
     border-radius: 10px;
@@ -88,30 +87,6 @@
   .attraction-card.active {
     border-color: #ffab00;
     background: #1e3444;
-  }
-  .card-img-wrapper {
-    width: 100%; height: 120px;
-    position: relative; overflow: hidden;
-    background-size: cover;
-    background-position: center;
-  }
-  .card-img-wrapper img {
-    width: 100%; height: 100%;
-    object-fit: cover;
-    transition: transform 0.3s;
-  }
-  .attraction-card:hover .card-img-wrapper img { transform: scale(1.05); }
-  .card-img-wrapper .no-photo {
-    width: 100%; height: 100%;
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    gap: 4px;
-  }
-  .card-img-wrapper .no-photo .emoji { font-size: 2em; opacity: 0.5; }
-  .card-img-wrapper .no-photo .label {
-    font-size: 0.65em; color: #90a4ae;
-    background: rgba(0,0,0,0.4);
-    padding: 2px 10px; border-radius: 4px;
   }
   .card-body { padding: 8px 10px; }
   .card-header-row {
@@ -135,6 +110,13 @@
   }
   .card-tag.food { background: #4a148c; color: #ce93d8; }
   .card-tag.cool { background: #0d47a1; color: #90caf9; }
+  .gmaps-link {
+    display: inline-flex; align-items: center; gap: 3px;
+    text-decoration: none; color: #fff;
+    border-radius: 6px; font-size: 0.7em;
+    font-weight: bold; transition: all 0.2s;
+  }
+  .gmaps-link:hover { filter: brightness(1.2); }
 
   /* Category colors */
   .cat-咖啡廳 { background: #e65100; }
@@ -149,18 +131,7 @@
   .cat-美食 { background: #bf360c; }
   .cat-文創園區 { background: #7b1fa2; }
 
-  /* Image gradient backgrounds per category */
-  .grad-咖啡廳 { background: linear-gradient(135deg, #e65100, #bf360c); }
-  .grad-農場 { background: linear-gradient(135deg, #1b5e20, #2e7d32); }
-  .grad-自然景點 { background: linear-gradient(135deg, #004d40, #00695c); }
-  .grad-觀光工廠 { background: linear-gradient(135deg, #0d47a1, #1565c0); }
-  .grad-景點 { background: linear-gradient(135deg, #4a148c, #6a1b9a); }
-  .grad-博物館 { background: linear-gradient(135deg, #311b92, #4527a0); }
-  .grad-夜市 { background: linear-gradient(135deg, #b71c1c, #c62828); }
-  .grad-美食街 { background: linear-gradient(135deg, #bf360c, #d84315); }
-  .grad-餐廳 { background: linear-gradient(135deg, #880e4f, #ad1457); }
-  .grad-美食 { background: linear-gradient(135deg, #8d5000, #bf360c); }
-  .grad-文創園區 { background: linear-gradient(135deg, #4a148c, #7b1fa2); }
+
 
   /* Popup */
   .custom-popup .leaflet-popup-content-wrapper {
@@ -178,22 +149,24 @@
     font-weight: bold; margin-bottom: 6px;
   }
   .popup-card .popup-loc { color: #90a4ae; font-size: 0.75em; margin-bottom: 4px; }
-  .popup-card .popup-tags { display: flex; gap: 5px; flex-wrap: wrap; }
+  .popup-card .popup-tags { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 8px; }
   .popup-card .popup-tag {
     font-size: 0.7em; padding: 2px 6px; border-radius: 6px;
   }
   .popup-card .popup-tag.food { background: #4a148c; color: #ce93d8; }
   .popup-card .popup-tag.cool { background: #0d47a1; color: #90caf9; }
-  .popup-card .popup-img {
-    width: 100%; height: 100px; object-fit: cover;
-    border-radius: 8px; margin-bottom: 8px;
+  .popup-card .gmaps-links { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+  .popup-card .gmaps-link {
+    display: inline-flex; align-items: center; gap: 3px;
+    padding: 4px 10px; border-radius: 6px;
+    font-size: 0.7em; text-decoration: none;
+    font-weight: bold; color: #fff;
+    transition: all 0.2s;
   }
-  .popup-card .popup-no-img {
-    width: 100%; height: 80px;
-    display: flex; align-items: center; justify-content: center;
-    border-radius: 8px; margin-bottom: 8px;
-    font-size: 2em; opacity: 0.4;
-  }
+  .popup-card .gmaps-link.gmaps { background: #1565c0; }
+  .popup-card .gmaps-link.gmaps:hover { background: #1976d2; }
+  .popup-card .gmaps-link.nav { background: #2e7d32; }
+  .popup-card .gmaps-link.nav:hover { background: #388e3c; }
 
   /* Map */
   #map-container {
@@ -259,21 +232,8 @@
       background: linear-gradient(180deg, #0d47a1ee 60%, #0d47a100);
     }
 
-    /* Mobile list card: full-width, image on top */
     #attraction-list { padding: 6px; }
-    .attraction-card {
-      display: grid;
-      grid-template-columns: 100px 1fr;
-      grid-template-rows: auto;
-    }
-    .card-img-wrapper {
-      width: 100%; height: 100%;
-      min-height: 80px;
-    }
     .card-body { padding: 6px 8px; }
-    .card-name { font-size: 0.8em; }
-    .card-loc { font-size: 0.65em; }
-    .card-tags { margin-top: 3px; }
 
     /* Mobile toggle button */
     #toggle-sidebar {
@@ -362,128 +322,6 @@
 </div>
 
 <script>
-// ===== Unsplash Image Mapping =====
-// Using Unsplash Source API with keywords for dynamic image fetching
-// Format: { name: "unsplash-photo-id" } for direct photos, or keyword lookup
-
-// Direct Unsplash photo IDs for major attractions
-const unsplashDirect = {
-  // ===== 南投 =====
-  "日月潭": "1508218472605-00774907a9e3",
-  "清境農場": "1501785882330-d7337d60ef55",
-  "奧萬大國家森林遊樂區": "1506905926754-d6dd0234a155",
-  "溪頭自然教育園區": "1501785882330-d7337d60ef55",
-  "九族文化村": "1563982426845-ee0db114ff68",
-  "中台禪寺": "1562681333-ef4c0c50f5f1",
-  "埔里酒廠": "1563982426845-ee0db114ff68",
-  "日月老茶廠": "1563982426845-ee0db114ff68",
-  "樹德半山夢工廠": "1562681333-ef4c0c50f5f1",
-  "Cona's妮娜巧克力夢想城堡": "1563982426845-ee0db114ff68",
-  "菓風製菓工場": "1563982426845-ee0db114ff68",
-  "九二一地震教育園區": "1562681333-ef4c0c50f5f1",
-  "集集老街": "1562681333-ef4c0c50f5f1",
-  "車埕老街": "1562681333-ef4c0c50f5f1",
-  "雙龍瀑布吊橋": "1500389748464-9013a0ba7f47",
-  "瑞龍瀑布": "1500389748464-9013a0ba7f47",
-  "杉林溪森林生態渡假園區": "1506905926754-d6dd0234a155",
-  "惠蓀林場": "1506905926754-d6dd0234a155",
-  "合歡山": "1501785882330-d7337d60ef55",
-  "塔塔加": "1501785882330-d7337d60ef55",
-  "彩蝶瀑布": "1500389748464-9013a0ba7f47",
-  "鹿谷竹林秘境": "1506905926754-d6dd0234a155",
-  "大崙山觀光茶園步道": "1563982426845-ee0db114ff68",
-  "清境天空步道": "1501785882330-d7337d60ef55",
-  "中台禪寺": "1562681333-ef4c0c50f5f1",
-  // ===== 台中 =====
-  "高美濕地": "1506905926754-d6dd0234a155",
-  "武陵農場": "1501785882330-d7337d60ef55",
-  "福壽山農場": "1501785882330-d7337d60ef55",
-  "大雪山國家森林遊樂區": "1506905926754-d6dd0234a155",
-  "八仙山國家森林遊樂區": "1501785882330-d7337d60ef55",
-  "東勢林場遊樂區": "1501785882330-d7337d60ef55",
-  "谷關溫泉養生館": "1504551330079-a6b45b567d27",
-  "薰衣草森林": "1559099618925-3d1c3690a0f1",
-  "后豐自行車道": "1506905926754-d6dd0234a155",
-  "望高寮": "1506905926754-d6dd0234a155",
-  "大坑風景區": "1501785882330-d7337d60ef55",
-  "台中海洋館": "1544556892-1e418a62e265",
-  "國立自然科學博物館": "1559599601-7c2c48a18de7",
-  "霧峰林家花園": "1562681333-ef4c0c50f5f1",
-  "八卦山風景區": "1506905926754-d6dd0234a155",
-  // ===== 嘉義 =====
-  "阿里山森林遊樂區": "1508218472605-00774907a9e3",
-  "奮起湖": "1568239844524-ec29a18b2e92",
-  "太平雲梯": "1563982426845-ee0db114ff68",
-  "觀音瀑布": "1500389748464-9013a0ba7f47",
-  "達娜伊谷自然生態公園": "1583785616562-4171fe391a77",
-  "檜意森活村": "1562681333-ef4c0c50f5f1",
-  // ===== 台南 =====
-  "十鼓仁糖文創園區": "1523489126",
-  "奇美博物館": "1596838899835-00a85fb4b0a2",
-  "四草綠色隧道": "1596200500669-8b3797c8e41d",
-  "藤枝森林遊樂區": "1506905926754-d6dd0234a155",
-  // ===== 雲林 =====
-  "古坑綠色隧道": "1563982426845-ee0db114ff68",
-};
-
-// Category-based keyword mapping for Unsplash Source API
-const catKeywords = {
-  '咖啡廳': 'cafe coffee shop interior',
-  '農場': 'farm countryside nature taiwan',
-  '自然景點': 'forest nature mountain taiwan',
-  '觀光工廠': 'factory taiwan tourism',
-  '景點': 'taiwan travel landmark',
-  '博物館': 'museum architecture taiwan',
-  '文創園區': 'art creative district taiwan',
-  '夜市': 'taiwan night market street food',
-  '美食街': 'taiwan food street market',
-  '餐廳': 'restaurant taiwan food',
-  '美食': 'taiwan food dessert',
-  '文創園區': 'creative park taiwan'
-};
-
-// Name-based keyword mapping for specific attractions
-const nameKeywords = {
-  '日月潭': 'sun moon lake taiwan',
-  '清境農場': 'qingjing farm sheep',
-  '阿里山': 'alishan forest train',
-  '奮起湖': 'fenqihu old street',
-  '溪頭': 'xitou forest',
-  '奧萬大': 'aowanda forest',
-  '九族文化村': 'nine villages culture village',
-  '中台禪寺': 'zhongtai zen temple',
-  '埔里酒廠': 'pulri liquor factory',
-  '武陵農場': 'wuling farm peach',
-  '高美濕地': 'gaomei wetland',
-  '谷關': 'guguan hot spring',
-  '古坑': 'gukeng coffee green tunnel',
-  '竹山': 'zhushan bamboo',
-  '集集': 'jiji old street train',
-  '車埕': 'checeng old station',
-};
-
-function getPhotoUrl(name) {
-  // Check direct photo ID
-  if (unsplashDirect[name]) {
-    return `https://images.unsplash.com/photo-${unsplashDirect[name]}?w=400&h=250&fit=crop&auto=format`;
-  }
-  // Check name-specific keywords
-  for (const [key, val] of Object.entries(nameKeywords)) {
-    if (name.includes(key)) {
-      return `https://source.unsplash.com/featured/?${val}&sig=${name.length}`;
-    }
-  }
-  return null;
-}
-
-function getKeywordForAttraction(name) {
-  // Check name-specific keywords
-  for (const [key, val] of Object.entries(nameKeywords)) {
-    if (name.includes(key)) return val;
-  }
-  return null;
-}
-
 // ===== DATA =====
 const attractions = [
 {"name":"十鼓仁糖文創園區","lat":22.9957,"lng":120.1822,"cat":"文創園區","tags":["避暑","美食"],"loc":"仁德區"},
@@ -845,17 +683,16 @@ const catEmojis = {
   '餐廳':'🍽️','美食':'🍰'
 };
 
-function hasPhoto(name) {
-  return unsplashDirect[name] !== undefined;
+// Google Maps helper functions
+function getGoogleMapsUrl(name, lat, lng) {
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(lat+','+lng)+'&query='+encodeURIComponent(name)}`;
 }
 
-function getPhotoUrl(name) {
-  const id = unsplashDirect[name];
-  if (id) return `https://images.unsplash.com/photo-${id}?w=400&h=250&fit=crop&auto=format`;
-  return null;
+function getGoogleMapsDirectionsUrl(name, lat, lng) {
+  return `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
 }
 
-// ===== Map =====
+// ===== Map Setup =====
 const map = L.map('map', { zoomControl: false }).setView([23.6, 120.7], 8);
 L.control.zoom({ position: 'bottomright' }).addTo(map);
 L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
@@ -881,23 +718,20 @@ attractions.forEach((a, i) => {
     iconSize: [26, 26], iconAnchor: [13, 26], popupAnchor: [0, -26]
   });
 
-  // Popup with photo
-  let photoHtml = '';
-  if (hasPhoto(a.name)) {
-    const url = getPhotoUrl(a.name);
-    photoHtml = `<img class="popup-img" src="${url}" alt="${a.name}" loading="lazy">`;
-  } else {
-    photoHtml = `<div class="popup-no-img grad-${a.cat}">${emoji}</div>`;
-  }
+  const gmapsUrl = getGoogleMapsUrl(a.name, a.lat, a.lng);
+  const directionsUrl = getGoogleMapsDirectionsUrl(a.name, a.lat, a.lng);
 
   const popupContent = `
     <div class="popup-card">
-      ${photoHtml}
-      <h3>${a.name}</h3>
+      <h3>${emoji} ${a.name}</h3>
       <span class="popup-cat cat-${a.cat}">${a.cat}</span>
       <div class="popup-loc">📍 ${a.loc}</div>
       <div class="popup-tags">
         ${a.tags.map(t => `<span class="popup-tag ${t==='美食'?'food':'cool'}">${t==='美食'?'🍴 吃喝':'❄️ 避暑'}</span>`).join('')}
+      </div>
+      <div class="gmaps-links">
+        <a href="${gmapsUrl}" target="_blank" class="gmaps-link gmaps">📍 Google Maps</a>
+        <a href="${directionsUrl}" target="_blank" class="gmaps-link nav">🧭 導航</a>
       </div>
     </div>`;
 
@@ -942,30 +776,23 @@ document.getElementById('farm-count').textContent = attractions.filter(a => a.ca
 document.getElementById('factory-count').textContent = attractions.filter(a => a.cat === '觀光工廠').length;
 
 function createCardHTML(a) {
-  const hasImg = hasPhoto(a.name);
-  const imgUrl = getPhotoUrl(a.name);
   const emoji = catEmojis[a.cat] || '📍';
-
-  let imgHTML;
-  if (hasImg) {
-    imgHTML = `<img src="${imgUrl}" alt="${a.name}" loading="lazy">`;
-  } else {
-    imgHTML = `<div class="no-photo grad-${a.cat}">
-      <span class="emoji">${emoji}</span>
-      <span class="label">無照片</span>
-    </div>`;
-  }
+  const gmapsUrl = getGoogleMapsUrl(a.name, a.lat, a.lng);
+  const directionsUrl = getGoogleMapsDirectionsUrl(a.name, a.lat, a.lng);
 
   return `
-    <div class="card-img-wrapper">${imgHTML}</div>
     <div class="card-body">
       <div class="card-header-row">
-        <span class="card-name">${a.name}</span>
+        <span class="card-name">${emoji} ${a.name}</span>
         <span class="card-cat cat-${a.cat}">${a.cat}</span>
       </div>
       <div class="card-loc">📍 ${a.loc}</div>
       <div class="card-tags">
         ${a.tags.map(t => `<span class="card-tag ${t==='美食'?'food':'cool'}">${t==='美食'?'🍴':'❄️'} ${t}</span>`).join('')}
+      </div>
+      <div style="display:flex;gap:4px;margin-top:6px;">
+        <a href="${gmapsUrl}" target="_blank" class="gmaps-link gmaps" style="font-size:0.65em;padding:3px 8px;">📍 Google Maps</a>
+        <a href="${directionsUrl}" target="_blank" class="gmaps-link nav" style="font-size:0.65em;padding:3px 8px;">🧭 導航</a>
       </div>
     </div>`;
 }
@@ -977,7 +804,9 @@ function renderList(filtered) {
     card.className = 'attraction-card';
     card.dataset.index = a._idx;
     card.innerHTML = createCardHTML(a);
-    card.addEventListener('click', () => {
+    card.addEventListener('click', (e) => {
+      // Don't trigger if clicking links
+      if (e.target.tagName === 'A') return;
       const m = markers[a._idx];
       map.setView([a.lat, a.lng], 13);
       m.openPopup();
@@ -1018,6 +847,7 @@ applyFilters();
 function toggleSidebar() {
   document.getElementById('sidebar').classList.toggle('hidden');
 }
+
 </script>
 </body>
 </html>
