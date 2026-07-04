@@ -12,8 +12,10 @@
             --card-border: rgba(255, 255, 255, 0.08);
             --primary-accent: #00d2ff;
             --secondary-accent: #ff007f;
+            --third-accent: #00ff66;
             --primary-grad: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
             --secondary-grad: linear-gradient(135deg, #ff0844 0%, #ffb199 100%);
+            --third-grad: linear-gradient(135deg, #00ff87 0%, #60efff 100%);
             --text-main: #f5f6f8;
             --text-muted: #9ba3b0;
         }
@@ -65,20 +67,27 @@
             gap: 40px;
         }
 
-        .comparison-grid {
+        .top-row {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(2, 1fr);
             gap: 20px;
+            max-width: 700px;
+            margin: 0 auto;
+            width: 100%;
         }
 
-        @media (max-width: 1200px) {
-            .comparison-grid {
-                grid-template-columns: repeat(2, 1fr);
+        .bottom-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            width: 100%;
+        }
+
+        @media (max-width: 992px) {
+            .top-row {
+                grid-template-columns: 1fr;
             }
-        }
-
-        @media (max-width: 768px) {
-            .comparison-grid {
+            .bottom-row {
                 grid-template-columns: 1fr;
             }
         }
@@ -110,6 +119,14 @@
             box-shadow: 0 8px 32px 0 rgba(255, 0, 127, 0.1);
         }
 
+        .card.green-accent {
+            border-color: rgba(0, 255, 102, 0.2);
+        }
+        .card.green-accent:hover {
+            border-color: rgba(0, 255, 102, 0.5);
+            box-shadow: 0 8px 32px 0 rgba(0, 255, 102, 0.1);
+        }
+
         .card h2 {
             font-size: 1.25rem;
             margin: 0;
@@ -130,6 +147,10 @@
 
         .card.accent h2 span {
             background: var(--secondary-grad);
+        }
+
+        .card.green-accent h2 span {
+            background: var(--third-grad);
         }
 
         .img-wrapper {
@@ -153,7 +174,7 @@
 
         .meta-container {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: repeat(3, 1fr);
             gap: 24px;
         }
 
@@ -185,6 +206,12 @@
 
         .meta-card.accent h3 {
             background: var(--secondary-grad);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .meta-card.green-accent h3 {
+            background: var(--third-grad);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
@@ -240,10 +267,10 @@
 <body>
     <header>
         <h1>RefControl DSLR & Film Styles</h1>
-        <p class="subtitle">結構鎖定與多重 LoRA（散景與底片風）生成報告</p>
+        <p class="subtitle">結構鎖定與多重 LoRA（散景、底片風與寫實細節）生成報告</p>
     </header>
     <main>
-        <div class="comparison-grid">
+        <div class="top-row">
             <div class="card">
                 <h2><span></span>Original Image (原圖)</h2>
                 <div class="img-wrapper">
@@ -256,6 +283,9 @@
                     <img src="depth.png" alt="Depth Map">
                 </div>
             </div>
+        </div>
+
+        <div class="bottom-row">
             <div class="card">
                 <h2><span></span>Version 1: f/1.2 Bokeh</h2>
                 <div class="img-wrapper">
@@ -266,6 +296,12 @@
                 <h2><span></span>Version 2: f/1.2 + Film</h2>
                 <div class="img-wrapper">
                     <img src="output_film.png" alt="Version 2: f/1.2 + Film">
+                </div>
+            </div>
+            <div class="card green-accent">
+                <h2><span></span>Version 4: f/1.2 + Film + Detail</h2>
+                <div class="img-wrapper">
+                    <img src="output_film_real.png" alt="Version 4: f/1.2 + Film + UltraReal Detail">
                 </div>
             </div>
         </div>
@@ -318,6 +354,31 @@ Prompt: refcontrol, scafrdsr, depth of field f/1.2, creamy bokeh, extremely blur
                 </div>
                 <div class="code-box">
 Prompt: refcontrol, scafrdsr, analog, AnalogRedmAF, depth of field f/1.2, creamy bokeh, extremely blurry background, 35mm photograph, deep shadows, preserved bright highlights, natural color with slight desaturation, crisp sharp rendering, fine grain, editorial mood
+                </div>
+            </div>
+
+            <div class="meta-card green-accent">
+                <h3>Version 4: DSLR + Film + UltraReal Detail</h3>
+                <div class="meta-grid">
+                    <div class="meta-item">
+                        <div class="meta-label">Model</div>
+                        <div class="meta-value">FLUX.2 Klein 9B-KV</div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-label">Steps</div>
+                        <div class="meta-value">5 (few-step)</div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-label">Seed</div>
+                        <div class="meta-value">1783187170</div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-label">Adapters Staked</div>
+                        <div class="meta-value">refcontrol (1.0), dslr (0.85), analog (0.55), ultra_real (0.70)</div>
+                    </div>
+                </div>
+                <div class="code-box">
+Prompt: refcontrol, scafrdsr, analog, AnalogRedmAF, High-quality photograph of a, Make this photo high-quality, depth of field f/1.2, creamy bokeh, extremely blurry background, 35mm photograph, deep shadows, preserved bright highlights, natural color with slight desaturation, crisp sharp rendering, fine grain, editorial mood
                 </div>
             </div>
         </div>
