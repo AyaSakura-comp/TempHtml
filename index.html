@@ -3,15 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RefControl DSLR f/1.2 Generation Report</title>
+    <title>RefControl DSLR f/1.2 & Film Generation Report</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #0d0f12;
-            --card-bg: rgba(22, 26, 32, 0.6);
+            --bg-color: #080a0f;
+            --card-bg: rgba(18, 22, 30, 0.7);
             --card-border: rgba(255, 255, 255, 0.08);
             --primary-accent: #00d2ff;
+            --secondary-accent: #ff007f;
             --primary-grad: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+            --secondary-grad: linear-gradient(135deg, #ff0844 0%, #ffb199 100%);
             --text-main: #f5f6f8;
             --text-muted: #9ba3b0;
         }
@@ -20,7 +22,7 @@
             margin: 0;
             padding: 0;
             background-color: var(--bg-color);
-            background-image: radial-gradient(circle at 50% -20%, #1e2630 0%, #0d0f12 70%);
+            background-image: radial-gradient(circle at 50% -20%, #171d29 0%, #080a0f 75%);
             color: var(--text-main);
             font-family: 'Outfit', sans-serif;
             min-height: 100vh;
@@ -31,16 +33,16 @@
 
         header {
             width: 100%;
-            max-width: 1200px;
-            padding: 40px 20px 20px;
+            max-width: 1400px;
+            padding: 50px 20px 30px;
             box-sizing: border-box;
             text-align: center;
         }
 
         h1 {
-            font-size: 2.5rem;
+            font-size: 2.8rem;
             font-weight: 800;
-            margin: 0 0 10px;
+            margin: 0 0 12px;
             background: var(--primary-grad);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -49,13 +51,13 @@
 
         p.subtitle {
             color: var(--text-muted);
-            font-size: 1.1rem;
+            font-size: 1.15rem;
             margin: 0;
         }
 
         main {
             width: 100%;
-            max-width: 1200px;
+            max-width: 1400px;
             padding: 0 20px 60px;
             box-sizing: border-box;
             display: flex;
@@ -65,18 +67,30 @@
 
         .comparison-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 24px;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+
+        @media (max-width: 1200px) {
+            .comparison-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .comparison-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
         .card {
             background: var(--card-bg);
             border: 1px solid var(--card-border);
             border-radius: 20px;
-            padding: 24px;
+            padding: 20px;
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
             transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease;
             display: flex;
             flex-direction: column;
@@ -88,8 +102,16 @@
             border-color: rgba(0, 210, 255, 0.3);
         }
 
+        .card.accent {
+            border-color: rgba(255, 0, 127, 0.2);
+        }
+        .card.accent:hover {
+            border-color: rgba(255, 0, 127, 0.5);
+            box-shadow: 0 8px 32px 0 rgba(255, 0, 127, 0.1);
+        }
+
         .card h2 {
-            font-size: 1.3rem;
+            font-size: 1.25rem;
             margin: 0;
             font-weight: 600;
             color: var(--text-main);
@@ -106,11 +128,15 @@
             display: inline-block;
         }
 
+        .card.accent h2 span {
+            background: var(--secondary-grad);
+        }
+
         .img-wrapper {
             position: relative;
             border-radius: 12px;
             overflow: hidden;
-            background: #111418;
+            background: #0b0d12;
             aspect-ratio: 3/4;
         }
 
@@ -125,6 +151,18 @@
             transform: scale(1.03);
         }
 
+        .meta-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+        }
+
+        @media (max-width: 992px) {
+            .meta-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
         .meta-card {
             background: var(--card-bg);
             border: 1px solid var(--card-border);
@@ -137,7 +175,7 @@
 
         .meta-card h3 {
             margin-top: 0;
-            font-size: 1.4rem;
+            font-size: 1.35rem;
             font-weight: 600;
             background: var(--primary-grad);
             -webkit-background-clip: text;
@@ -145,9 +183,15 @@
             margin-bottom: 20px;
         }
 
+        .meta-card.accent h3 {
+            background: var(--secondary-grad);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
         .meta-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 20px;
         }
 
@@ -158,29 +202,30 @@
         }
 
         .meta-label {
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             color: var(--text-muted);
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
 
         .meta-value {
-            font-size: 1.05rem;
+            font-size: 1rem;
             font-weight: 500;
             color: var(--text-main);
         }
 
         .code-box {
-            background: rgba(10, 12, 16, 0.8);
+            background: rgba(10, 12, 16, 0.85);
             border-radius: 12px;
             padding: 16px;
             font-family: 'JetBrains Mono', monospace;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             line-height: 1.5;
             color: #d1d5db;
             overflow-x: auto;
             border: 1px solid rgba(255, 255, 255, 0.05);
             margin-top: 20px;
+            max-height: 120px;
         }
 
         footer {
@@ -194,8 +239,8 @@
 </head>
 <body>
     <header>
-        <h1>RefControl DSLR f/1.2 Result</h1>
-        <p class="subtitle">結構鎖定與 Sensor DSLR 光圈虛化生成報告</p>
+        <h1>RefControl DSLR & Film Styles</h1>
+        <p class="subtitle">結構鎖定與多重 LoRA（散景與底片風）生成報告</p>
     </header>
     <main>
         <div class="comparison-grid">
@@ -212,43 +257,68 @@
                 </div>
             </div>
             <div class="card">
-                <h2><span></span>RefControl f/1.2 Output (生成圖)</h2>
+                <h2><span></span>Version 1: f/1.2 Bokeh</h2>
                 <div class="img-wrapper">
-                    <img src="output.png" alt="RefControl f/1.2 Output">
+                    <img src="output.png" alt="Version 1: f/1.2 Bokeh">
+                </div>
+            </div>
+            <div class="card accent">
+                <h2><span></span>Version 2: f/1.2 + Film</h2>
+                <div class="img-wrapper">
+                    <img src="output_film.png" alt="Version 2: f/1.2 + Film">
                 </div>
             </div>
         </div>
 
-        <div class="meta-card">
-            <h3>Generation Configuration & Metadata</h3>
-            <div class="meta-grid">
-                <div class="meta-item">
-                    <div class="meta-label">Model</div>
-                    <div class="meta-value">FLUX.2 Klein 9B-KV</div>
+        <div class="meta-container">
+            <div class="meta-card">
+                <h3>Version 1: DSLR Bokeh Only</h3>
+                <div class="meta-grid">
+                    <div class="meta-item">
+                        <div class="meta-label">Model</div>
+                        <div class="meta-value">FLUX.2 Klein 9B-KV</div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-label">Steps</div>
+                        <div class="meta-value">5 (few-step)</div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-label">Seed</div>
+                        <div class="meta-value">1783185231</div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-label">Adapters Staked</div>
+                        <div class="meta-value">refcontrol (1.0), dslr (0.85)</div>
+                    </div>
                 </div>
-                <div class="meta-item">
-                    <div class="meta-label">Steps</div>
-                    <div class="meta-value">5 (few-step)</div>
-                </div>
-                <div class="meta-item">
-                    <div class="meta-label">Guidance Scale</div>
-                    <div class="meta-value">1.0</div>
-                </div>
-                <div class="meta-item">
-                    <div class="meta-label">Seed</div>
-                    <div class="meta-value">1783185231</div>
-                </div>
-                <div class="meta-item">
-                    <div class="meta-label">Structure LoRA</div>
-                    <div class="meta-value">refcontrol_klein9b_depth (1.0)</div>
-                </div>
-                <div class="meta-item">
-                    <div class="meta-label">Style LoRA</div>
-                    <div class="meta-value">sensor_dslr_flux_klein (0.85)</div>
+                <div class="code-box">
+Prompt: refcontrol, scafrdsr, DSLR sensor photography of a cute ginger and white cat sitting on a black laptop keyboard, wooden dining table, grey computer mouse on the right side, stairs in the background, 35mm photograph, depth of field f/1.2, creamy bokeh, extremely blurry background, natural window light, raw texture, neutral color grading
                 </div>
             </div>
-            <div class="code-box">
-Prompt: refcontrol, scafrdsr, DSLR sensor photography of a cute ginger and white cat sitting on a black laptop keyboard, wooden dining table, grey computer mouse on the right side, stairs in the background, 35mm photograph, depth of field f/1.2, creamy bokeh, extremely blurry background, natural window light, raw texture, neutral color grading
+
+            <div class="meta-card accent">
+                <h3>Version 2: DSLR Bokeh + Analog Film</h3>
+                <div class="meta-grid">
+                    <div class="meta-item">
+                        <div class="meta-label">Model</div>
+                        <div class="meta-value">FLUX.2 Klein 9B-KV</div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-label">Steps</div>
+                        <div class="meta-value">5 (few-step)</div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-label">Seed</div>
+                        <div class="meta-value">1783185658</div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-label">Adapters Staked</div>
+                        <div class="meta-value">refcontrol (1.0), dslr (0.85), analog (0.55)</div>
+                    </div>
+                </div>
+                <div class="code-box">
+Prompt: refcontrol, scafrdsr, analog, AnalogRedmAF, DSLR sensor photography, analog film of a cute ginger and white cat sitting on a black laptop keyboard, wooden dining table, grey computer mouse on the right side, stairs in the background, 35mm photograph, depth of field f/1.2, creamy bokeh, extremely blurry background, natural window light, raw texture, preserved bright highlights, deep shadows, fine grain, filmic, neutral color grading
+                </div>
             </div>
         </div>
     </main>
