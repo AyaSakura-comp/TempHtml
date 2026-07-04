@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RefControl Aperture f/1.2 Generation Report</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0d0f12;
+            --card-bg: rgba(22, 26, 32, 0.6);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --primary-accent: #00d2ff;
+            --primary-grad: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+            --text-main: #f5f6f8;
+            --text-muted: #9ba3b0;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            background-image: radial-gradient(circle at 50% -20%, #1e2630 0%, #0d0f12 70%);
+            color: var(--text-main);
+            font-family: 'Outfit', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        header {
+            width: 100%;
+            max-width: 1200px;
+            padding: 40px 20px 20px;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin: 0 0 10px;
+            background: var(--primary-grad);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        p.subtitle {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            margin: 0;
+        }
+
+        main {
+            width: 100%;
+            max-width: 1200px;
+            padding: 0 20px 60px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 24px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 24px;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(0, 210, 255, 0.3);
+        }
+
+        .card h2 {
+            font-size: 1.3rem;
+            margin: 0;
+            font-weight: 600;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card h2 span {
+            background: var(--primary-grad);
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .img-wrapper {
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #111418;
+            aspect-ratio: 2/3;
+        }
+
+        .img-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .img-wrapper:hover img {
+            transform: scale(1.03);
+        }
+
+        .meta-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 30px;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        .meta-card h3 {
+            margin-top: 0;
+            font-size: 1.4rem;
+            font-weight: 600;
+            background: var(--primary-grad);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 20px;
+        }
+
+        .meta-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .meta-item {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .meta-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .meta-value {
+            font-size: 1.05rem;
+            font-weight: 500;
+            color: var(--text-main);
+        }
+
+        .code-box {
+            background: rgba(10, 12, 16, 0.8);
+            border-radius: 12px;
+            padding: 16px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            color: #d1d5db;
+            overflow-x: auto;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            margin-top: 20px;
+        }
+
+        footer {
+            margin-top: auto;
+            padding: 40px;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>RefControl Aperture f/1.2 Result</h1>
+        <p class="subtitle">結構鎖定與光圈虛化生成報告</p>
+    </header>
+    <main>
+        <div class="comparison-grid">
+            <div class="card">
+                <h2><span></span>Original Image (原圖)</h2>
+                <div class="img-wrapper">
+                    <img src="original.jpg" alt="Original Image">
+                </div>
+            </div>
+            <div class="card">
+                <h2><span></span>Depth Map (深度圖)</h2>
+                <div class="img-wrapper">
+                    <img src="depth.png" alt="Depth Map">
+                </div>
+            </div>
+            <div class="card">
+                <h2><span></span>RefControl f/1.2 Output (生成圖)</h2>
+                <div class="img-wrapper">
+                    <img src="output.png" alt="RefControl f/1.2 Output">
+                </div>
+            </div>
+        </div>
+
+        <div class="meta-card">
+            <h3>Generation Configuration & Metadata</h3>
+            <div class="meta-grid">
+                <div class="meta-item">
+                    <div class="meta-label">Model</div>
+                    <div class="meta-value">FLUX.2 Klein 9B-KV</div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">Steps</div>
+                    <div class="meta-value">5 (few-step)</div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">Guidance Scale</div>
+                    <div class="meta-value">1.0</div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">Seed</div>
+                    <div class="meta-value">1783146556</div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">Structure LoRA</div>
+                    <div class="meta-value">refcontrol_klein9b_depth (1.0)</div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">Style LoRA</div>
+                    <div class="meta-value">analog_redmond_fluxklein9b (0.55)</div>
+                </div>
+            </div>
+            <div class="code-box">
+Prompt: refcontrol, analog, AnalogRedmAF, f/1.2 aperture, shallow depth of field, creamy bokeh, blurry background, deep shadows, preserved bright highlights, natural color with slight desaturation, crisp sharp rendering, fine grain, editorial mood
+            </div>
+        </div>
+    </main>
+    <footer>
+        Antigravity Coding Assistant &copy; 2026
+    </footer>
+</body>
+</html>
