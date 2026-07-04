@@ -13,9 +13,13 @@
             --primary-accent: #00d2ff;
             --secondary-accent: #ff007f;
             --third-accent: #00ff66;
+            --four-accent: #e5a93b;
+            --five-accent: #9d5bff;
             --primary-grad: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
             --secondary-grad: linear-gradient(135deg, #ff0844 0%, #ffb199 100%);
             --third-grad: linear-gradient(135deg, #00ff87 0%, #60efff 100%);
+            --four-grad: linear-gradient(135deg, #f12711 0%, #f5af19 100%);
+            --five-grad: linear-gradient(135deg, #7f00ff 0%, #e100ff 100%);
             --text-main: #f5f6f8;
             --text-muted: #9ba3b0;
         }
@@ -83,11 +87,18 @@
             width: 100%;
         }
 
+        .compare-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            width: 100%;
+        }
+
         @media (max-width: 992px) {
             .top-row {
                 grid-template-columns: 1fr;
             }
-            .bottom-row {
+            .bottom-row, .compare-row {
                 grid-template-columns: 1fr;
             }
         }
@@ -127,6 +138,22 @@
             box-shadow: 0 8px 32px 0 rgba(0, 255, 102, 0.1);
         }
 
+        .card.orange-accent {
+            border-color: rgba(245, 175, 25, 0.2);
+        }
+        .card.orange-accent:hover {
+            border-color: rgba(245, 175, 25, 0.5);
+            box-shadow: 0 8px 32px 0 rgba(245, 175, 25, 0.1);
+        }
+
+        .card.purple-accent {
+            border-color: rgba(157, 91, 255, 0.2);
+        }
+        .card.purple-accent:hover {
+            border-color: rgba(157, 91, 255, 0.5);
+            box-shadow: 0 8px 32px 0 rgba(157, 91, 255, 0.1);
+        }
+
         .card h2 {
             font-size: 1.25rem;
             margin: 0;
@@ -151,6 +178,14 @@
 
         .card.green-accent h2 span {
             background: var(--third-grad);
+        }
+
+        .card.orange-accent h2 span {
+            background: var(--four-grad);
+        }
+
+        .card.purple-accent h2 span {
+            background: var(--five-grad);
         }
 
         .img-wrapper {
@@ -302,6 +337,21 @@
                 <h2><span></span>Version 4: f/1.2 + Film + Detail</h2>
                 <div class="img-wrapper">
                     <img src="output_film_real.png" alt="Version 4: f/1.2 + Film + UltraReal Detail">
+                </div>
+            </div>
+        </div>
+
+        <div class="compare-row">
+            <div class="card orange-accent">
+                <h2><span></span>Version 5: Low-Denoise Image-to-Image (strength = 0.12)</h2>
+                <div class="img-wrapper">
+                    <img src="output_img2img_test.png" alt="Version 5: Low-Denoise Image-to-Image">
+                </div>
+            </div>
+            <div class="card purple-accent">
+                <h2><span></span>Version 6: Depth-Masked Composite (100% Original Cat)</h2>
+                <div class="img-wrapper">
+                    <img src="output_composite_depth.png" alt="Version 6: Depth-Masked Composite">
                 </div>
             </div>
         </div>
