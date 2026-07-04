@@ -372,7 +372,7 @@
                 </div>
             </div>
 
-            <div class="grid-2">
+            <div class="grid-3">
                 <div class="card orange-accent">
                     <h2><span></span>Version 5: Low-Denoise Image-to-Image (strength = 0.12)</h2>
                     <div class="img-wrapper">
@@ -383,6 +383,12 @@
                     <h2><span></span>Version 6: Depth-Masked Composite (100% Original Cat)</h2>
                     <div class="img-wrapper">
                         <img src="output_composite_depth.png" alt="Version 6: Depth-Masked Composite">
+                    </div>
+                </div>
+                <div class="card green-accent">
+                    <h2><span></span>Version 7: f/1.2 + Film + Pet LoRA (v67_pet)</h2>
+                    <div class="img-wrapper">
+                        <img src="output_cat_v67_pet.png" alt="Version 7: f/1.2 + Film + Pet LoRA">
                     </div>
                 </div>
             </div>
@@ -437,6 +443,31 @@ Prompt: refcontrol, scafrdsr, analog, AnalogRedmAF, depth of field f/1.2, creamy
 Method: Extract depth map foreground, create a soft alpha mask, overlay original sharp foreground onto FLUX generated blurred background.
                     </div>
                 </div>
+
+                <div class="meta-card green-accent">
+                    <h3>Version 7: DSLR + Film + Pet LoRA</h3>
+                    <div class="meta-grid">
+                        <div class="meta-item">
+                            <div class="meta-label">Model</div>
+                            <div class="meta-value">FLUX.2 Klein 9B-KV</div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-label">Steps</div>
+                            <div class="meta-value">5 (few-step)</div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-label">Seed</div>
+                            <div class="meta-value">1783189999</div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-label">Adapters Stacked</div>
+                            <div class="meta-value">refcontrol (1.0), dslr (0.80), analog (0.50), v67_pet (0.65)</div>
+                        </div>
+                    </div>
+                    <div class="code-box">
+Prompt: refcontrol, scafrdsr, analog, AnalogRedmAF, depth of field f/1.2, creamy bokeh, extremely blurry background, 35mm photograph, deep shadows, preserved bright highlights, natural color with slight desaturation, crisp sharp rendering, fine grain, editorial mood
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -457,7 +488,7 @@ Method: Extract depth map foreground, create a soft alpha mask, overlay original
                 </div>
             </div>
 
-            <div class="grid-2">
+            <div class="grid-3">
                 <div class="card accent">
                     <h2><span></span>Version 1: Raw FLUX (DSLR f/1.2 + Film)</h2>
                     <div class="img-wrapper">
@@ -468,6 +499,12 @@ Method: Extract depth map foreground, create a soft alpha mask, overlay original
                     <h2><span></span>Version 2: Depth-Masked Composite (100% Original Cat)</h2>
                     <div class="img-wrapper">
                         <img src="output_composite_ginger.png" alt="Depth-Masked Composite Ginger">
+                    </div>
+                </div>
+                <div class="card green-accent">
+                    <h2><span></span>Version 3: f/1.2 + Film + Pet LoRA (v67_pet)</h2>
+                    <div class="img-wrapper">
+                        <img src="output_ginger_v67_pet.png" alt="Version 3: f/1.2 + Film + Pet LoRA">
                     </div>
                 </div>
             </div>
@@ -520,6 +557,31 @@ Prompt: refcontrol, scafrdsr, analog, AnalogRedmAF, depth of field f/1.2, creamy
                     </div>
                     <div class="code-box">
 Method: Extract depth map foreground, create a soft alpha mask, overlay original sharp foreground onto FLUX generated blurred background.
+                    </div>
+                </div>
+
+                <div class="meta-card green-accent">
+                    <h3>Version 3: DSLR + Film + Pet LoRA</h3>
+                    <div class="meta-grid">
+                        <div class="meta-item">
+                            <div class="meta-label">Model</div>
+                            <div class="meta-value">FLUX.2 Klein 9B-KV</div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-label">Steps</div>
+                            <div class="meta-value">5 (few-step)</div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-label">Seed</div>
+                            <div class="meta-value">1783189999</div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-label">Adapters Stacked</div>
+                            <div class="meta-value">refcontrol (1.0), dslr (0.80), analog (0.50), v67_pet (0.65)</div>
+                        </div>
+                    </div>
+                    <div class="code-box">
+Prompt: refcontrol, scafrdsr, analog, AnalogRedmAF, depth of field f/1.2, creamy bokeh, extremely blurry background, 35mm photograph, deep shadows, preserved bright highlights, natural color with slight desaturation, crisp sharp rendering, fine grain, editorial mood
                     </div>
                 </div>
             </div>
