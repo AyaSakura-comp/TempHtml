@@ -40,7 +40,7 @@
         header {
             width: 100%;
             max-width: 1400px;
-            padding: 50px 20px 30px;
+            padding: 50px 20px 20px;
             box-sizing: border-box;
             text-align: center;
         }
@@ -58,7 +58,48 @@
         p.subtitle {
             color: var(--text-muted);
             font-size: 1.15rem;
-            margin: 0;
+            margin: 0 0 30px;
+        }
+
+        /* Tabs Navigation */
+        .tabs-container {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 40px;
+            width: 100%;
+            max-width: 600px;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 6px;
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-sizing: border-box;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.05rem;
+            font-weight: 600;
+            padding: 10px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            flex: 1;
+            text-align: center;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .tab-btn.active {
+            color: #080a0f;
+            background: var(--primary-grad);
+            box-shadow: 0 4px 15px rgba(0, 242, 254, 0.3);
         }
 
         main {
@@ -66,39 +107,40 @@
             max-width: 1400px;
             padding: 0 20px 60px;
             box-sizing: border-box;
-            display: flex;
-            flex-direction: column;
-            gap: 40px;
         }
 
-        .top-row {
+        .tab-content {
+            display: none;
+            flex-direction: column;
+            gap: 40px;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .tab-content.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .grid-2 {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 20px;
-            max-width: 700px;
-            margin: 0 auto;
             width: 100%;
         }
 
-        .bottom-row {
+        .grid-3 {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 20px;
             width: 100%;
         }
 
-        .compare-row {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-            width: 100%;
-        }
-
         @media (max-width: 992px) {
-            .top-row {
-                grid-template-columns: 1fr;
-            }
-            .bottom-row, .compare-row {
+            .grid-2, .grid-3 {
                 grid-template-columns: 1fr;
             }
         }
@@ -122,33 +164,25 @@
             border-color: rgba(0, 210, 255, 0.3);
         }
 
-        .card.accent {
-            border-color: rgba(255, 0, 127, 0.2);
-        }
+        .card.accent { border-color: rgba(255, 0, 127, 0.2); }
         .card.accent:hover {
             border-color: rgba(255, 0, 127, 0.5);
             box-shadow: 0 8px 32px 0 rgba(255, 0, 127, 0.1);
         }
 
-        .card.green-accent {
-            border-color: rgba(0, 255, 102, 0.2);
-        }
+        .card.green-accent { border-color: rgba(0, 255, 102, 0.2); }
         .card.green-accent:hover {
             border-color: rgba(0, 255, 102, 0.5);
             box-shadow: 0 8px 32px 0 rgba(0, 255, 102, 0.1);
         }
 
-        .card.orange-accent {
-            border-color: rgba(245, 175, 25, 0.2);
-        }
+        .card.orange-accent { border-color: rgba(245, 175, 25, 0.2); }
         .card.orange-accent:hover {
             border-color: rgba(245, 175, 25, 0.5);
             box-shadow: 0 8px 32px 0 rgba(245, 175, 25, 0.1);
         }
 
-        .card.purple-accent {
-            border-color: rgba(157, 91, 255, 0.2);
-        }
+        .card.purple-accent { border-color: rgba(157, 91, 255, 0.2); }
         .card.purple-accent:hover {
             border-color: rgba(157, 91, 255, 0.5);
             box-shadow: 0 8px 32px 0 rgba(157, 91, 255, 0.1);
@@ -165,28 +199,17 @@
         }
 
         .card h2 span {
-            background: var(--primary-grad);
             width: 8px;
             height: 8px;
             border-radius: 50%;
             display: inline-block;
+            background: var(--primary-grad);
         }
 
-        .card.accent h2 span {
-            background: var(--secondary-grad);
-        }
-
-        .card.green-accent h2 span {
-            background: var(--third-grad);
-        }
-
-        .card.orange-accent h2 span {
-            background: var(--four-grad);
-        }
-
-        .card.purple-accent h2 span {
-            background: var(--five-grad);
-        }
+        .card.accent h2 span { background: var(--secondary-grad); }
+        .card.green-accent h2 span { background: var(--third-grad); }
+        .card.orange-accent h2 span { background: var(--four-grad); }
+        .card.purple-accent h2 span { background: var(--five-grad); }
 
         .img-wrapper {
             position: relative;
@@ -209,14 +232,8 @@
 
         .meta-container {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 24px;
-        }
-
-        @media (max-width: 992px) {
-            .meta-container {
-                grid-template-columns: 1fr;
-            }
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
         }
 
         .meta-card {
@@ -247,6 +264,12 @@
 
         .meta-card.green-accent h3 {
             background: var(--third-grad);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .meta-card.purple-accent h3 {
+            background: var(--five-grad);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
@@ -303,138 +326,224 @@
     <header>
         <h1>RefControl DSLR & Film Styles</h1>
         <p class="subtitle">結構鎖定與多重 LoRA（散景、底片風與寫實細節）生成報告</p>
+        
+        <div class="tabs-container">
+            <button class="tab-btn active" onclick="switchTab('cat-1')">白橘貓 (Experiment 1)</button>
+            <button class="tab-btn" onclick="switchTab('cat-2')">黃橘貓 (Experiment 2)</button>
+        </div>
     </header>
+
     <main>
-        <div class="top-row">
-            <div class="card">
-                <h2><span></span>Original Image (原圖)</h2>
-                <div class="img-wrapper">
-                    <img src="original.jpg" alt="Original Image">
-                </div>
-            </div>
-            <div class="card">
-                <h2><span></span>Depth Map (深度圖)</h2>
-                <div class="img-wrapper">
-                    <img src="depth.png" alt="Depth Map">
-                </div>
-            </div>
-        </div>
-
-        <div class="bottom-row">
-            <div class="card">
-                <h2><span></span>Version 1: f/1.2 Bokeh</h2>
-                <div class="img-wrapper">
-                    <img src="output.png" alt="Version 1: f/1.2 Bokeh">
-                </div>
-            </div>
-            <div class="card accent">
-                <h2><span></span>Version 2: f/1.2 + Film</h2>
-                <div class="img-wrapper">
-                    <img src="output_film.png" alt="Version 2: f/1.2 + Film">
-                </div>
-            </div>
-            <div class="card green-accent">
-                <h2><span></span>Version 4: f/1.2 + Film + Detail</h2>
-                <div class="img-wrapper">
-                    <img src="output_film_real.png" alt="Version 4: f/1.2 + Film + UltraReal Detail">
-                </div>
-            </div>
-        </div>
-
-        <div class="compare-row">
-            <div class="card orange-accent">
-                <h2><span></span>Version 5: Low-Denoise Image-to-Image (strength = 0.12)</h2>
-                <div class="img-wrapper">
-                    <img src="output_img2img_test.png" alt="Version 5: Low-Denoise Image-to-Image">
-                </div>
-            </div>
-            <div class="card purple-accent">
-                <h2><span></span>Version 6: Depth-Masked Composite (100% Original Cat)</h2>
-                <div class="img-wrapper">
-                    <img src="output_composite_depth.png" alt="Version 6: Depth-Masked Composite">
-                </div>
-            </div>
-        </div>
-
-        <div class="meta-container">
-            <div class="meta-card">
-                <h3>Version 1: DSLR Bokeh Only</h3>
-                <div class="meta-grid">
-                    <div class="meta-item">
-                        <div class="meta-label">Model</div>
-                        <div class="meta-value">FLUX.2 Klein 9B-KV</div>
-                    </div>
-                    <div class="meta-item">
-                        <div class="meta-label">Steps</div>
-                        <div class="meta-value">5 (few-step)</div>
-                    </div>
-                    <div class="meta-item">
-                        <div class="meta-label">Seed</div>
-                        <div class="meta-value">1783186056</div>
-                    </div>
-                    <div class="meta-item">
-                        <div class="meta-label">Adapters Staked</div>
-                        <div class="meta-value">refcontrol (1.0), dslr (0.85)</div>
+        <!-- Tab 1: White-Orange Cat -->
+        <div id="cat-1" class="tab-content active">
+            <div class="grid-2">
+                <div class="card">
+                    <h2><span></span>Original Image (原圖)</h2>
+                    <div class="img-wrapper">
+                        <img src="original.jpg" alt="Original Image">
                     </div>
                 </div>
-                <div class="code-box">
-Prompt: refcontrol, scafrdsr, depth of field f/1.2, creamy bokeh, extremely blurry background, 35mm photograph, crisp sharp rendering, editorial mood
+                <div class="card">
+                    <h2><span></span>Depth Map (深度圖)</h2>
+                    <div class="img-wrapper">
+                        <img src="depth.png" alt="Depth Map">
+                    </div>
                 </div>
             </div>
 
-            <div class="meta-card accent">
-                <h3>Version 2: DSLR Bokeh + Analog Film</h3>
-                <div class="meta-grid">
-                    <div class="meta-item">
-                        <div class="meta-label">Model</div>
-                        <div class="meta-value">FLUX.2 Klein 9B-KV</div>
-                    </div>
-                    <div class="meta-item">
-                        <div class="meta-label">Steps</div>
-                        <div class="meta-value">5 (few-step)</div>
-                    </div>
-                    <div class="meta-item">
-                        <div class="meta-label">Seed</div>
-                        <div class="meta-value">1783186302</div>
-                    </div>
-                    <div class="meta-item">
-                        <div class="meta-label">Adapters Staked</div>
-                        <div class="meta-value">refcontrol (1.0), dslr (0.85), analog (0.55)</div>
+            <div class="grid-3">
+                <div class="card">
+                    <h2><span></span>Version 1: f/1.2 Bokeh</h2>
+                    <div class="img-wrapper">
+                        <img src="output.png" alt="Version 1: f/1.2 Bokeh">
                     </div>
                 </div>
-                <div class="code-box">
+                <div class="card accent">
+                    <h2><span></span>Version 2: f/1.2 + Film</h2>
+                    <div class="img-wrapper">
+                        <img src="output_film.png" alt="Version 2: f/1.2 + Film">
+                    </div>
+                </div>
+                <div class="card green-accent">
+                    <h2><span></span>Version 4: f/1.2 + Film + Detail</h2>
+                    <div class="img-wrapper">
+                        <img src="output_film_real.png" alt="Version 4: f/1.2 + Film + UltraReal Detail">
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <div class="card orange-accent">
+                    <h2><span></span>Version 5: Low-Denoise Image-to-Image (strength = 0.12)</h2>
+                    <div class="img-wrapper">
+                        <img src="output_img2img_test.png" alt="Version 5: Low-Denoise Image-to-Image">
+                    </div>
+                </div>
+                <div class="card purple-accent">
+                    <h2><span></span>Version 6: Depth-Masked Composite (100% Original Cat)</h2>
+                    <div class="img-wrapper">
+                        <img src="output_composite_depth.png" alt="Version 6: Depth-Masked Composite">
+                    </div>
+                </div>
+            </div>
+
+            <div class="meta-container">
+                <div class="meta-card">
+                    <h3>Version 2: DSLR Bokeh + Analog Film</h3>
+                    <div class="meta-grid">
+                        <div class="meta-item">
+                            <div class="meta-label">Model</div>
+                            <div class="meta-value">FLUX.2 Klein 9B-KV</div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-label">Steps</div>
+                            <div class="meta-value">5 (few-step)</div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-label">Seed</div>
+                            <div class="meta-value">1783186302</div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-label">Adapters Stacked</div>
+                            <div class="meta-value">refcontrol (1.0), dslr (0.85), analog (0.55)</div>
+                        </div>
+                    </div>
+                    <div class="code-box">
 Prompt: refcontrol, scafrdsr, analog, AnalogRedmAF, depth of field f/1.2, creamy bokeh, extremely blurry background, 35mm photograph, deep shadows, preserved bright highlights, natural color with slight desaturation, crisp sharp rendering, fine grain, editorial mood
+                    </div>
+                </div>
+
+                <div class="meta-card purple-accent">
+                    <h3>Version 6: Depth-Masked Composite</h3>
+                    <div class="meta-grid">
+                        <div class="meta-item">
+                            <div class="meta-label">Composite Type</div>
+                            <div class="meta-value">Depth Mask Blending (threshold = 85)</div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-label">Feather Radius</div>
+                            <div class="meta-value">15px Gaussian Blur</div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-label">Foreground Source</div>
+                            <div class="meta-value">100% Original Cat (Original.jpg)</div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-label">Background Source</div>
+                            <div class="meta-value">FLUX Generated f/1.2 + Film (V2)</div>
+                        </div>
+                    </div>
+                    <div class="code-box">
+Method: Extract depth map foreground, create a soft alpha mask, overlay original sharp foreground onto FLUX generated blurred background.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 2: Ginger Cat -->
+        <div id="cat-2" class="tab-content">
+            <div class="grid-2">
+                <div class="card">
+                    <h2><span></span>Original Image (原圖)</h2>
+                    <div class="img-wrapper">
+                        <img src="original_ginger.jpg" alt="Original Ginger Cat">
+                    </div>
+                </div>
+                <div class="card">
+                    <h2><span></span>Depth Map (深度圖)</h2>
+                    <div class="img-wrapper">
+                        <img src="depth_ginger.png" alt="Depth Map Ginger">
+                    </div>
                 </div>
             </div>
 
-            <div class="meta-card green-accent">
-                <h3>Version 4: DSLR + Film + UltraReal Detail</h3>
-                <div class="meta-grid">
-                    <div class="meta-item">
-                        <div class="meta-label">Model</div>
-                        <div class="meta-value">FLUX.2 Klein 9B-KV</div>
-                    </div>
-                    <div class="meta-item">
-                        <div class="meta-label">Steps</div>
-                        <div class="meta-value">5 (few-step)</div>
-                    </div>
-                    <div class="meta-item">
-                        <div class="meta-label">Seed</div>
-                        <div class="meta-value">1783187170</div>
-                    </div>
-                    <div class="meta-item">
-                        <div class="meta-label">Adapters Staked</div>
-                        <div class="meta-value">refcontrol (1.0), dslr (0.85), analog (0.55), ultra_real (0.70)</div>
+            <div class="grid-2">
+                <div class="card accent">
+                    <h2><span></span>Version 1: Raw FLUX (DSLR f/1.2 + Film)</h2>
+                    <div class="img-wrapper">
+                        <img src="output_ginger_film.png" alt="Raw FLUX DSLR + Film">
                     </div>
                 </div>
-                <div class="code-box">
-Prompt: refcontrol, scafrdsr, analog, AnalogRedmAF, High-quality photograph of a, Make this photo high-quality, depth of field f/1.2, creamy bokeh, extremely blurry background, 35mm photograph, deep shadows, preserved bright highlights, natural color with slight desaturation, crisp sharp rendering, fine grain, editorial mood
+                <div class="card purple-accent">
+                    <h2><span></span>Version 2: Depth-Masked Composite (100% Original Cat)</h2>
+                    <div class="img-wrapper">
+                        <img src="output_composite_ginger.png" alt="Depth-Masked Composite Ginger">
+                    </div>
+                </div>
+            </div>
+
+            <div class="meta-container">
+                <div class="meta-card accent">
+                    <h3>Raw FLUX: DSLR Bokeh + Analog Film</h3>
+                    <div class="meta-grid">
+                        <div class="meta-item">
+                            <div class="meta-label">Model</div>
+                            <div class="meta-value">FLUX.2 Klein 9B-KV</div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-label">Steps</div>
+                            <div class="meta-value">5 (few-step)</div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-label">Seed</div>
+                            <div class="meta-value">Dynamic seed</div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-label">Adapters Stacked</div>
+                            <div class="meta-value">refcontrol (1.0), dslr (0.85), analog (0.55)</div>
+                        </div>
+                    </div>
+                    <div class="code-box">
+Prompt: refcontrol, scafrdsr, analog, AnalogRedmAF, depth of field f/1.2, creamy bokeh, extremely blurry background, 35mm photograph, deep shadows, preserved bright highlights, natural color with slight desaturation, crisp sharp rendering, fine grain, editorial mood
+                    </div>
+                </div>
+
+                <div class="meta-card purple-accent">
+                    <h3>Depth-Masked Composite (Recommended)</h3>
+                    <div class="meta-grid">
+                        <div class="meta-item">
+                            <div class="meta-label">Composite Type</div>
+                            <div class="meta-value">Depth Mask Blending (threshold = 90)</div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-label">Feather Radius</div>
+                            <div class="meta-value">15px Gaussian Blur</div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-label">Foreground Source</div>
+                            <div class="meta-value">100% Original Ginger Cat (original_ginger.jpg)</div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-label">Background Source</div>
+                            <div class="meta-value">FLUX Generated f/1.2 + Film (V1)</div>
+                        </div>
+                    </div>
+                    <div class="code-box">
+Method: Extract depth map foreground, create a soft alpha mask, overlay original sharp foreground onto FLUX generated blurred background.
+                    </div>
                 </div>
             </div>
         </div>
     </main>
+
     <footer>
         Antigravity Coding Assistant &copy; 2026
     </footer>
+
+    <script>
+        function switchTab(tabId) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            // Remove active class from all buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            // Show target content and activate button
+            document.getElementById(tabId).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+    </script>
 </body>
 </html>
