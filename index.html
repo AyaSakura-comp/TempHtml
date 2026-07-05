@@ -1,764 +1,447 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RefControl DSLR f/1.2 & Film Generation Report</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg-color: #080a0f;
-            --card-bg: rgba(18, 22, 30, 0.7);
-            --card-border: rgba(255, 255, 255, 0.08);
-            --primary-accent: #00d2ff;
-            --secondary-accent: #ff007f;
-            --third-accent: #00ff66;
-            --four-accent: #e5a93b;
-            --five-accent: #9d5bff;
-            --primary-grad: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
-            --secondary-grad: linear-gradient(135deg, #ff0844 0%, #ffb199 100%);
-            --third-grad: linear-gradient(135deg, #00ff87 0%, #60efff 100%);
-            --four-grad: linear-gradient(135deg, #f12711 0%, #f5af19 100%);
-            --five-grad: linear-gradient(135deg, #7f00ff 0%, #e100ff 100%);
-            --text-main: #f5f6f8;
-            --text-muted: #9ba3b0;
-        }
-
-        body {
-            margin: 0;
-            padding: 0;
-            background-color: var(--bg-color);
-            background-image: radial-gradient(circle at 50% -20%, #171d29 0%, #080a0f 75%);
-            color: var(--text-main);
-            font-family: 'Outfit', sans-serif;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        header {
-            width: 100%;
-            max-width: 1400px;
-            padding: 50px 20px 20px;
-            box-sizing: border-box;
-            text-align: center;
-        }
-
-        h1 {
-            font-size: 2.8rem;
-            font-weight: 800;
-            margin: 0 0 12px;
-            background: var(--primary-grad);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            letter-spacing: -0.5px;
-        }
-
-        p.subtitle {
-            color: var(--text-muted);
-            font-size: 1.15rem;
-            margin: 0 0 30px;
-        }
-
-        /* Tabs Navigation */
-        .tabs-container {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-bottom: 40px;
-            width: 100%;
-            max-width: 600px;
-            background: rgba(255, 255, 255, 0.03);
-            padding: 6px;
-            border-radius: 30px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            box-sizing: border-box;
-        }
-
-        .tab-btn {
-            background: transparent;
-            border: none;
-            color: var(--text-muted);
-            font-family: 'Outfit', sans-serif;
-            font-size: 1.05rem;
-            font-weight: 600;
-            padding: 10px 24px;
-            border-radius: 25px;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-            flex: 1;
-            text-align: center;
-        }
-
-        .tab-btn:hover {
-            color: var(--text-main);
-            background: rgba(255, 255, 255, 0.05);
-        }
-
-        .tab-btn.active {
-            color: #080a0f;
-            background: var(--primary-grad);
-            box-shadow: 0 4px 15px rgba(0, 242, 254, 0.3);
-        }
-
-        main {
-            width: 100%;
-            max-width: 1400px;
-            padding: 0 20px 60px;
-            box-sizing: border-box;
-        }
-
-        .tab-content {
-            display: none;
-            flex-direction: column;
-            gap: 40px;
-            animation: fadeIn 0.4s ease-out;
-        }
-
-        .tab-content.active {
-            display: flex;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .grid-2 {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-            width: 100%;
-        }
-
-        .grid-3 {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-            width: 100%;
-        }
-
-        @media (max-width: 992px) {
-            .grid-2, .grid-3 {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .card {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 20px;
-            padding: 20px;
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
-            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-
-        .card:hover {
-            transform: translateY(-4px);
-            border-color: rgba(0, 210, 255, 0.3);
-        }
-
-        .card.accent { border-color: rgba(255, 0, 127, 0.2); }
-        .card.accent:hover {
-            border-color: rgba(255, 0, 127, 0.5);
-            box-shadow: 0 8px 32px 0 rgba(255, 0, 127, 0.1);
-        }
-
-        .card.green-accent { border-color: rgba(0, 255, 102, 0.2); }
-        .card.green-accent:hover {
-            border-color: rgba(0, 255, 102, 0.5);
-            box-shadow: 0 8px 32px 0 rgba(0, 255, 102, 0.1);
-        }
-
-        .card.orange-accent { border-color: rgba(245, 175, 25, 0.2); }
-        .card.orange-accent:hover {
-            border-color: rgba(245, 175, 25, 0.5);
-            box-shadow: 0 8px 32px 0 rgba(245, 175, 25, 0.1);
-        }
-
-        .card.purple-accent { border-color: rgba(157, 91, 255, 0.2); }
-        .card.purple-accent:hover {
-            border-color: rgba(157, 91, 255, 0.5);
-            box-shadow: 0 8px 32px 0 rgba(157, 91, 255, 0.1);
-        }
-
-        .card h2 {
-            font-size: 1.25rem;
-            margin: 0;
-            font-weight: 600;
-            color: var(--text-main);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .card h2 span {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            display: inline-block;
-            background: var(--primary-grad);
-        }
-
-        .card.accent h2 span { background: var(--secondary-grad); }
-        .card.green-accent h2 span { background: var(--third-grad); }
-        .card.orange-accent h2 span { background: var(--four-grad); }
-        .card.purple-accent h2 span { background: var(--five-grad); }
-
-        .img-wrapper {
-            position: relative;
-            border-radius: 12px;
-            overflow: hidden;
-            background: #0b0d12;
-            aspect-ratio: 3/4;
-        }
-
-        .img-wrapper img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.5s ease;
-        }
-
-        .img-wrapper:hover img {
-            transform: scale(1.03);
-        }
-
-        .meta-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 20px;
-        }
-
-        .meta-card {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 20px;
-            padding: 30px;
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-        }
-
-        .meta-card h3 {
-            margin-top: 0;
-            font-size: 1.35rem;
-            font-weight: 600;
-            background: var(--primary-grad);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 20px;
-        }
-
-        .meta-card.accent h3 {
-            background: var(--secondary-grad);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .meta-card.green-accent h3 {
-            background: var(--third-grad);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .meta-card.purple-accent h3 {
-            background: var(--five-grad);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .meta-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 20px;
-        }
-
-        .meta-item {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        .meta-label {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .meta-value {
-            font-size: 1rem;
-            font-weight: 500;
-            color: var(--text-main);
-        }
-
-        .code-box {
-            background: rgba(10, 12, 16, 0.85);
-            border-radius: 12px;
-            padding: 16px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.85rem;
-            line-height: 1.5;
-            color: #d1d5db;
-            overflow-x: auto;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            margin-top: 20px;
-            max-height: 120px;
-        }
-
-        footer {
-            margin-top: auto;
-            padding: 40px;
-            color: var(--text-muted);
-            font-size: 0.9rem;
-            text-align: center;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0a0a1a">
+<title>3D 貪吃蛇</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    width: 100%; height: 100%; overflow: hidden;
+    background: #0a0a1a;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    color: #fff;
+    touch-action: none;
+    overscroll-behavior: none;
+  }
+  #game { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+  #hud {
+    position: fixed; top: 0; left: 0; right: 0;
+    padding: calc(env(safe-area-inset-top, 0px) + 10px) 16px 10px;
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 16px; font-weight: 600; pointer-events: none;
+    text-shadow: 0 2px 8px rgba(0,0,0,.8);
+    z-index: 10;
+  }
+  #score { color: #7ee787; }
+  #best  { color: #ffd479; }
+  #overlay {
+    position: fixed; inset: 0; z-index: 20;
+    background: rgba(8, 10, 24, 0.82);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 24px;
+    transition: opacity .3s;
+  }
+  #overlay.hidden { opacity: 0; pointer-events: none; }
+  #overlay h1 {
+    font-size: clamp(28px, 8vw, 48px);
+    font-weight: 800;
+    background: linear-gradient(135deg, #7ee787, #4ec9b0, #5db1ff);
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 8px; letter-spacing: 1px;
+  }
+  #overlay p { color: #aab; max-width: 320px; font-size: 14px; line-height: 1.6; margin-bottom: 24px; }
+  #overlay .score-final { font-size: 18px; color: #ffd479; margin-bottom: 8px; }
+  #startBtn {
+    font-size: 18px; font-weight: 700;
+    padding: 14px 36px; border-radius: 999px;
+    background: linear-gradient(135deg, #4ec9b0, #5db1ff);
+    color: #fff; border: none; cursor: pointer;
+    box-shadow: 0 8px 24px rgba(93,177,255,.4);
+    transition: transform .15s, box-shadow .15s;
+  }
+  #startBtn:active { transform: scale(.94); box-shadow: 0 4px 12px rgba(93,177,255,.3); }
+  .ctrl-hint { font-size: 13px; color: #889; margin-top: 18px; line-height: 1.7; }
+  .ctrl-hint b { color: #ccd; }
+</style>
 </head>
 <body>
-    <header>
-        <h1>RefControl DSLR & Film Styles</h1>
-        <p class="subtitle">結構鎖定與多重 LoRA（散景、底片風與寫實細節）生成報告</p>
-        
-        <div class="tabs-container">
-            <button class="tab-btn active" onclick="switchTab('cat-1')">白橘貓 (Experiment 1)</button>
-            <button class="tab-btn" onclick="switchTab('cat-2')">黃橘貓 (Experiment 2)</button>
-        </div>
-    </header>
+<canvas id="game"></canvas>
 
-    <main>
-        <!-- Tab 1: White-Orange Cat -->
-        <div id="cat-1" class="tab-content active">
-            <div class="grid-2">
-                <div class="card">
-                    <h2><span></span>Original Image (原圖)</h2>
-                    <div class="img-wrapper">
-                        <img src="original.jpg" alt="Original Image">
-                    </div>
-                </div>
-                <div class="card">
-                    <h2><span></span>Depth Map (深度圖)</h2>
-                    <div class="img-wrapper">
-                        <img src="depth.png" alt="Depth Map">
-                    </div>
-                </div>
-            </div>
+<div id="hud">
+  <div>分數 <span id="score">0</span></div>
+  <div>最佳 <span id="best">0</span></div>
+</div>
 
-            <div class="grid-3">
-                <div class="card">
-                    <h2><span></span>Version 1: f/1.2 Bokeh</h2>
-                    <div class="img-wrapper">
-                        <img src="output.png" alt="Version 1: f/1.2 Bokeh">
-                    </div>
-                </div>
-                <div class="card accent">
-                    <h2><span></span>Version 2: f/1.2 + Film</h2>
-                    <div class="img-wrapper">
-                        <img src="output_film.png" alt="Version 2: f/1.2 + Film">
-                    </div>
-                </div>
-                <div class="card green-accent">
-                    <h2><span></span>Version 4: f/1.2 + Film + Detail</h2>
-                    <div class="img-wrapper">
-                        <img src="output_film_real.png" alt="Version 4: f/1.2 + Film + UltraReal Detail">
-                    </div>
-                </div>
-            </div>
+<div id="overlay">
+  <h1>3D 貪吃蛇</h1>
+  <p>在 3D 空間中滑動螢幕改變方向，吃掉金色方塊加分。撞牆或撞到自己就結束。</p>
+  <div class="score-final" id="finalScore" style="display:none;"></div>
+  <button id="startBtn">開始遊戲</button>
+  <div class="ctrl-hint">
+    <b>操作：</b>上下左右滑動翻轉方向<br>
+    <b>視角：</b>單指拖曳可旋轉視角
+  </div>
+</div>
 
-            <div class="grid-3">
-                <div class="card orange-accent">
-                    <h2><span></span>Version 5: Low-Denoise Image-to-Image (strength = 0.12)</h2>
-                    <div class="img-wrapper">
-                        <img src="output_img2img_test.png" alt="Version 5: Low-Denoise Image-to-Image">
-                    </div>
-                </div>
-                <div class="card purple-accent">
-                    <h2><span></span>Version 6: Depth-Masked Composite (100% Original Cat)</h2>
-                    <div class="img-wrapper">
-                        <img src="output_composite_depth.png" alt="Version 6: Depth-Masked Composite">
-                    </div>
-                </div>
-                <div class="card green-accent">
-                    <h2><span></span>Version 7: f/1.2 + Film + Pet LoRA (v67_pet)</h2>
-                    <div class="img-wrapper">
-                        <img src="output_cat_v67_pet.png" alt="Version 7: f/1.2 + Film + Pet LoRA">
-                    </div>
-                </div>
-            </div>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js"
+  }
+}
+</script>
 
-            <div class="divider"></div>
-            <div style="margin-top: 30px; margin-bottom: 30px;">
-                <div class="card orange-accent" style="max-width: 800px; margin: 0 auto;">
-                    <h2><span></span>Version 8: Frequency-Separated Hybrid (100% Original Fur Detail + FLUX Style)</h2>
-                    <div class="img-wrapper">
-                        <img src="output_frequency_cat.png" alt="Version 8: Frequency-Separated Hybrid">
-                    </div>
-                </div>
-            </div>
+<script type="module">
+import * as THREE from 'three';
 
-            <div style="margin-top: 30px; margin-bottom: 30px;">
-                <h2 style="text-align: center; color: var(--text); margin-bottom: 20px;">T2I Step Comparison (無參考圖步數對比)</h2>
-                <div class="grid-3">
-                    <div class="card accent">
-                        <h2><span></span>T2I: 5 Steps (Few-step Distilled)</h2>
-                        <div class="img-wrapper">
-                            <img src="output_t2i_cat.png" alt="T2I 5 Steps">
-                        </div>
-                    </div>
-                    <div class="card accent">
-                        <h2><span></span>T2I: 10 Steps</h2>
-                        <div class="img-wrapper">
-                            <img src="output_t2i_cat_10steps.png" alt="T2I 10 Steps">
-                        </div>
-                    </div>
-                    <div class="card accent">
-                        <h2><span></span>T2I: 20 Steps</h2>
-                        <div class="img-wrapper">
-                            <img src="output_t2i_cat_20steps.png" alt="T2I 20 Steps">
-                        </div>
-                    </div>
-                </div>
-            </div>
+// ---------- 基本設定 ----------
+const GRID = 11;            // 棋盤單邊格數
+const CELL = 1;             // 每格大小
+const HALF = GRID / 2;
+const canvas = document.getElementById('game');
 
-            <div class="meta-container">
-                <div class="meta-card">
-                    <h3>Version 2: DSLR Bokeh + Analog Film</h3>
-                    <div class="meta-grid">
-                        <div class="meta-item">
-                            <div class="meta-label">Model</div>
-                            <div class="meta-value">FLUX.2 Klein 9B-KV</div>
-                        </div>
-                        <div class="meta-item">
-                            <div class="meta-label">Steps</div>
-                            <div class="meta-value">5 (few-step)</div>
-                        </div>
-                        <div class="meta-item">
-                            <div class="meta-label">Seed</div>
-                            <div class="meta-value">1783186302</div>
-                        </div>
-                        <div class="meta-item">
-                            <div class="meta-label">Adapters Stacked</div>
-                            <div class="meta-value">refcontrol (1.0), dslr (0.85), analog (0.55)</div>
-                        </div>
-                    </div>
-                    <div class="code-box">
-Prompt: refcontrol, scafrdsr, analog, AnalogRedmAF, depth of field f/1.2, creamy bokeh, extremely blurry background, 35mm photograph, deep shadows, preserved bright highlights, natural color with slight desaturation, crisp sharp rendering, fine grain, editorial mood
-                    </div>
-                </div>
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-                <div class="meta-card purple-accent">
-                    <h3>Version 6: Depth-Masked Composite</h3>
-                    <div class="meta-grid">
-                        <div class="meta-item">
-                            <div class="meta-label">Composite Type</div>
-                            <div class="meta-value">Depth Mask Blending (threshold = 85)</div>
-                        </div>
-                        <div class="meta-item">
-                            <div class="meta-label">Feather Radius</div>
-                            <div class="meta-value">15px Gaussian Blur</div>
-                        </div>
-                        <div class="meta-item">
-                            <div class="meta-label">Foreground Source</div>
-                            <div class="meta-value">100% Original Cat (Original.jpg)</div>
-                        </div>
-                        <div class="meta-item">
-                            <div class="meta-label">Background Source</div>
-                            <div class="meta-value">FLUX Generated f/1.2 + Film (V2)</div>
-                        </div>
-                    </div>
-                    <div class="code-box">
-Method: Extract depth map foreground, create a soft alpha mask, overlay original sharp foreground onto FLUX generated blurred background.
-                    </div>
-                </div>
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0a0a1a);
+scene.fog = new THREE.Fog(0x0a0a1a, 18, 38);
 
-                <div class="meta-card green-accent">
-                    <h3>Version 7: DSLR + Film + Pet LoRA</h3>
-                    <div class="meta-grid">
-                        <div class="meta-item">
-                            <div class="meta-label">Model</div>
-                            <div class="meta-value">FLUX.2 Klein 9B-KV</div>
-                        </div>
-                        <div class="meta-item">
-                            <div class="meta-label">Steps</div>
-                            <div class="meta-value">5 (few-step)</div>
-                        </div>
-                        <div class="meta-item">
-                            <div class="meta-label">Seed</div>
-                            <div class="meta-value">1783189999</div>
-                        </div>
-                        <div class="meta-item">
-                            <div class="meta-label">Adapters Stacked</div>
-                            <div class="meta-value">refcontrol (1.0), dslr (0.80), analog (0.50), v67_pet (0.65)</div>
-                        </div>
-                    </div>
-                    <div class="code-box">
-Prompt: refcontrol, scafrdsr, analog, AnalogRedmAF, depth of field f/1.2, creamy bokeh, extremely blurry background, 35mm photograph, deep shadows, preserved bright highlights, natural color with slight desaturation, crisp sharp rendering, fine grain, editorial mood
-                    </div>
-                </div>
+const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 100);
+camera.position.set(0, 14, 16);
+camera.lookAt(0, 0, 0);
 
-                <div class="meta-card orange-accent">
-                    <h3>Version 8: Frequency-Separated Hybrid</h3>
-                    <div class="meta-grid">
-                        <div class="meta-item">
-                            <div class="meta-label">Detail Source</div>
-                            <div class="meta-value">100% Original High-Frequency Fur (original.jpg)</div>
-                        </div>
-                        <div class="meta-item">
-                            <div class="meta-label">Color & Tone Source</div>
-                            <div class="meta-value">FLUX V7 Pet LoRA Low-Frequency (v67_pet)</div>
-                        </div>
-                        <div class="meta-item">
-                            <div class="meta-label">Gaussian Blur Radius</div>
-                            <div class="meta-value">5px for frequency split</div>
-                        </div>
-                        <div class="meta-item">
-                            <div class="meta-label">Alignment</div>
-                            <div class="meta-value">Pixel-perfect Crop-Align</div>
-                        </div>
-                    </div>
-                    <div class="code-box">
-Method: Extracts fine high-frequency details (whiskers, hair strands) from the original cat, and overlays them onto the low-frequency colors, lighting, and textures generated by the FLUX v67_pet LoRA model. This eliminates both style mismatch and blurry AI fur!
-                    </div>
-                </div>
+// ---------- 燈光 ----------
+const ambient = new THREE.AmbientLight(0x6688cc, 0.5);
+scene.add(ambient);
 
-                <div class="meta-card accent">
-                    <h3>Version 9: Text-to-Image Direct Generation</h3>
-                    <div class="meta-grid">
-                        <div class="meta-item">
-                            <div class="meta-label">Model</div>
-                            <div class="meta-value">FLUX.2 Klein 9B-KV</div>
-                        </div>
-                        <div class="meta-item">
-                            <div class="meta-label">Ref Image (Pose)</div>
-                            <div class="meta-value">None (Pure Text-to-Image)</div>
-                        </div>
-                        <div class="meta-item">
-                            <div class="meta-label">Seed</div>
-                            <div class="meta-value">1783189999</div>
-                        </div>
-                        <div class="meta-item">
-                            <div class="meta-label">Adapters Stacked</div>
-                            <div class="meta-value">dslr (0.85), analog (0.55), v67_pet (0.65)</div>
-                        </div>
-                    </div>
-                    <div class="code-box">
-Prompt: A cute white and orange cat, scafrdsr, analog, AnalogRedmAF, depth of field f/1.2, creamy bokeh, extremely blurry background, 35mm photograph, deep shadows, preserved bright highlights, natural color with slight desaturation, crisp sharp rendering, fine grain, editorial mood
-                    </div>
-                </div>
-            </div>
-        </div>
+const keyLight = new THREE.DirectionalLight(0xffffff, 1.1);
+keyLight.position.set(8, 18, 10);
+keyLight.castShadow = true;
+keyLight.shadow.mapSize.set(1024, 1024);
+keyLight.shadow.camera.near = 1;
+keyLight.shadow.camera.far = 60;
+keyLight.shadow.camera.left = -20; keyLight.shadow.camera.right = 20;
+keyLight.shadow.camera.top = 20; keyLight.shadow.camera.bottom = -20;
+scene.add(keyLight);
 
-        <!-- Tab 2: Ginger Cat -->
-        <div id="cat-2" class="tab-content">
-            <div class="grid-2">
-                <div class="card">
-                    <h2><span></span>Original Image (原圖)</h2>
-                    <div class="img-wrapper">
-                        <img src="original_ginger.jpg" alt="Original Ginger Cat">
-                    </div>
-                </div>
-                <div class="card">
-                    <h2><span></span>Depth Map (深度圖)</h2>
-                    <div class="img-wrapper">
-                        <img src="depth_ginger.png" alt="Depth Map Ginger">
-                    </div>
-                </div>
-            </div>
+const rimLight = new THREE.DirectionalLight(0x5db1ff, 0.5);
+rimLight.position.set(-10, 8, -10);
+scene.add(rimLight);
 
-            <div class="grid-3">
-                <div class="card accent">
-                    <h2><span></span>Version 1: Raw FLUX (DSLR f/1.2 + Film)</h2>
-                    <div class="img-wrapper">
-                        <img src="output_ginger_film.png" alt="Raw FLUX DSLR + Film">
-                    </div>
-                </div>
-                <div class="card purple-accent">
-                    <h2><span></span>Version 2: Depth-Masked Composite (100% Original Cat)</h2>
-                    <div class="img-wrapper">
-                        <img src="output_composite_ginger.png" alt="Depth-Masked Composite Ginger">
-                    </div>
-                </div>
-                <div class="card green-accent">
-                    <h2><span></span>Version 3: f/1.2 + Film + Pet LoRA (v67_pet)</h2>
-                    <div class="img-wrapper">
-                        <img src="output_ginger_v67_pet.png" alt="Version 3: f/1.2 + Film + Pet LoRA">
-                    </div>
-                </div>
-            </div>
+// ---------- 地面與棋盤格 ----------
+const groundGeo = new THREE.PlaneGeometry(GRID + 2, GRID + 2);
+const groundMat = new THREE.MeshStandardMaterial({ color: 0x141833, roughness: 0.9, metalness: 0.1 });
+const ground = new THREE.Mesh(groundGeo, groundMat);
+ground.rotation.x = -Math.PI / 2;
+ground.position.y = -0.5;
+ground.receiveShadow = true;
+scene.add(ground);
 
-            <div class="divider"></div>
-            <div style="margin-top: 30px; margin-bottom: 30px;">
-                <div class="card orange-accent" style="max-width: 800px; margin: 0 auto;">
-                    <h2><span></span>Version 4: Frequency-Separated Hybrid (100% Original Fur Detail + FLUX Style)</h2>
-                    <div class="img-wrapper">
-                        <img src="output_frequency_ginger.png" alt="Version 4: Frequency-Separated Hybrid">
-                    </div>
-                </div>
-            </div>
+// 網格線
+const gridHelper = new THREE.GridHelper(GRID, GRID, 0x3a3f5f, 0x1c2030);
+gridHelper.position.y = -0.49;
+scene.add(gridHelper);
 
-            <div style="margin-top: 30px; margin-bottom: 30px;">
-                <div class="card accent" style="max-width: 800px; margin: 0 auto;">
-                    <h2><span></span>Version 5: Text-to-Image (T2I) Direct Generation (No Ref Image)</h2>
-                    <div class="img-wrapper">
-                        <img src="output_t2i_ginger.png" alt="Version 5: Text-to-Image Direct Generation">
-                    </div>
-                </div>
-            </div>
+// 圍牆
+const wallMat = new THREE.MeshStandardMaterial({ color: 0x2a3055, roughness: 0.7, transparent: true, opacity: 0.55 });
+const wallH = 0.6;
+const wallGeoL = new THREE.BoxGeometry(GRID + 2, wallH, 0.2);
+const walls = [
+  new THREE.Mesh(wallGeoL, wallMat),
+  new THREE.Mesh(wallGeoL, wallMat),
+  new THREE.Mesh(new THREE.BoxGeometry(0.2, wallH, GRID + 2), wallMat),
+  new THREE.Mesh(new THREE.BoxGeometry(0.2, wallH, GRID + 2), wallMat),
+];
+walls[0].position.set(0, wallH/2 - 0.5, -HALF - 0.1);
+walls[1].position.set(0, wallH/2 - 0.5,  HALF + 0.1);
+walls[2].position.set(-HALF - 0.1, wallH/2 - 0.5, 0);
+walls[3].position.set( HALF + 0.1, wallH/2 - 0.5, 0);
+walls.forEach(w => { w.castShadow = true; scene.add(w); });
 
-            <div class="meta-container">
-                <div class="meta-card accent">
-                    <h3>Raw FLUX: DSLR Bokeh + Analog Film</h3>
-                    <div class="meta-grid">
-                        <div class="meta-item">
-                            <div class="meta-label">Model</div>
-                            <div class="meta-value">FLUX.2 Klein 9B-KV</div>
-                        </div>
-                        <div class="meta-item">
-                            <div class="meta-label">Steps</div>
-                            <div class="meta-value">5 (few-step)</div>
-                        </div>
-                        <div class="meta-item">
-                            <div class="meta-label">Seed</div>
-                            <div class="meta-value">Dynamic seed</div>
-                        </div>
-                        <div class="meta-item">
-                            <div class="meta-label">Adapters Stacked</div>
-                            <div class="meta-value">refcontrol (1.0), dslr (0.85), analog (0.55)</div>
-                        </div>
-                    </div>
-                    <div class="code-box">
-Prompt: refcontrol, scafrdsr, analog, AnalogRedmAF, depth of field f/1.2, creamy bokeh, extremely blurry background, 35mm photograph, deep shadows, preserved bright highlights, natural color with slight desaturation, crisp sharp rendering, fine grain, editorial mood
-                    </div>
-                </div>
+// ---------- 蛇與食物 ----------
+const snakeGeo = new THREE.BoxGeometry(0.85, 0.85, 0.85);
+const headMat  = new THREE.MeshStandardMaterial({ color: 0x7ee787, emissive: 0x224422, emissiveIntensity: 0.6, roughness: 0.3, metalness: 0.3 });
+const bodyMat  = new THREE.MeshStandardMaterial({ color: 0x4ec9b0, emissive: 0x113327, emissiveIntensity: 0.4, roughness: 0.4, metalness: 0.2 });
 
-                <div class="meta-card purple-accent">
-                    <h3>Depth-Masked Composite (Recommended)</h3>
-                    <div class="meta-grid">
-                        <div class="meta-item">
-                            <div class="meta-label">Composite Type</div>
-                            <div class="meta-value">Depth Mask Blending (threshold = 90)</div>
-                        </div>
-                        <div class="meta-item">
-                            <div class="meta-label">Feather Radius</div>
-                            <div class="meta-value">15px Gaussian Blur</div>
-                        </div>
-                        <div class="meta-item">
-                            <div class="meta-label">Foreground Source</div>
-                            <div class="meta-value">100% Original Ginger Cat (original_ginger.jpg)</div>
-                        </div>
-                        <div class="meta-item">
-                            <div class="meta-label">Background Source</div>
-                            <div class="meta-value">FLUX Generated f/1.2 + Film (V1)</div>
-                        </div>
-                    </div>
-                    <div class="code-box">
-Method: Extract depth map foreground, create a soft alpha mask, overlay original sharp foreground onto FLUX generated blurred background.
-                    </div>
-                </div>
+const foodGeo = new THREE.BoxGeometry(0.7, 0.7, 0.7);
+const foodMat = new THREE.MeshStandardMaterial({ color: 0xffd479, emissive: 0x553300, emissiveIntensity: 0.7, roughness: 0.2, metalness: 0.4 });
+const food = new THREE.Mesh(foodGeo, foodMat);
+food.castShadow = true;
+scene.add(food);
 
-                <div class="meta-card green-accent">
-                    <h3>Version 3: DSLR + Film + Pet LoRA</h3>
-                    <div class="meta-grid">
-                        <div class="meta-item">
-                            <div class="meta-label">Model</div>
-                            <div class="meta-value">FLUX.2 Klein 9B-KV</div>
-                        </div>
-                        <div class="meta-item">
-                            <div class="meta-label">Steps</div>
-                            <div class="meta-value">5 (few-step)</div>
-                        </div>
-                        <div class="meta-item">
-                            <div class="meta-label">Seed</div>
-                            <div class="meta-value">1783189999</div>
-                        </div>
-                        <div class="meta-item">
-                            <div class="meta-label">Adapters Stacked</div>
-                            <div class="meta-value">refcontrol (1.0), dslr (0.80), analog (0.50), v67_pet (0.65)</div>
-                        </div>
-                    </div>
-                    <div class="code-box">
-Prompt: refcontrol, scafrdsr, analog, AnalogRedmAF, depth of field f/1.2, creamy bokeh, extremely blurry background, 35mm photograph, deep shadows, preserved bright highlights, natural color with slight desaturation, crisp sharp rendering, fine grain, editorial mood
-                    </div>
-                </div>
+// 食物光暈
+const haloGeo = new THREE.SphereGeometry(0.9, 16, 16);
+const haloMat = new THREE.MeshBasicMaterial({ color: 0xffd479, transparent: true, opacity: 0.18 });
+const halo = new THREE.Mesh(haloGeo, haloMat);
+scene.add(halo);
 
-                <div class="meta-card orange-accent">
-                    <h3>Version 4: Frequency-Separated Hybrid</h3>
-                    <div class="meta-grid">
-                        <div class="meta-item">
-                            <div class="meta-label">Detail Source</div>
-                            <div class="meta-value">100% Original High-Frequency Fur (original_ginger.jpg)</div>
-                        </div>
-                        <div class="meta-item">
-                            <div class="meta-label">Color & Tone Source</div>
-                            <div class="meta-value">FLUX V3 Pet LoRA Low-Frequency (v67_pet)</div>
-                        </div>
-                        <div class="meta-item">
-                            <div class="meta-label">Gaussian Blur Radius</div>
-                            <div class="meta-value">5px for frequency split</div>
-                        </div>
-                        <div class="meta-item">
-                            <div class="meta-label">Alignment</div>
-                            <div class="meta-value">Pixel-perfect Crop-Align</div>
-                        </div>
-                    </div>
-                    <div class="code-box">
-Method: Extracts fine high-frequency details (whiskers, hair strands) from the original ginger cat, and overlays them onto the low-frequency colors, lighting, and textures generated by the FLUX v67_pet LoRA model. This eliminates both style mismatch and blurry AI fur!
-                    </div>
-                </div>
+// ---------- 遊戲狀態 ----------
+let snake = [];           // [{x, z, mesh, isHead}]
+let dir = { x: 1, z: 0 };
+let nextDir = { ...dir };
+let foodPos = { x: 0, z: 0 };
+let score = 0;
+let best = parseInt(localStorage.getItem('snake3d_best') || '0', 10);
+let running = false;
+let stepInterval = 220;   // ms 每步
+let lastStep = 0;
 
-                <div class="meta-card accent">
-                    <h3>Version 5: Text-to-Image Direct Generation</h3>
-                    <div class="meta-grid">
-                        <div class="meta-item">
-                            <div class="meta-label">Model</div>
-                            <div class="meta-value">FLUX.2 Klein 9B-KV</div>
-                        </div>
-                        <div class="meta-item">
-                            <div class="meta-label">Ref Image (Pose)</div>
-                            <div class="meta-value">None (Pure Text-to-Image)</div>
-                        </div>
-                        <div class="meta-item">
-                            <div class="meta-label">Seed</div>
-                            <div class="meta-value">1783189999</div>
-                        </div>
-                        <div class="meta-item">
-                            <div class="meta-label">Adapters Stacked</div>
-                            <div class="meta-value">dslr (0.85), analog (0.55), v67_pet (0.65)</div>
-                        </div>
-                    </div>
-                    <div class="code-box">
-Prompt: A beautiful ginger orange cat, scafrdsr, analog, AnalogRedmAF, depth of field f/1.2, creamy bokeh, extremely blurry background, 35mm photograph, deep shadows, preserved bright highlights, natural color with slight desaturation, crisp sharp rendering, fine grain, editorial mood
-                    </div>
-                </div>
-            </div>
-        </div>
-    </main>
+document.getElementById('best').textContent = best;
 
-    <footer>
-        Antigravity Coding Assistant &copy; 2026
-    </footer>
+function gridToWorld(g) {
+  return g - HALF + 0.5;
+}
 
-    <script>
-        function switchTab(tabId) {
-            // Hide all tab contents
-            document.querySelectorAll('.tab-content').forEach(content => {
-                content.classList.remove('active');
-            });
-            // Remove active class from all buttons
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            // Show target content and activate button
-            document.getElementById(tabId).classList.add('active');
-            event.currentTarget.classList.add('active');
-        }
-    </script>
+function spawnFood() {
+  let tries = 0;
+  while (tries++ < 200) {
+    const x = Math.floor(Math.random() * GRID);
+    const z = Math.floor(Math.random() * GRID);
+    if (!snake.some(s => s.x === x && s.z === z)) {
+      foodPos = { x, z };
+      food.position.set(gridToWorld(x), 0, gridToWorld(z));
+      halo.position.copy(food.position);
+      return;
+    }
+  }
+}
+
+function createSegment(x, z, isHead=false) {
+  const mesh = new THREE.Mesh(snakeGeo, isHead ? headMat : bodyMat);
+  mesh.castShadow = true;
+  mesh.position.set(gridToWorld(x), 0, gridToWorld(z));
+  scene.add(mesh);
+  return { x, z, mesh };
+}
+
+function resetGame() {
+  // 清除舊蛇
+  snake.forEach(s => scene.remove(s.mesh));
+  snake = [];
+  const startX = Math.floor(GRID / 2);
+  const startZ = Math.floor(GRID / 2);
+  for (let i = 0; i < 3; i++) {
+    snake.push(createSegment(startX - i, startZ, i === 0));
+  }
+  dir = { x: 1, z: 0 };
+  nextDir = { ...dir };
+  score = 0;
+  document.getElementById('score').textContent = 0;
+  stepInterval = 220;
+  lastStep = 0;
+  spawnFood();
+}
+
+// ---------- 步進邏輯 ----------
+function step() {
+  // 套用方向（避免直接反轉）
+  if (!(nextDir.x === -dir.x && nextDir.z === -dir.z)) {
+    dir = nextDir;
+  }
+  const head = snake[0];
+  const nx = head.x + dir.x;
+  const nz = head.z + dir.z;
+
+  // 撞牆
+  if (nx < 0 || nx >= GRID || nz < 0 || nz >= GRID) return gameOver();
+  // 撞自己（排除尾巴，因為尾巴會移動）
+  for (let i = 0; i < snake.length - 1; i++) {
+    if (snake[i].x === nx && snake[i].z === nz) return gameOver();
+  }
+
+  const ate = (nx === foodPos.x && nz === foodPos.z);
+
+  if (ate) {
+    // 在頭前面新增（不刪尾巴 => 長度成長）
+    const newHead = createSegment(nx, nz, true);
+    snake[0].mesh.material = bodyMat;
+    snake.unshift(newHead);
+    score++;
+    document.getElementById('score').textContent = score;
+    if (score > best) {
+      best = score;
+      document.getElementById('best').textContent = best;
+      localStorage.setItem('snake3d_best', String(best));
+    }
+    spawnFood();
+    // 加速
+    stepInterval = Math.max(90, stepInterval - 4);
+    playBeep(660, 0.08);
+  } else {
+    // 移動：把尾巴搬到頭前方（reuse mesh 省資源）
+    const tail = snake.pop();
+    const prevHead = snake[0];
+    prevHead.mesh.material = bodyMat;
+    tail.x = nx; tail.z = nz;
+    tail.mesh.material = headMat;
+    tail.mesh.position.set(gridToWorld(nx), 0, gridToWorld(nz));
+    snake.unshift(tail);
+  }
+}
+
+function gameOver() {
+  running = false;
+  playBeep(180, 0.25);
+  setTimeout(() => playBeep(120, 0.3), 120);
+  const ov = document.getElementById('overlay');
+  document.getElementById('finalScore').style.display = 'block';
+  document.getElementById('finalScore').textContent = `本局 ${score} 分　最佳 ${best}`;
+  document.querySelector('#overlay p').style.display = 'none';
+  document.querySelector('#overlay .ctrl-hint').style.display = 'none';
+  document.getElementById('startBtn').textContent = '再玩一次';
+  ov.classList.remove('hidden');
+}
+
+// ---------- 音效 ----------
+let audioCtx = null;
+function playBeep(freq, dur) {
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.type = 'square';
+    o.frequency.value = freq;
+    g.gain.value = 0.05;
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start();
+    g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur);
+    o.stop(audioCtx.currentTime + dur);
+  } catch(e) {}
+}
+
+// ---------- 觸控 / 手勢控制 ----------
+let touchStart = null;
+let swipeThreshold = 24; // px
+
+canvas.addEventListener('touchstart', (e) => {
+  if (e.touches.length === 1) {
+    touchStart = { x: e.touches[0].clientX, y: e.touches[0].clientY, t: performance.now() };
+  }
+}, { passive: true });
+
+canvas.addEventListener('touchmove', (e) => {
+  if (!touchStart || !running) return;
+  const dx = e.touches[0].clientX - touchStart.x;
+  const dy = e.touches[0].clientY - touchStart.y;
+  // 在遊戲中：一旦滑動超過門檻，就更新方向並重設起點（連續滑可連續轉）
+  if (Math.abs(dx) > swipeThreshold || Math.abs(dy) > swipeThreshold) {
+    handleSwipe(dx, dy);
+    touchStart = { x: e.touches[0].clientX, y: e.touches[0].clientY, t: performance.now() };
+  }
+}, { passive: true });
+
+canvas.addEventListener('touchend', () => { touchStart = null; }, { passive: true });
+
+// 桌機鍵盤
+window.addEventListener('keydown', (e) => {
+  if (!running) return;
+  const k = e.key.toLowerCase();
+  if (k === 'arrowup'    || k === 'w') tryDir(0, -1);
+  if (k === 'arrowdown'  || k === 's') tryDir(0,  1);
+  if (k === 'arrowleft'  || k === 'a') tryDir(-1, 0);
+  if (k === 'arrowright' || k === 'd') tryDir( 1, 0);
+});
+
+function handleSwipe(dx, dy) {
+  if (Math.abs(dx) > Math.abs(dy)) {
+    tryDir(dx > 0 ? 1 : -1, 0);
+  } else {
+    tryDir(0, dy > 0 ? 1 : -1);
+  }
+}
+
+function tryDir(x, z) {
+  // 不可直接反轉
+  if (x === -dir.x && z === -dir.z) return;
+  nextDir = { x, z };
+}
+
+// ---------- 視角軌道控制（未開始時） ----------
+let camDragging = false;
+let camTheta = 0;
+let camPhi = Math.PI / 3.2;     // 俯角
+const camRadius = 16;
+let camLast = null;
+
+function updateCamera() {
+  const r = camRadius;
+  const cosP = Math.cos(camPhi);
+  camera.position.x = r * Math.sin(camTheta) * cosP;
+  camera.position.y = r * Math.sin(camPhi) + 2;
+  camera.position.z = r * Math.cos(camTheta) * cosP;
+  camera.lookAt(0, 0, 0);
+}
+updateCamera();
+
+canvas.addEventListener('mousedown', (e) => { if (!running) { camDragging = true; camLast = { x: e.clientX, y: e.clientY }; }});
+window.addEventListener('mousemove', (e) => {
+  if (!camDragging) return;
+  const dx = e.clientX - camLast.x;
+  const dy = e.clientY - camLast.y;
+ (camLast = { x: e.clientX, y: e.clientY });
+  camTheta -= dx * 0.01;
+  camPhi   = Math.max(0.25, Math.min(Math.PI / 2 - 0.05, camPhi - dy * 0.01));
+  updateCamera();
+});
+window.addEventListener('mouseup', () => { camDragging = false; });
+
+// 雙指拖曳也讓未開始時可旋轉視角
+let camTouchLast = null;
+canvas.addEventListener('touchstart', (e) => {
+  if (!running && e.touches.length === 2) {
+    camTouchLast = { x: (e.touches[0].clientX + e.touches[1].clientX)/2, y: (e.touches[0].clientY + e.touches[1].clientY)/2 };
+  }
+}, { passive: true });
+canvas.addEventListener('touchmove', (e) => {
+  if (!running && e.touches.length === 2 && camTouchLast) {
+    const cx = (e.touches[0].clientX + e.touches[1].clientX)/2;
+    const cy = (e.touches[0].clientY + e.touches[1].clientY)/2;
+    camTheta -= (cx - camTouchLast.x) * 0.01;
+    camPhi   = Math.max(0.25, Math.min(Math.PI/2 - 0.05, camPhi - (cy - camTouchLast.y) * 0.01));
+    camTouchLast = { x: cx, y: cy };
+    updateCamera();
+  }
+}, { passive: true });
+
+// ---------- 遊戲迴圈 ----------
+function loop(t) {
+  requestAnimationFrame(loop);
+  if (halo) {
+    const s = 1 + Math.sin(t * 0.005) * 0.12;
+    halo.scale.set(s, s, s);
+  }
+  if (running) {
+    if (t - lastStep > stepInterval) {
+      step();
+      lastStep = t;
+    }
+  }
+  renderer.render(scene, camera);
+}
+requestAnimationFrame(loop);
+
+// ---------- 啟動按鈕 ----------
+document.getElementById('startBtn').addEventListener('click', () => {
+  document.getElementById('overlay').classList.add('hidden');
+  document.querySelector('#overlay p').style.display = '';
+  document.querySelector('#overlay .ctrl-hint').style.display = '';
+  document.getElementById('finalScore').style.display = 'none';
+  resetGame();
+  running = true;
+  lastStep = performance.now();
+  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+});
+
+// ---------- RWD ----------
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// 預先放一條示意蛇給主畫面看
+resetGame();
+</script>
 </body>
 </html>
