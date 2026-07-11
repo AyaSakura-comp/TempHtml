@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>台語語音合成試聽 | MERaLiON Hokkien TTS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --card-bg: rgba(17, 24, 39, 0.7);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --primary: #06b6d4; /* Cyan */
+            --primary-glow: rgba(6, 182, 212, 0.35);
+            --secondary: #8b5cf6; /* Violet */
+            --secondary-glow: rgba(139, 92, 246, 0.3);
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', 'Noto Sans TC', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Animated background glows */
+        .glow {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(120px);
+            z-index: 0;
+            opacity: 0.5;
+            animation: float 12s infinite alternate ease-in-out;
+        }
+
+        .glow-1 {
+            width: 400px;
+            height: 400px;
+            background: var(--primary-glow);
+            top: -100px;
+            left: -100px;
+        }
+
+        .glow-2 {
+            width: 500px;
+            height: 500px;
+            background: var(--secondary-glow);
+            bottom: -150px;
+            right: -150px;
+            animation-delay: -6s;
+        }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(50px, 30px) scale(1.1); }
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            padding: 40px;
+            width: 90%;
+            max-width: 480px;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+        }
+
+        .badge {
+            background: rgba(6, 182, 212, 0.1);
+            border: 1px solid rgba(6, 182, 212, 0.2);
+            color: var(--primary);
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            margin-bottom: 24px;
+            text-transform: uppercase;
+        }
+
+        .title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #ffffff 0%, #a5f3fc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .romanization {
+            font-size: 1rem;
+            color: var(--primary);
+            font-weight: 500;
+            margin-bottom: 30px;
+        }
+
+        /* Custom Audio Player */
+        .player-container {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 30px;
+        }
+
+        .controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .play-btn {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            border: none;
+            outline: none;
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            box-shadow: 0 8px 24px rgba(6, 182, 212, 0.3);
+            transition: all 0.2s ease;
+        }
+
+        .play-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 12px 28px rgba(6, 182, 212, 0.45);
+        }
+
+        .play-btn:active {
+            transform: scale(0.95);
+        }
+
+        .play-btn svg {
+            width: 24px;
+            height: 24px;
+            fill: currentColor;
+            transition: transform 0.2s ease;
+        }
+
+        /* Waveform simulation during play */
+        .waveform {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            height: 30px;
+            margin-bottom: 16px;
+        }
+
+        .bar {
+            width: 3px;
+            height: 6px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+            transition: height 0.1s ease, background-color 0.3s ease;
+        }
+
+        .playing .bar {
+            background-color: var(--primary);
+            animation: bounce 0.8s infinite alternate ease-in-out;
+        }
+
+        /* Create heights for bars */
+        .bar:nth-child(1) { height: 12px; animation-delay: 0.1s; }
+        .bar:nth-child(2) { height: 24px; animation-delay: 0.3s; }
+        .bar:nth-child(3) { height: 16px; animation-delay: 0.2s; }
+        .bar:nth-child(4) { height: 28px; animation-delay: 0.5s; }
+        .bar:nth-child(5) { height: 10px; animation-delay: 0.1s; }
+        .bar:nth-child(6) { height: 22px; animation-delay: 0.4s; }
+        .bar:nth-child(7) { height: 14px; animation-delay: 0.2s; }
+        .bar:nth-child(8) { height: 26px; animation-delay: 0.6s; }
+
+        @keyframes bounce {
+            0% { transform: scaleY(0.4); }
+            100% { transform: scaleY(1.2); }
+        }
+
+        .progress-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+        }
+
+        .time {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            width: 35px;
+        }
+
+        .progress-bar {
+            flex-grow: 1;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .progress-filled {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--primary) 0%, var(--secondary) 100%);
+            border-radius: 3px;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        /* Metadata & Details */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            width: 100%;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding-top: 24px;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .stat-val {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 2px;
+        }
+
+        .stat-lbl {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .footer {
+            margin-top: 24px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .footer a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="glow glow-1"></div>
+    <div class="glow glow-2"></div>
+
+    <div class="card">
+        <span class="badge">台語語音合成 (TTS)</span>
+        <h1 class="title">明仔載風颱會來咧</h1>
+        <p class="romanization">Bîn-á-tsài hong-thai ē-lâi--eh</p>
+
+        <div class="player-container">
+            <div id="wave-indicator" class="waveform">
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+            </div>
+
+            <div class="controls">
+                <button id="play-pause" class="play-btn" aria-label="Play">
+                    <!-- Play icon -->
+                    <svg id="play-icon" viewBox="0 0 24 24">
+                        <path d="M8 5v14l11-7z"/>
+                    </svg>
+                    <!-- Pause icon (hidden initially) -->
+                    <svg id="pause-icon" viewBox="0 0 24 24" style="display: none;">
+                        <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="progress-container">
+                <span id="current-time" class="time">0:00</span>
+                <div id="progress" class="progress-bar">
+                    <div id="progress-filled" class="progress-filled"></div>
+                </div>
+                <span id="duration" class="time">0:00</span>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-item">
+                <span class="stat-val">1.10s</span>
+                <span class="stat-lbl">合成耗時</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-val">1.96s</span>
+                <span class="stat-lbl">音檔長度</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-val">0.56x</span>
+                <span class="stat-lbl">實時因子</span>
+            </div>
+        </div>
+
+        <div class="footer">
+            由 <a href="https://huggingface.co/MERaLiON/MERaLiON-OmniVoice-Hokkien-TTS" target="_blank">MERaLiON Hokkien TTS</a> 本地 GPU 推理生成
+        </div>
+    </div>
+
+    <!-- Hidden audio element pointing to the generated wav file -->
+    <audio id="audio" src="test_typhoon.wav"></audio>
+
+    <script>
+        const audio = document.getElementById('audio');
+        const playPauseBtn = document.getElementById('play-pause');
+        const playIcon = document.getElementById('play-icon');
+        const pauseIcon = document.getElementById('pause-icon');
+        const progress = document.getElementById('progress');
+        const progressFilled = document.getElementById('progress-filled');
+        const currentTimeEl = document.getElementById('current-time');
+        const durationEl = document.getElementById('duration');
+        const waveIndicator = document.getElementById('wave-indicator');
+
+        // Helper to format time (e.g. 0:02)
+        function formatTime(seconds) {
+            if (isNaN(seconds)) return '0:00';
+            const m = Math.floor(seconds / 60);
+            const s = Math.floor(seconds % 60);
+            return `${m}:${s < 10 ? '0' : ''}${s}`;
+        }
+
+        // Toggle play / pause
+        function togglePlay() {
+            if (audio.paused) {
+                audio.play();
+                playIcon.style.display = 'none';
+                pauseIcon.style.display = 'block';
+                waveIndicator.classList.add('playing');
+            } else {
+                audio.pause();
+                playIcon.style.display = 'block';
+                pauseIcon.style.display = 'none';
+                waveIndicator.classList.remove('playing');
+            }
+        }
+
+        playPauseBtn.addEventListener('click', togglePlay);
+
+        // Update progress bar & time
+        audio.addEventListener('timeupdate', () => {
+            const percent = (audio.currentTime / audio.duration) * 100;
+            progressFilled.style.width = `${percent}%`;
+            currentTimeEl.textContent = formatTime(audio.currentTime);
+        });
+
+        // Set total duration once metadata is loaded
+        audio.addEventListener('loadedmetadata', () => {
+            durationEl.textContent = formatTime(audio.duration);
+        });
+
+        // When audio ends, reset controls
+        audio.addEventListener('ended', () => {
+            playIcon.style.display = 'block';
+            pauseIcon.style.display = 'none';
+            waveIndicator.classList.remove('playing');
+            progressFilled.style.width = '0%';
+            currentTimeEl.textContent = '0:00';
+        });
+
+        // Click on progress bar to seek
+        progress.addEventListener('click', (e) => {
+            const rect = progress.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const width = rect.width;
+            const percentage = clickX / width;
+            audio.currentTime = percentage * audio.duration;
+        });
+
+        // In case metadata is already loaded (from cache)
+        if (audio.readyState >= 1) {
+            durationEl.textContent = formatTime(audio.duration);
+        }
+    </script>
+</body>
+</html>
