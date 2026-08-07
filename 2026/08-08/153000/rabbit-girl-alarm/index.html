@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🐰 兔娘鬧鐘 — Clay 起床啦！</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --pink: #ff6b9d;
+    --pink-light: #ffa2c4;
+    --pink-dark: #e84578;
+    --white: #fff9fc;
+    --bg: #fff0f5;
+    --text: #4a3040;
+    --shadow: rgba(255, 107, 157, 0.3);
+  }
+
+  body {
+    font-family: 'Noto Sans TC', sans-serif;
+    background: linear-gradient(135deg, #fff0f5 0%, #ffe8f0 50%, #ffd6e8 100%);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Floating hearts background */
+  .hearts-bg {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+  }
+
+  .floating-heart {
+    position: absolute;
+    font-size: 20px;
+    opacity: 0.15;
+    animation: floatUp linear infinite;
+  }
+
+  @keyframes floatUp {
+    0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+    10% { opacity: 0.15; }
+    90% { opacity: 0.15; }
+    100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    padding: 2rem;
+  }
+
+  /* ===== Rabbit Girl Character ===== */
+  .rabbit-girl {
+    position: relative;
+    width: 200px;
+    height: 220px;
+    margin: 0 auto 1rem;
+    animation: bunnyBounce 2s ease-in-out infinite;
+  }
+
+  @keyframes bunnyBounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+
+  /* Head */
+  .rabbit-head {
+    width: 140px;
+    height: 130px;
+    background: var(--white);
+    border-radius: 50% 50% 45% 45%;
+    position: absolute;
+    top: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    box-shadow: 0 4px 20px var(--shadow);
+    border: 3px solid #f0d0e0;
+  }
+
+  /* Ears */
+  .ear {
+    position: absolute;
+    width: 35px;
+    height: 90px;
+    background: var(--white);
+    border-radius: 50%;
+    border: 3px solid #f0d0e0;
+    box-shadow: 0 2px 10px var(--shadow);
+  }
+
+  .ear::after {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 70px;
+    background: var(--pink-light);
+    border-radius: 50%;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0.6;
+  }
+
+  .ear-left {
+    top: 0;
+    left: 25px;
+    transform: rotate(-15deg);
+    animation: earWiggleL 3s ease-in-out infinite;
+  }
+
+  .ear-right {
+    top: 0;
+    right: 25px;
+    transform: rotate(15deg);
+    animation: earWiggleR 3s ease-in-out infinite 0.5s;
+  }
+
+  @keyframes earWiggleL {
+    0%, 100% { transform: rotate(-15deg); }
+    50% { transform: rotate(-20deg); }
+  }
+
+  @keyframes earWiggleR {
+    0%, 100% { transform: rotate(15deg); }
+    50% { transform: rotate(20deg); }
+  }
+
+  /* Eyes */
+  .eye {
+    width: 22px;
+    height: 26px;
+    background: #2a1520;
+    border-radius: 50%;
+    position: absolute;
+    top: 100px;
+    animation: blink 4s ease-in-out infinite;
+  }
+
+  .eye::after {
+    content: '';
+    width: 8px;
+    height: 8px;
+    background: white;
+    border-radius: 50%;
+    position: absolute;
+    top: 4px;
+    right: 3px;
+  }
+
+  .eye-left { left: 38px; }
+  .eye-right { right: 38px; }
+
+  @keyframes blink {
+    0%, 95%, 100% { transform: scaleY(1); }
+    97% { transform: scaleY(0.1); }
+  }
+
+  /* Blush */
+  .blush {
+    width: 24px;
+    height: 14px;
+    background: var(--pink-light);
+    border-radius: 50%;
+    position: absolute;
+    top: 110px;
+    opacity: 0.4;
+  }
+
+  .blush-left { left: 25px; }
+  .blush-right { right: 25px; }
+
+  /* Mouth */
+  .mouth {
+    width: 16px;
+    height: 10px;
+    border-bottom: 3px solid #e8a0b8;
+    border-radius: 0 0 50% 50%;
+    position: absolute;
+    top: 118px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  /* Bow */
+  .bow {
+    position: absolute;
+    top: 85px;
+    right: 35px;
+    width: 30px;
+    height: 20px;
+    z-index: 2;
+  }
+
+  .bow::before, .bow::after {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 16px;
+    background: var(--pink);
+    border-radius: 50%;
+    top: 2px;
+  }
+
+  .bow::before {
+    left: 0;
+    transform: rotate(-20deg);
+  }
+
+  .bow::after {
+    right: 0;
+    transform: rotate(20deg);
+  }
+
+  .bow-center {
+    width: 10px;
+    height: 10px;
+    background: var(--pink-dark);
+    border-radius: 50%;
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  /* Body */
+  .rabbit-body {
+    width: 100px;
+    height: 70px;
+    background: var(--white);
+    border-radius: 40% 40% 50% 50%;
+    position: absolute;
+    top: 175px;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 3px solid #f0d0e0;
+    box-shadow: 0 4px 15px var(--shadow);
+  }
+
+  /* Belly bow tie */
+  .bowtie {
+    width: 20px;
+    height: 12px;
+    background: var(--pink);
+    border-radius: 3px;
+    position: absolute;
+    top: 185px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2;
+  }
+
+  .bowtie::before, .bowtie::after {
+    content: '';
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    border: 3px solid var(--pink);
+    background: var(--white);
+    top: -2px;
+  }
+
+  .bowtie::before {
+    left: -12px;
+    border-radius: 50% 0 50% 50%;
+    transform: rotate(-20deg);
+  }
+
+  .bowtie::after {
+    right: -12px;
+    border-radius: 0 50% 50% 50%;
+    transform: rotate(20deg);
+  }
+
+  /* Feet */
+  .foot {
+    width: 30px;
+    height: 18px;
+    background: var(--white);
+    border-radius: 50%;
+    position: absolute;
+    bottom: 15px;
+    border: 3px solid #f0d0e0;
+  }
+
+  .foot-left { left: 45px; }
+  .foot-right { right: 45px; }
+
+  /* Tail */
+  .tail {
+    width: 25px;
+    height: 25px;
+    background: var(--white);
+    border-radius: 50%;
+    position: absolute;
+    bottom: 35px;
+    right: 25px;
+    border: 3px solid #f0d0e0;
+    animation: tailWag 1s ease-in-out infinite;
+  }
+
+  @keyframes tailWag {
+    0%, 100% { transform: translateX(0); }
+    50% { transform: translateX(3px); }
+  }
+
+  /* ===== Alarm Time Display ===== */
+  .alarm-time {
+    font-size: 4.5rem;
+    font-weight: 900;
+    color: var(--pink-dark);
+    text-shadow: 2px 2px 0 rgba(255,255,255,0.5), 0 0 30px var(--shadow);
+    margin: 0.5rem 0;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 2px;
+  }
+
+  .alarm-label {
+    font-size: 1.2rem;
+    color: var(--pink);
+    margin-bottom: 0.5rem;
+    font-weight: 700;
+  }
+
+  /* Current time sub-display */
+  .current-time {
+    font-size: 1.4rem;
+    color: #b07090;
+    margin-bottom: 2rem;
+    font-weight: 400;
+  }
+
+  /* ===== Clay's Wake-up Message ===== */
+  .wake-message {
+    background: linear-gradient(135deg, var(--pink), var(--pink-dark));
+    color: white;
+    padding: 12px 30px;
+    border-radius: 50px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 1rem auto;
+    max-width: 400px;
+    box-shadow: 0 4px 20px var(--shadow);
+    display: inline-block;
+    animation: messagePulse 2s ease-in-out infinite;
+  }
+
+  @keyframes messagePulse {
+    0%, 100% { transform: scale(1); box-shadow: 0 4px 20px var(--shadow); }
+    50% { transform: scale(1.03); box-shadow: 0 6px 30px rgba(255, 107, 157, 0.5); }
+  }
+
+  /* ===== Alarm Setter ===== */
+  .alarm-setter {
+    background: white;
+    border-radius: 24px;
+    padding: 24px 32px;
+    box-shadow: 0 8px 40px var(--shadow);
+    display: inline-flex;
+    align-items: center;
+    gap: 16px;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .alarm-setter label {
+    font-weight: 700;
+    color: var(--text);
+    font-size: 1rem;
+  }
+
+  .alarm-setter input[type="time"] {
+    font-size: 1.5rem;
+    font-family: 'Noto Sans TC', sans-serif;
+    padding: 8px 16px;
+    border: 3px solid var(--pink-light);
+    border-radius: 16px;
+    color: var(--pink-dark);
+    font-weight: 700;
+    background: var(--bg);
+    outline: none;
+    transition: border-color 0.3s;
+  }
+
+  .alarm-setter input[type="time"]:focus {
+    border-color: var(--pink-dark);
+  }
+
+  .btn {
+    font-family: 'Noto Sans TC', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    padding: 10px 28px;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--pink), var(--pink-dark));
+    color: white;
+    box-shadow: 0 4px 15px var(--shadow);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 25px rgba(255, 107, 157, 0.5);
+  }
+
+  .btn-secondary {
+    background: #f0d0e0;
+    color: var(--pink-dark);
+  }
+
+  .btn-secondary:hover {
+    background: #e8b0d0;
+  }
+
+  /* ===== Alarm Active State ===== */
+  .alarm-active .rabbit-girl {
+    animation: bunnyDance 0.3s ease-in-out infinite;
+  }
+
+  @keyframes bunnyDance {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    25% { transform: translateY(-20px) rotate(-10deg); }
+    75% { transform: translateY(-20px) rotate(10deg); }
+  }
+
+  .alarm-active .ear {
+    animation: earFlap 0.2s ease-in-out infinite !important;
+  }
+
+  @keyframes earFlap {
+    0%, 100% { transform: rotate(0deg); }
+    50% { transform: rotate(15deg); }
+  }
+
+  .alarm-active .alarm-time {
+    animation: timeFlash 0.5s ease-in-out infinite;
+  }
+
+  @keyframes timeFlash {
+    0%, 100% { color: var(--pink-dark); }
+    50% { color: #ff3060; text-shadow: 0 0 40px #ff3060; }
+  }
+
+  /* Sparkle effects when alarm is active */
+  .sparkle {
+    position: absolute;
+    font-size: 1.5rem;
+    pointer-events: none;
+    animation: sparkleFloat 1.5s ease-out forwards;
+  }
+
+  @keyframes sparkleFloat {
+    0% { transform: scale(0) rotate(0deg); opacity: 1; }
+    50% { transform: scale(1.2) rotate(180deg); opacity: 0.8; }
+    100% { transform: scale(0) rotate(360deg) translateY(-100px); opacity: 0; }
+  }
+
+  /* ===== Status indicator ===== */
+  .status {
+    margin-top: 1rem;
+    font-size: 0.9rem;
+    color: #b07090;
+  }
+
+  .status .dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #ccc;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+
+  .status .dot.active {
+    background: #4caf50;
+    box-shadow: 0 0 10px #4caf50;
+    animation: dotPulse 1s ease-in-out infinite;
+  }
+
+  @keyframes dotPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.3); }
+  }
+
+  /* ===== Sound toggle ===== */
+  .sound-toggle {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: white;
+    border: 2px solid var(--pink-light);
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    cursor: pointer;
+    box-shadow: 0 2px 10px var(--shadow);
+    transition: all 0.3s;
+    z-index: 10;
+  }
+
+  .sound-toggle:hover {
+    transform: scale(1.1);
+  }
+
+  /* ===== Responsive ===== */
+  @media (max-width: 500px) {
+    .alarm-time { font-size: 3rem; }
+    .alarm-setter { padding: 16px 20px; }
+    .rabbit-girl { transform: scale(0.8); margin-bottom: -20px; }
+  }
+
+  /* ===== Wake up big text ===== */
+  .wake-big {
+    font-size: 2rem;
+    font-weight: 900;
+    color: var(--pink-dark);
+    margin: 0.5rem 0;
+    animation: wakePulse 0.5s ease-in-out infinite;
+  }
+
+  @keyframes wakePulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.1); opacity: 0.8; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Floating Hearts Background -->
+<div class="hearts-bg" id="heartsBg"></div>
+
+<button class="sound-toggle" id="soundToggle" title="音效開關">🔔</button>
+
+<div class="container" id="mainContainer">
+  <!-- Rabbit Girl Character -->
+  <div class="rabbit-girl" id="rabbitGirl">
+    <div class="ear ear-left"></div>
+    <div class="ear ear-right"></div>
+    <div class="rabbit-head">
+      <div class="eye eye-left"></div>
+      <div class="eye eye-right"></div>
+      <div class="blush blush-left"></div>
+      <div class="blush blush-right"></div>
+      <div class="mouth"></div>
+      <div class="bow">
+        <div class="bow-center"></div>
+      </div>
+    </div>
+    <div class="bowtie"></div>
+    <div class="rabbit-body"></div>
+    <div class="foot foot-left"></div>
+    <div class="foot foot-right"></div>
+    <div class="tail"></div>
+  </div>
+
+  <!-- Wake up message (always visible) -->
+  <div class="wake-message" id="wakeMessage">
+    🌅 Clay 起床啦～快起來！
+  </div>
+
+  <!-- Alarm time display -->
+  <div class="current-time" id="currentTime">--:--:--</div>
+  <div class="alarm-label">⏰ 設定鬧鐘時間</div>
+  <div class="alarm-time" id="alarmDisplay">--:--</div>
+  <div class="status" id="status">
+    <span class="dot" id="statusDot"></span>
+    <span id="statusText">尚未設定鬧鐘</span>
+  </div>
+
+  <!-- Alarm setter -->
+  <div class="alarm-setter" id="alarmSetter">
+    <label for="alarmInput">鬧鐘時間：</label>
+    <input type="time" id="alarmInput" value="07:00">
+    <button class="btn btn-primary" id="setBtn" onclick="setAlarm()">設定鬧鐘 🐰</button>
+    <button class="btn btn-secondary" id="stopBtn" onclick="stopAlarm()" style="display:none;">停止鬧鐘 🔕</button>
+  </div>
+
+  <!-- Hidden snooze / dismiss -->
+  <div id="alarmActions" style="display:none; margin-top: 1rem;">
+    <button class="btn btn-secondary" onclick="snoozeAlarm()" style="margin-right: 10px;">再睡 5 分鐘 💤</button>
+    <button class="btn btn-primary" onclick="dismissAlarm()">起床了！☀️</button>
+  </div>
+</div>
+
+<script>
+// ===== State =====
+let alarmTime = null;
+let alarmActive = false;
+let alarmSnoozed = false;
+let soundEnabled = true;
+let audioCtx = null;
+let alarmInterval = null;
+let sparkleInterval = null;
+
+// ===== Initialize =====
+document.addEventListener('DOMContentLoaded', () => {
+  createFloatingHearts();
+  updateClock();
+  setInterval(updateClock, 1000);
+
+  // Load saved alarm
+  const saved = localStorage.getItem('rabbitAlarmTime');
+  if (saved) {
+    document.getElementById('alarmInput').value = saved;
+    const [h, m] = saved.split(':').map(Number);
+    const now = new Date();
+    const alarmDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m);
+    if (alarmDate > now) {
+      alarmTime = alarmDate;
+      updateAlarmDisplay();
+      setStatus(true);
+    }
+  }
+
+  // Sound toggle
+  document.getElementById('soundToggle').addEventListener('click', () => {
+    soundEnabled = !soundEnabled;
+    document.getElementById('soundToggle').textContent = soundEnabled ? '🔔' : '🔕';
+  });
+});
+
+// ===== Floating Hearts =====
+function createFloatingHearts() {
+  const container = document.getElementById('heartsBg');
+  const hearts = ['💗', '💖', '💕', '🩷', '🐰', '✨', '⭐'];
+  for (let i = 0; i < 20; i++) {
+    const heart = document.createElement('div');
+    heart.className = 'floating-heart';
+    heart.textContent = hearts[Math.floor(Math.random() * hearts.length)];
+    heart.style.left = Math.random() * 100 + '%';
+    heart.style.animationDuration = (8 + Math.random() * 12) + 's';
+    heart.style.animationDelay = (Math.random() * 10) + 's';
+    heart.style.fontSize = (14 + Math.random() * 18) + 'px';
+    container.appendChild(heart);
+  }
+}
+
+// ===== Clock =====
+function updateClock() {
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString('zh-TW', { hour12: false });
+  document.getElementById('currentTime').textContent = timeStr;
+
+  if (alarmTime && !alarmActive) {
+    const nowMin = now.getHours() * 60 + now.getMinutes();
+    const alarmMin = alarmTime.getHours() * 60 + alarmTime.getMinutes();
+    if (nowMin >= alarmMin && now.getSeconds() >= 0 && now.getSeconds() <= 5) {
+      triggerAlarm();
+    }
+  }
+}
+
+// ===== Set Alarm =====
+function setAlarm() {
+  const input = document.getElementById('alarmInput').value;
+  if (!input) return;
+
+  const [h, m] = input.split(':').map(Number);
+  const now = new Date();
+  alarmTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m);
+
+  // If time has passed today, set for tomorrow
+  if (alarmTime <= now) {
+    alarmTime.setDate(alarmTime.getDate() + 1);
+  }
+
+  localStorage.setItem('rabbitAlarmTime', input);
+  updateAlarmDisplay();
+  setStatus(true);
+  alarmSnoozed = false;
+
+  // Visual feedback
+  document.getElementById('setBtn').textContent = '✅ 鬧鐘已設定！';
+  setTimeout(() => {
+    document.getElementById('setBtn').textContent = '設定鬧鐘 🐰';
+  }, 2000);
+}
+
+function updateAlarmDisplay() {
+  if (alarmTime) {
+    document.getElementById('alarmDisplay').textContent =
+      alarmTime.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit', hour12: false });
+  }
+}
+
+function setStatus(active) {
+  const dot = document.getElementById('statusDot');
+  const text = document.getElementById('statusText');
+  if (active) {
+    dot.classList.add('active');
+    if (!alarmActive) {
+      const diff = alarmTime - new Date();
+      const mins = Math.floor(diff / 60000);
+      text.textContent = mins > 0 ? `距離鬧鐘還有 ${mins} 分鐘` : '鬧鐘響了！';
+    }
+  } else {
+    dot.classList.remove('active');
+    text.textContent = '尚未設定鬧鐘';
+  }
+}
+
+// ===== Alarm Trigger =====
+function triggerAlarm() {
+  if (alarmActive) return;
+  alarmActive = true;
+  document.body.classList.add('alarm-active');
+
+  document.getElementById('alarmSetter').style.display = 'none';
+  document.getElementById('alarmActions').style.display = 'block';
+  document.getElementById('stopBtn').style.display = 'inline-block';
+
+  document.getElementById('wakeMessage').textContent = '🐰⏰ Clay 起床啦——！！！';
+  document.getElementById('wakeMessage').style.animation = 'messagePulse 0.5s ease-in-out infinite';
+
+  document.getElementById('statusText').textContent = '⏰ 鬧鐘響了！快起床！';
+
+  // Start alarm sound
+  playAlarmSound();
+
+  // Start sparkles
+  startSparkles();
+}
+
+function stopAlarm() {
+  alarmActive = false;
+  document.body.classList.remove('alarm-active');
+  document.getElementById('alarmSetter').style.display = 'inline-flex';
+  document.getElementById('alarmActions').style.display = 'none';
+  document.getElementById('stopBtn').style.display = 'none';
+
+  document.getElementById('wakeMessage').textContent = '🌅 Clay 起床啦～快起來！';
+  document.getElementById('wakeMessage').style.animation = 'messagePulse 2s ease-in-out infinite';
+
+  stopAlarmSound();
+  stopSparkles();
+  setStatus(false);
+  alarmTime = null;
+  localStorage.removeItem('rabbitAlarmTime');
+  document.getElementById('alarmDisplay').textContent = '--:--';
+}
+
+function dismissAlarm() {
+  stopAlarm();
+  // Show happy message
+  document.getElementById('wakeMessage').textContent = '🎉 很好！Clay 起床成功！加油！💪';
+  setTimeout(() => {
+    document.getElementById('wakeMessage').textContent = '🌅 Clay 起床啦～快起來！';
+  }, 5000);
+}
+
+function snoozeAlarm() {
+  stopAlarmSound();
+  stopSparkles();
+
+  // Snooze for 5 minutes
+  const snoozeTime = new Date(Date.now() + 5 * 60 * 1000);
+  alarmTime = snoozeTime;
+  alarmActive = false;
+  alarmSnoozed = true;
+
+  document.body.classList.remove('alarm-active');
+  document.getElementById('alarmSetter').style.display = 'inline-flex';
+  document.getElementById('alarmActions').style.display = 'none';
+  document.getElementById('stopBtn').style.display = 'none';
+
+  document.getElementById('wakeMessage').textContent = '💤 Clay 再睡 5 分鐘…';
+  updateAlarmDisplay();
+  setStatus(true);
+
+  // Auto-reschedule snooze
+  setTimeout(() => {
+    if (alarmActive) return;
+    const now = new Date();
+    if (now >= alarmTime) {
+      triggerAlarm();
+    }
+  }, 5 * 60 * 1000);
+}
+
+// ===== Sound =====
+function getAudioCtx() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  return audioCtx;
+}
+
+function playAlarmSound() {
+  if (!soundEnabled) return;
+  playBeepSequence();
+}
+
+function playBeepSequence() {
+  if (!alarmActive) return;
+
+  const ctx = getAudioCtx();
+  const now = ctx.currentTime;
+
+  // Play a cute alarm melody
+  const notes = [
+    { freq: 880, start: 0, dur: 0.15 },
+    { freq: 1100, start: 0.2, dur: 0.15 },
+    { freq: 880, start: 0.4, dur: 0.15 },
+    { freq: 1100, start: 0.6, dur: 0.3 },
+    { freq: 0, start: 0.95, dur: 0.05 }, // pause
+    // Rabbit-like cute sounds
+    { freq: 1200, start: 1.0, dur: 0.1 },
+    { freq: 1400, start: 1.15, dur: 0.1 },
+    { freq: 1200, start: 1.3, dur: 0.1 },
+    { freq: 1600, start: 1.45, dur: 0.25 },
+  ];
+
+  notes.forEach(n => {
+    if (n.freq === 0) return;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.frequency.value = n.freq;
+    osc.type = 'sine';
+    gain.gain.setValueAtTime(0.3, now + n.start);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + n.start + n.dur);
+    osc.start(now + n.start);
+    osc.stop(now + n.start + n.dur);
+  });
+
+  // Loop the sequence
+  alarmInterval = setTimeout(() => {
+    if (alarmActive) playBeepSequence();
+  }, 2000);
+}
+
+function stopAlarmSound() {
+  if (alarmInterval) {
+    clearTimeout(alarmInterval);
+    alarmInterval = null;
+  }
+}
+
+// ===== Sparkles =====
+function startSparkles() {
+  const symbols = ['✨', '⭐', '🌟', '💗', '🐰', '☀️', '🌸'];
+  sparkleInterval = setInterval(() => {
+    const el = document.createElement('div');
+    el.className = 'sparkle';
+    el.textContent = symbols[Math.floor(Math.random() * symbols.length)];
+    el.style.left = (Math.random() * 80 + 10) + '%';
+    el.style.top = (Math.random() * 60 + 20) + '%';
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 1500);
+  }, 300);
+}
+
+function stopSparkles() {
+  if (sparkleInterval) {
+    clearInterval(sparkleInterval);
+    sparkleInterval = null;
+  }
+}
+</script>
+</body>
+</html>
