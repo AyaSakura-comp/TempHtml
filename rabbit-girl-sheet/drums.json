@@ -1,0 +1,1556 @@
+{
+  "counts": {
+    "kick": 51,
+    "snare": 51,
+    "crash": 78,
+    "closed_hihat": 123,
+    "tom": 6
+  },
+  "events": [
+    {
+      "time": 22.441,
+      "instrument": "kick",
+      "midi_pitch": 35
+    },
+    {
+      "time": 23.02,
+      "instrument": "kick",
+      "midi_pitch": 35
+    },
+    {
+      "time": 23.309,
+      "instrument": "snare",
+      "midi_pitch": 38
+    },
+    {
+      "time": 23.309,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 25.03,
+      "instrument": "snare",
+      "midi_pitch": 38
+    },
+    {
+      "time": 25.891,
+      "instrument": "kick",
+      "midi_pitch": 35
+    },
+    {
+      "time": 26.75,
+      "instrument": "snare",
+      "midi_pitch": 38
+    },
+    {
+      "time": 26.75,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 28.47,
+      "instrument": "snare",
+      "midi_pitch": 38
+    },
+    {
+      "time": 29.341,
+      "instrument": "kick",
+      "midi_pitch": 35
+    },
+    {
+      "time": 30.2,
+      "instrument": "snare",
+      "midi_pitch": 38
+    },
+    {
+      "time": 31.92,
+      "instrument": "snare",
+      "midi_pitch": 38
+    },
+    {
+      "time": 31.92,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 32.78,
+      "instrument": "kick",
+      "midi_pitch": 35
+    },
+    {
+      "time": 36.23,
+      "instrument": "kick",
+      "midi_pitch": 35
+    },
+    {
+      "time": 36.23,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 36.23,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 37.091,
+      "instrument": "snare",
+      "midi_pitch": 38
+    },
+    {
+      "time": 37.091,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 37.4,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 37.67,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 37.959,
+      "instrument": "kick",
+      "midi_pitch": 35
+    },
+    {
+      "time": 37.959,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 38.259,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 38.809,
+      "instrument": "snare",
+      "midi_pitch": 38
+    },
+    {
+      "time": 38.809,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 39.1,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 39.391,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 39.68,
+      "instrument": "kick",
+      "midi_pitch": 35
+    },
+    {
+      "time": 39.68,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 39.97,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 40.25,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 40.541,
+      "instrument": "snare",
+      "midi_pitch": 38
+    },
+    {
+      "time": 40.541,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 40.83,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 41.4,
+      "instrument": "kick",
+      "midi_pitch": 35
+    },
+    {
+      "time": 41.4,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 41.68,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 42.259,
+      "instrument": "snare",
+      "midi_pitch": 38
+    },
+    {
+      "time": 42.259,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 42.559,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 43.13,
+      "instrument": "kick",
+      "midi_pitch": 35
+    },
+    {
+      "time": 43.13,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 43.409,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 43.7,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 43.98,
+      "instrument": "snare",
+      "midi_pitch": 38
+    },
+    {
+      "time": 43.98,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 44.27,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 44.559,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 44.85,
+      "instrument": "kick",
+      "midi_pitch": 35
+    },
+    {
+      "time": 44.85,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 45.42,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 45.709,
+      "instrument": "snare",
+      "midi_pitch": 38
+    },
+    {
+      "time": 45.709,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 46.0,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 46.57,
+      "instrument": "kick",
+      "midi_pitch": 35
+    },
+    {
+      "time": 46.57,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 46.859,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 47.141,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 47.43,
+      "instrument": "snare",
+      "midi_pitch": 38
+    },
+    {
+      "time": 47.43,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 47.72,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 48.291,
+      "instrument": "kick",
+      "midi_pitch": 35
+    },
+    {
+      "time": 49.159,
+      "instrument": "snare",
+      "midi_pitch": 38
+    },
+    {
+      "time": 49.45,
+      "instrument": "tom",
+      "midi_pitch": 47
+    },
+    {
+      "time": 49.73,
+      "instrument": "tom",
+      "midi_pitch": 47
+    },
+    {
+      "time": 50.02,
+      "instrument": "kick",
+      "midi_pitch": 35
+    },
+    {
+      "time": 50.02,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 50.609,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 50.88,
+      "instrument": "snare",
+      "midi_pitch": 38
+    },
+    {
+      "time": 50.88,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 51.17,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 51.47,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 51.75,
+      "instrument": "kick",
+      "midi_pitch": 35
+    },
+    {
+      "time": 51.75,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 52.03,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 52.6,
+      "instrument": "snare",
+      "midi_pitch": 38
+    },
+    {
+      "time": 52.6,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 52.9,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 53.18,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 53.47,
+      "instrument": "kick",
+      "midi_pitch": 35
+    },
+    {
+      "time": 53.47,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 53.73,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 54.041,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 54.33,
+      "instrument": "snare",
+      "midi_pitch": 38
+    },
+    {
+      "time": 54.33,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 55.191,
+      "instrument": "kick",
+      "midi_pitch": 35
+    },
+    {
+      "time": 55.191,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 55.48,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 56.05,
+      "instrument": "snare",
+      "midi_pitch": 38
+    },
+    {
+      "time": 56.92,
+      "instrument": "kick",
+      "midi_pitch": 35
+    },
+    {
+      "time": 56.92,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 57.491,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 57.78,
+      "instrument": "snare",
+      "midi_pitch": 38
+    },
+    {
+      "time": 57.78,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 58.641,
+      "instrument": "kick",
+      "midi_pitch": 35
+    },
+    {
+      "time": 58.641,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 59.5,
+      "instrument": "snare",
+      "midi_pitch": 38
+    },
+    {
+      "time": 59.791,
+      "instrument": "tom",
+      "midi_pitch": 47
+    },
+    {
+      "time": 60.07,
+      "instrument": "tom",
+      "midi_pitch": 47
+    },
+    {
+      "time": 60.359,
+      "instrument": "kick",
+      "midi_pitch": 35
+    },
+    {
+      "time": 60.359,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 60.93,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 61.22,
+      "instrument": "snare",
+      "midi_pitch": 38
+    },
+    {
+      "time": 61.22,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 61.52,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 61.8,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 62.08,
+      "instrument": "kick",
+      "midi_pitch": 35
+    },
+    {
+      "time": 62.091,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 62.37,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 62.659,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 62.95,
+      "instrument": "snare",
+      "midi_pitch": 38
+    },
+    {
+      "time": 62.95,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 63.23,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 63.52,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 63.809,
+      "instrument": "kick",
+      "midi_pitch": 35
+    },
+    {
+      "time": 63.809,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 64.1,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 64.67,
+      "instrument": "snare",
+      "midi_pitch": 38
+    },
+    {
+      "time": 64.67,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 65.241,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 65.53,
+      "instrument": "kick",
+      "midi_pitch": 35
+    },
+    {
+      "time": 65.53,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 65.82,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 66.1,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 66.391,
+      "instrument": "snare",
+      "midi_pitch": 38
+    },
+    {
+      "time": 66.391,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 66.68,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 66.97,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 67.25,
+      "instrument": "kick",
+      "midi_pitch": 35
+    },
+    {
+      "time": 67.25,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 67.55,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 68.109,
+      "instrument": "snare",
+      "midi_pitch": 38
+    },
+    {
+      "time": 68.12,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 68.4,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 68.691,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 68.98,
+      "instrument": "kick",
+      "midi_pitch": 35
+    },
+    {
+      "time": 68.98,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 69.27,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 69.55,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 69.841,
+      "instrument": "snare",
+      "midi_pitch": 38
+    },
+    {
+      "time": 69.841,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 70.12,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 70.409,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 70.7,
+      "instrument": "kick",
+      "midi_pitch": 35
+    },
+    {
+      "time": 70.7,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 70.991,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 71.559,
+      "instrument": "snare",
+      "midi_pitch": 38
+    },
+    {
+      "time": 71.559,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 71.841,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 72.141,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 72.42,
+      "instrument": "kick",
+      "midi_pitch": 35
+    },
+    {
+      "time": 72.42,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 72.709,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 73.28,
+      "instrument": "snare",
+      "midi_pitch": 38
+    },
+    {
+      "time": 73.28,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 73.57,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 73.859,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 74.15,
+      "instrument": "kick",
+      "midi_pitch": 35
+    },
+    {
+      "time": 74.15,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 75.009,
+      "instrument": "snare",
+      "midi_pitch": 38
+    },
+    {
+      "time": 75.009,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 75.57,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 75.87,
+      "instrument": "kick",
+      "midi_pitch": 35
+    },
+    {
+      "time": 75.87,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 76.159,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 76.441,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 76.73,
+      "instrument": "snare",
+      "midi_pitch": 38
+    },
+    {
+      "time": 76.73,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 77.309,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 77.6,
+      "instrument": "kick",
+      "midi_pitch": 35
+    },
+    {
+      "time": 77.6,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 77.9,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 78.18,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 78.459,
+      "instrument": "snare",
+      "midi_pitch": 38
+    },
+    {
+      "time": 78.459,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 78.741,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 79.03,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 79.32,
+      "instrument": "kick",
+      "midi_pitch": 35
+    },
+    {
+      "time": 79.32,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 79.609,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 79.891,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 80.18,
+      "instrument": "snare",
+      "midi_pitch": 38
+    },
+    {
+      "time": 80.18,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 80.47,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 80.75,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 81.041,
+      "instrument": "kick",
+      "midi_pitch": 35
+    },
+    {
+      "time": 81.041,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 81.9,
+      "instrument": "snare",
+      "midi_pitch": 38
+    },
+    {
+      "time": 81.9,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 82.191,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 82.48,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 82.77,
+      "instrument": "kick",
+      "midi_pitch": 35
+    },
+    {
+      "time": 82.77,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 83.33,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 83.63,
+      "instrument": "snare",
+      "midi_pitch": 38
+    },
+    {
+      "time": 83.92,
+      "instrument": "tom",
+      "midi_pitch": 47
+    },
+    {
+      "time": 84.2,
+      "instrument": "tom",
+      "midi_pitch": 47
+    },
+    {
+      "time": 84.491,
+      "instrument": "kick",
+      "midi_pitch": 35
+    },
+    {
+      "time": 84.491,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 85.35,
+      "instrument": "snare",
+      "midi_pitch": 38
+    },
+    {
+      "time": 85.35,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 85.741,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 86.209,
+      "instrument": "kick",
+      "midi_pitch": 35
+    },
+    {
+      "time": 86.209,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 86.78,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 87.07,
+      "instrument": "snare",
+      "midi_pitch": 38
+    },
+    {
+      "time": 87.07,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 87.35,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 87.93,
+      "instrument": "kick",
+      "midi_pitch": 35
+    },
+    {
+      "time": 87.93,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 88.791,
+      "instrument": "snare",
+      "midi_pitch": 38
+    },
+    {
+      "time": 88.791,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 89.65,
+      "instrument": "kick",
+      "midi_pitch": 35
+    },
+    {
+      "time": 89.65,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 90.509,
+      "instrument": "snare",
+      "midi_pitch": 38
+    },
+    {
+      "time": 90.509,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 91.091,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 91.38,
+      "instrument": "kick",
+      "midi_pitch": 35
+    },
+    {
+      "time": 91.38,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 92.241,
+      "instrument": "snare",
+      "midi_pitch": 38
+    },
+    {
+      "time": 92.241,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 93.1,
+      "instrument": "kick",
+      "midi_pitch": 35
+    },
+    {
+      "time": 93.1,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 93.67,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 93.959,
+      "instrument": "snare",
+      "midi_pitch": 38
+    },
+    {
+      "time": 93.959,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 94.25,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 94.82,
+      "instrument": "kick",
+      "midi_pitch": 35
+    },
+    {
+      "time": 94.82,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 94.82,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 95.109,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 95.391,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 95.68,
+      "instrument": "snare",
+      "midi_pitch": 38
+    },
+    {
+      "time": 95.68,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 96.25,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 96.541,
+      "instrument": "kick",
+      "midi_pitch": 35
+    },
+    {
+      "time": 96.541,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 96.83,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 97.12,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 97.4,
+      "instrument": "snare",
+      "midi_pitch": 38
+    },
+    {
+      "time": 97.4,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 98.27,
+      "instrument": "kick",
+      "midi_pitch": 35
+    },
+    {
+      "time": 98.27,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 105.159,
+      "instrument": "kick",
+      "midi_pitch": 35
+    },
+    {
+      "time": 105.159,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 105.159,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 105.73,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 106.009,
+      "instrument": "snare",
+      "midi_pitch": 38
+    },
+    {
+      "time": 106.009,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 106.309,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 106.591,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 106.88,
+      "instrument": "kick",
+      "midi_pitch": 35
+    },
+    {
+      "time": 106.88,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 107.17,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 107.459,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 107.741,
+      "instrument": "snare",
+      "midi_pitch": 38
+    },
+    {
+      "time": 107.741,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 108.03,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 108.309,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 108.6,
+      "instrument": "kick",
+      "midi_pitch": 35
+    },
+    {
+      "time": 108.6,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 108.88,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 109.18,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 109.459,
+      "instrument": "snare",
+      "midi_pitch": 38
+    },
+    {
+      "time": 109.459,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 109.75,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 110.05,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 110.32,
+      "instrument": "kick",
+      "midi_pitch": 35
+    },
+    {
+      "time": 110.32,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 110.609,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 110.891,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 111.18,
+      "instrument": "snare",
+      "midi_pitch": 38
+    },
+    {
+      "time": 111.18,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 111.75,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 112.041,
+      "instrument": "kick",
+      "midi_pitch": 35
+    },
+    {
+      "time": 112.041,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 112.62,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 112.9,
+      "instrument": "snare",
+      "midi_pitch": 38
+    },
+    {
+      "time": 112.9,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 113.191,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 113.48,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 113.48,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 113.77,
+      "instrument": "kick",
+      "midi_pitch": 35
+    },
+    {
+      "time": 113.77,
+      "instrument": "closed_hihat",
+      "midi_pitch": 42
+    },
+    {
+      "time": 113.77,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 114.059,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 114.63,
+      "instrument": "snare",
+      "midi_pitch": 38
+    },
+    {
+      "time": 114.63,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 114.92,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 115.07,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 115.491,
+      "instrument": "kick",
+      "midi_pitch": 35
+    },
+    {
+      "time": 115.491,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 116.35,
+      "instrument": "snare",
+      "midi_pitch": 38
+    },
+    {
+      "time": 116.35,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 117.22,
+      "instrument": "kick",
+      "midi_pitch": 35
+    },
+    {
+      "time": 117.22,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 117.52,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 117.8,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 118.08,
+      "instrument": "snare",
+      "midi_pitch": 38
+    },
+    {
+      "time": 118.08,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 118.37,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 118.65,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 118.941,
+      "instrument": "kick",
+      "midi_pitch": 35
+    },
+    {
+      "time": 118.941,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 119.23,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 119.509,
+      "instrument": "crash",
+      "midi_pitch": 49
+    },
+    {
+      "time": 119.8,
+      "instrument": "snare",
+      "midi_pitch": 38
+    },
+    {
+      "time": 119.8,
+      "instrument": "crash",
+      "midi_pitch": 49
+    }
+  ]
+}
