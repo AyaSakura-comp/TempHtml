@@ -1,0 +1,1339 @@
+[
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/clang/lib/Headers/aie2p/aie2p_version.h#L14-L20",
+    "label": "AIE2P 版本標頭",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "system",
+      "isa",
+      "datatypes"
+    ],
+    "notes": [
+      "arch 21 與 model 巨集；不可混用 arch 22。 僅靜態來源查核。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/README.md#L1-L66",
+    "label": "Peano README：架構與後端",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "system",
+      "compute",
+      "synchronization",
+      "isa"
+    ],
+    "notes": [
+      "XDNA2 target triple、in-order exposed-pipeline VLIW、編譯器責任及成熟度限制。示例 timing 非本次硬體規格。 僅靜態來源查核。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/include/aie/Dialect/AIE/IR/AIETargetModel.h#L1077-L1145",
+    "label": "AIETargetModel：NPU2 拓撲與分區",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "system",
+      "memory"
+    ],
+    "notes": [
+      "完整 Strix 八欄、六列角色、可變 cols 分區及 512-bit 對齊；不是所有 SKU 或 runtime 配額。 僅靜態來源查核。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/lib/Dialect/AIE/IR/AIETargetModel.cpp#L755-L824",
+    "label": "AIETargetModel：記憶體鄰接",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "system",
+      "memory",
+      "dma"
+    ],
+    "notes": [
+      "East=self、方向與邊界／mem tile 例外；不可推成完整 DMA 路由限制。 僅靜態來源查核。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/lib/Dialect/AIE/IR/AIETargetModel.cpp#L885-L949",
+    "label": "AIETargetModel：switchbox 目的埠",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "system",
+      "dma"
+    ],
+    "notes": [
+      "各 tile 的方向／DMA 連接資源與邊界；不是完整路由可行性證明。 僅靜態來源查核。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/skills/aie-code-creator/references/architecture.md#L39-L142",
+    "label": "架構速查表：交叉查核對象",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "system",
+      "compute",
+      "dma"
+    ],
+    "notes": [
+      "用於導航與自然向量寬度；固定 clocks、latencies、BF16 MAC/cycle、路由絕對規則及 FIFO 深度不採作保證。 僅靜態來源查核。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PRegisterInfo.td#L109-L132",
+    "label": "AIE2P 後端：scalar register class",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "compute",
+      "isa"
+    ],
+    "notes": [
+      "一般暫存器類別存在；不等於獨立 scalar 執行緒或 FP32 原生乘法。 僅靜態來源查核。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PInstrPatterns.td#L295-L307",
+    "label": "AIE2P patterns：寬向量 BF16",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "compute",
+      "isa"
+    ],
+    "notes": [
+      "VEC1024／ACC2048 的 BF16 VMUL/VMAC selection，容器位寬不等於矩陣工作量。 僅靜態來源查核。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/aie_api/blob/bec000fd312b407c61f25ef86fd582042e42d28a/include/aie_api/detail/ld_st.hpp#L33-L40",
+    "label": "AIE API：AIE2P load/store 對齊",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "compute",
+      "memory"
+    ],
+    "notes": [
+      "不同向量寬度的對齊 helper；full-width 64-byte alignment 不等於匯流排寬度。 僅靜態來源查核。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/aie_api/blob/bec000fd312b407c61f25ef86fd582042e42d28a/include/aie_api/detail/aie2p/accum_native_types.hpp#L15-L24",
+    "label": "AIE API：累加型別映射",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "compute",
+      "datatypes"
+    ],
+    "notes": [
+      "acc16/24→acc32，acc40/48/56→acc64；型別標籤不等於多種物理位寬。 僅靜態來源查核。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/aie_api/blob/bec000fd312b407c61f25ef86fd582042e42d28a/include/aie_api/detail/aie2p/accum_native_types.hpp#L167-L172",
+    "label": "AIE API：浮點累加儲存",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "compute"
+    ],
+    "notes": [
+      "FP accumulator 的每 lane 32-bit storage specialization 與較大組合表示。 僅靜態來源查核。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/aie_api/blob/bec000fd312b407c61f25ef86fd582042e42d28a/include/aie_api/detail/aie2p/emulated_mmul_intrinsics.hpp#L207-L269",
+    "label": "AIE API：非 BFP BF16 helper",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "compute",
+      "datatypes",
+      "mma"
+    ],
+    "notes": [
+      "4×8×8 的八次 32-lane MUL/MAC，加 broadcast/shuffle；無 cycle 保證。 僅靜態來源查核。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/clang/lib/Headers/aie2p/aie2p_vmult.h#L39416-L39509",
+    "label": "Peano：8b×4b wrapper 展開",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "compute",
+      "isa",
+      "datatypes",
+      "mma"
+    ],
+    "notes": [
+      "4×16×16 先 unpack/shuffle，再兩次 4×8×16 int8 算術；不是單一 INT4 MMA 證據。 僅靜態來源查核。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenSchedule.td#L9031-L9064",
+    "label": "AIE2P itinerary：VMAC operand timing",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "compute",
+      "isa",
+      "mma"
+    ],
+    "notes": [
+      "來源／目的 operand timing 與 bypass 是 scheduler 模型；不可讀成 mmul 固定耗時或 issue-rate。 僅靜態來源查核。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/include/aie/Dialect/AIE/IR/AIETargetModel.h#L749-L790",
+    "label": "AIETargetModel：核心容量與地址",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "compute",
+      "memory"
+    ],
+    "notes": [
+      "64 KiB data、16 KiB program、地址視窗、256-bit load/store bus 及 cascade 模型；非存取延遲量測。 僅靜態來源查核。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/include/aie/Dialect/AIE/IR/AIETargetModel.h#L830-L834",
+    "label": "AIETargetModel：mem tile 容量與 banks",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "memory"
+    ],
+    "notes": [
+      "512 KiB mem tile；模型回傳 mem tile 八 banks、其他 tile 四 banks。 僅靜態來源查核。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_guide/core_data_memory.md#L10-L32",
+    "label": "Core Data Memory：共用資料區",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "memory"
+    ],
+    "notes": [
+      "Stack、buffers、.data/.rodata/.bss 共用本地 data memory。 僅靜態來源查核。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_guide/core_data_memory.md#L107-L176",
+    "label": "Core Data Memory：連續區間與預建 ELF",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "memory"
+    ],
+    "notes": [
+      "data_size 保留一段連續區間；預建 ELF 固定地址須另保留，不能只用大小表達。 僅靜態來源查核。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_guide/core_data_memory.md#L34-L105",
+    "label": "Core Data Memory：stack 分析",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "memory"
+    ],
+    "notes": [
+      "Linked ELF 靜態呼叫路徑分析、缺失資料與 override；measured 屬編譯分析，不是 runtime 測量。 僅靜態來源查核。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_guide/core_data_memory.md#L193-L218",
+    "label": "Core Data Memory：配置策略",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "memory"
+    ],
+    "notes": [
+      "bank-aware、basic-sequential、mem_bank 的不同處理；不提供 bank 延遲。 僅靜態來源查核。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/include/aie/Dialect/AIE/IR/AIEOps.td#L1291-L1347",
+    "label": "AIE DMAStartOp：通道契約",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "dma"
+    ],
+    "notes": [
+      "通道由 MM2S/S2MM 方向與 index 定義；channel、BD 與 per-channel padding 分層。 僅靜態來源查核。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/include/aie/Dialect/AIE/IR/AIEOps.td#L940-L1064",
+    "label": "AIE DMABDOp：描述子與布局契約",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "dma",
+      "synchronization"
+    ],
+    "notes": [
+      "Buffer、offset/len、元素單位、BD 鏈與 ND layout；文件內 stride 例子與限制文字有落差，本文不判定所有可用步距。 僅靜態來源查核。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/include/aie/Dialect/AIE/IR/AIETargetModel.h#L759-L824",
+    "label": "AIETargetModel：鎖與 BD 資源",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "dma",
+      "synchronization"
+    ],
+    "notes": [
+      "鎖、BD 數、ND 維度及 mem tile channel 對 BD 半區的可達性。 僅靜態來源查核。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/include/aie/Dialect/AIE/IR/AIEOps.td#L1500-L1611",
+    "label": "AIE LockOp／UseLockOp：鎖語意",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "synchronization"
+    ],
+    "notes": [
+      "Counting semaphore、AcquireGreaterEqual 等待後扣除、Release 增加；非主機 mutex/coherence 保證。 僅靜態來源查核。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/clang/lib/Headers/aie2p/aie2p_locks.h#L14-L61",
+    "label": "Peano AIE2P locks：builtin 包裝",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "synchronization"
+    ],
+    "notes": [
+      "Greater-equal 的負值編碼及 pointer overload；不應按負號猜測邏輯計數初值。 僅靜態來源查核。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_guide/section-2/section-2a/README.md#L258-L298",
+    "label": "ObjectFifo：概念深度與局部池",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "synchronization"
+    ],
+    "notes": [
+      "批量取得、可前進與可重疊所需容量不同；範例不是完整有限迴圈活性證明。 僅靜態來源查核。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_guide/section-4/section-4b/README.md#L75-L101",
+    "label": "Trace 文件：等待事件分類",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "synchronization"
+    ],
+    "notes": [
+      "Memory、stream、lock stall 名稱；僅讀文件，未取得任何硬體 trace。 僅靜態來源查核。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/clang/lib/Headers/aie2p/aie2p_vmult.h#L38830-L38885",
+    "label": "Peano：BFP16 matrix builtin",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "isa",
+      "mma"
+    ],
+    "notes": [
+      "8×8×8T 傳遞 mantissa/exponent 至 BFP576 builtin，回傳 accfloat。 僅靜態來源查核。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PInstrPatterns.td#L443-L460",
+    "label": "AIE2P patterns：BFP VMUL／VMAC",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "isa",
+      "mma"
+    ],
+    "notes": [
+      "BFP576 intrinsic 到機器 pattern；不是 helper 或 kernel 耗時。 僅靜態來源查核。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PLegalizerInfo.cpp#L214-L255",
+    "label": "AIE2P legalizer：scalar FP 路徑",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "isa",
+      "datatypes"
+    ],
+    "notes": [
+      "Scalar BF16 MUL 向量化後抽取；FP32/FP64 MUL 有 libcall。不能保證部署可連結。 僅靜態來源查核。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/aie_api/blob/bec000fd312b407c61f25ef86fd582042e42d28a/include/aie_api/detail/aie2p/config.hpp#L22-L24",
+    "label": "AIE API：FP32 feature guards",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "isa",
+      "datatypes"
+    ],
+    "notes": [
+      "FP32 emulation guard 與 native support=0 分離；非所有 FP32 表示皆不支援。 僅靜態來源查核。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/clang/lib/Headers/aie2p/aie2p_vmult.h#L54935-L54942",
+    "label": "Peano：float wrapper 預設選擇",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "isa",
+      "datatypes",
+      "mma"
+    ],
+    "notes": [
+      "mul_elem_32(v32float,...) 預設 accuracy_safe。 僅靜態來源查核。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/clang/lib/Headers/aie2p/aie2p_vmult.h#L53918-L53994",
+    "label": "Peano：FP32 的 BF16 部分積",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "isa",
+      "datatypes"
+    ],
+    "notes": [
+      "Safe path 九個部分乘積加總，另有殘差/轉換；與單次 BF16 truncation 不同。 僅靜態來源查核。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/clang/lib/Headers/aie2p/aie2p_vmult.h#L15-L58",
+    "label": "Peano：i8 matrix builtin 與 sign bits",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "isa",
+      "datatypes",
+      "mma"
+    ],
+    "notes": [
+      "8×8×8 integer builtin、configuration 的 signX/signY；sign control 與 bit container 分開。 僅靜態來源查核。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/test/Conversion/AIEVecToLLVM/matmul-aie2p.mlir#L169-L232",
+    "label": "MLIR FileCheck：i8 signedness 預期",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "isa",
+      "datatypes"
+    ],
+    "notes": [
+      "四組 configuration 與 signless 預設 signed；只讀預期、未執行測試。 僅靜態來源查核。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/lib/Conversion/AIEVecToLLVM/AIEVecToLLVM.cpp#L4895-L4904",
+    "label": "MLIR i16 decoder：未重現疑點",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "isa",
+      "datatypes",
+      "mma"
+    ],
+    "notes": [
+      "8×2×8 回傳固定 conf=24，未像 i8 合入 sign bits；靜態疑點，不是晶片 bug。 僅靜態來源查核。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/lib/Conversion/AIEVecToLLVM/AIEVecToLLVM.cpp#L4980-L5048",
+    "label": "MLIR i16 rewrite：conf 沿用",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "isa"
+    ],
+    "notes": [
+      "取得 decoded conf 並加入 padded operands；用於限定 signedness 疑點所在路徑。 僅靜態來源查核。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/clang/lib/Headers/aiebase_typedefs.h#L580-L643",
+    "label": "Peano：arch 22 FP16／FP8 guard",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "isa",
+      "datatypes"
+    ],
+    "notes": [
+      "_Float16、float8、bfloat8 在 arch 22 區塊；不可移植為 arch 21 支援。 僅靜態來源查核。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/clang/lib/Headers/aiebase_typedefs.h#L117-L118",
+    "label": "Peano：四位元 scalar typedef",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "datatypes"
+    ],
+    "notes": [
+      "signed/unsigned _BitInt(4) 表示存在；不保證 scalar 陣列即 packed vector layout。 僅靜態來源查核。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/clang/lib/Headers/aiebase_typedefs.h#L235-L270",
+    "label": "Peano：BF16 與 packed INT4 typedef",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "datatypes"
+    ],
+    "notes": [
+      "__bf16；v256int4 的 128-byte storage、其他 nibble 容器。 僅靜態來源查核。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/aie_api/blob/bec000fd312b407c61f25ef86fd582042e42d28a/include/aie_api/detail/aie2p/mmul_16_16.hpp#L23-L105",
+    "label": "AIE API：i16 shape 與 accumulator",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "datatypes",
+      "mma"
+    ],
+    "notes": [
+      "8×2×8 acc32、4×4×8 內部 acc64；較小 shape 可取較大原語子集。 僅靜態來源查核。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/aie_api/blob/bec000fd312b407c61f25ef86fd582042e42d28a/include/aie_api/detail/aie2p/mmul_bf16_bf16.hpp#L63-L131",
+    "label": "AIE API：BF16 轉 BFP16 路徑",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "datatypes",
+      "mma"
+    ],
+    "notes": [
+      "macro 開啟後 transpose B、轉 accfloat/BFP16 再呼叫 BFP 原語，涉及精度變化。 僅靜態來源查核。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/aie_api/blob/bec000fd312b407c61f25ef86fd582042e42d28a/include/aie_api/aie_doc.hpp#L229-L250",
+    "label": "AIE API 格式表：BFP block bytes",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "datatypes"
+    ],
+    "notes": [
+      "EBS8 八 mantissas 加共享 exponent 共九 bytes；EBS16 十七 bytes。 僅靜態來源查核。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/clang/lib/Headers/aiebase_typedefs.h#L545-L578",
+    "label": "Peano：BFP16 register 表示",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "datatypes"
+    ],
+    "notes": [
+      "EBS16 exponent 在 register 中重複，不等於緊縮記憶體大小。 僅靜態來源查核。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/aie_api/blob/bec000fd312b407c61f25ef86fd582042e42d28a/include/aie_api/detail/aie2p/mmul_bfp16_bfp16.hpp#L17-L104",
+    "label": "AIE API：BFP16 MMUL specialization",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "datatypes",
+      "mma"
+    ],
+    "notes": [
+      "EBS8 8×8×8 直接 T 原語、8×8×16 兩次原語；EBS16 forwarding 不保證所有 shape 成功。 僅靜態來源查核。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/aie_api/blob/bec000fd312b407c61f25ef86fd582042e42d28a/include/aie_api/detail/aie2p/mmul_fp32_fp32.hpp#L24-L44",
+    "label": "AIE API：FP32 MMUL emulation",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "datatypes",
+      "mma"
+    ],
+    "notes": [
+      "4×8×4 specialization 在 FP32_EMULATION guard 內。 僅靜態來源查核。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/lib/Dialect/AIEVec/Transforms/VectorToVectorConversions.cpp#L812-L943",
+    "label": "MLIR：通用 bf16-emulation rewrite",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "datatypes"
+    ],
+    "notes": [
+      "Binary ops truncf/op/extf；vector.fma 三個 operands 包括 acc 都截成 BF16。 僅靜態來源查核。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/aie_api/blob/bec000fd312b407c61f25ef86fd582042e42d28a/include/aie_api/aie_types.hpp#L34-L60",
+    "label": "AIE API：rounding／saturation",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "datatypes"
+    ],
+    "notes": [
+      "Floor 與 toward-zero 不同；deprecated truncate=saturate；中間溢位與輸出飽和分開。 僅靜態來源查核。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/aie_api/blob/bec000fd312b407c61f25ef86fd582042e42d28a/include/aie_api/aie.hpp#L6295-L6530",
+    "label": "AIE API：公開 MMUL 契約",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "datatypes",
+      "mma"
+    ],
+    "notes": [
+      "M/K/N、size_A/B/C、mul 初始化、mac 累加、普通 vector row-major 及浮點 shift 忽略。 僅靜態來源查核。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/clang/lib/Headers/aie2p/aie2p_srs.h#L1281-L1344",
+    "label": "Peano：浮點／BFP conversion",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "datatypes"
+    ],
+    "notes": [
+      "專用 BF16 conversion，BFP conf helper save/set/restore rounding；非全 IEEE 邊界保證。 僅靜態來源查核。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/clang/lib/Headers/aie2p/aie2p_vmult.h#L37603-L37651",
+    "label": "Peano：i32×i16 直接原語",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "mma"
+    ],
+    "notes": [
+      "4×2×8→32×acc64，直接 I512_I512_ACC2048 builtin。 僅靜態來源查核。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/aie_api/blob/bec000fd312b407c61f25ef86fd582042e42d28a/include/aie_api/detail/aie2p/emulated_mmul_intrinsics.hpp#L10-L122",
+    "label": "AIE API：寬整數部分積合成",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "mma"
+    ],
+    "notes": [
+      "32×32、較大 K 的 32×16、16×32 代表 helper 以高低字、shift 與多次原語合成。 僅靜態來源查核。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/aie_api/blob/bec000fd312b407c61f25ef86fd582042e42d28a/include/aie_api/detail/aie2p/mmul_bf16_bf16.hpp#L134-L178",
+    "label": "AIE API：非 BFP 大形狀",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "mma"
+    ],
+    "notes": [
+      "macro=0 仍有 8×8×8，分兩份 4×8×8 helper。 僅靜態來源查核。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/aie_kernels/aie2p/mm.cc#L437-L487",
+    "label": "MLIR-AIE kernel：BF16 macro 幾何",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "mma"
+    ],
+    "notes": [
+      "Kernel 使用 #ifdef、API 使用 #if，定義為零不等同未定義。 僅靜態來源查核。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/test/Conversion/AIEVecToLLVM/matmul-aie2p.mlir#L10-L166",
+    "label": "MLIR FileCheck：BF16 matmul 預期",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "mma"
+    ],
+    "notes": [
+      "4×8×8／8×8×8 預期 BFP conversion；其他形狀預期多次 BF16 MAC。未執行。 僅靜態來源查核。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/lib/Conversion/AIEVecToLLVM/AIEVecToLLVM.cpp#L5048-L5095",
+    "label": "MLIR AIEVec rewrite：BFP helper",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "mma"
+    ],
+    "notes": [
+      "直接 BF16 lowering 的轉換、B 轉置及 BFP helper，與 C++ macro 路徑分開。 僅靜態來源查核。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PInstrPatterns.td#L422-L427",
+    "label": "AIE2P patterns：I512 integer VMUL／VMAC",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "mma"
+    ],
+    "notes": [
+      "整數 matrix intrinsic 對應機器 selection，與 i8 及 i32×i16 header 對照；不證明每週期吞吐量。僅靜態來源查核。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/README.md",
+    "label": "IRON / MLIR-AIE 專案說明",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "compiler"
+    ],
+    "notes": [
+      "Python 空間資料流、Peano 與版本配對原則。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_guide/compilation_stages.md",
+    "label": "IRON 編譯階段與產物",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "compiler",
+      "iron",
+      "runtime",
+      "debug"
+    ],
+    "notes": [
+      "JIT、recipe / artifact hash、核心 ELF 與預設 XRT 載入。"
+    ]
+  },
+  {
+    "url": "https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/README.md",
+    "label": "Triton-XDNA：編譯與 runtime",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "compiler",
+      "triton",
+      "runtime",
+      "quantization",
+      "heterogeneous",
+      "deployment",
+      "performance",
+      "validation",
+      "glossary",
+      "sources",
+      "wiki-method"
+    ],
+    "notes": [
+      "固定快照的流程、依賴與 runtime 條件；不是本機驗證。",
+      "實驗性 compiler；上游效能數字不代表本機量測。"
+    ]
+  },
+  {
+    "url": "https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/matmul_bf16_m64_n64_k64/transform_aie2p.mlir",
+    "label": "AIE2P matmul Transform IR",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "compiler",
+      "triton"
+    ],
+    "notes": [
+      "pack、K reduction、memory space 與 herd mapping。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/tools/aiecc/README.md#L29-L49",
+    "label": "aiecc 產物與建置圖",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "compiler",
+      "debug"
+    ],
+    "notes": [
+      "xclbin 指令流與 full-ELF 為不同輸出方案。"
+    ]
+  },
+  {
+    "url": "https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/amd_triton_npu/backend/driver.py#L1093-L1133",
+    "label": "Triton runtime 與格式選擇",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "compiler",
+      "runtime"
+    ],
+    "notes": [
+      "HSA 強制 PDI；XRT 自動選 npu2 ELF、npu1 xclbin。"
+    ]
+  },
+  {
+    "url": "https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/utils/mlir-air-hash.txt",
+    "label": "Triton 的 AIR 版本鎖",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "compiler",
+      "triton"
+    ],
+    "notes": [
+      "指定 AIR 6746658；不能拿獨立下載的 AIR HEAD 代替。"
+    ]
+  },
+  {
+    "url": "https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/utils/peano-requirements.txt",
+    "label": "Triton 的 Peano 版本鎖",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "compiler",
+      "triton",
+      "debug"
+    ],
+    "notes": [
+      "指定 wheel 版本；註解記載混版曾使 stack 問題表現成 NaN。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_guide/section-1/README.md",
+    "label": "IRON 結構元件",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "iron"
+    ],
+    "notes": [
+      "Worker、Program、range_ 與 placement。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_guide/section-2/section-2a/README.md",
+    "label": "ObjectFifo 語意",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "iron"
+    ],
+    "notes": [
+      "depth、單一 producer、多 consumer、acquire / release。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_guide/section-2/section-2d/RuntimeTasks.md",
+    "label": "IRON Runtime tasks",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "iron",
+      "debug"
+    ],
+    "notes": [
+      "fill / drain、TaskGroup、完成依賴與資源回收。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_examples/basic/vector_scalar_add/vector_scalar_add.py",
+    "label": "IRON vector_scalar_add 範例",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "iron",
+      "debug"
+    ],
+    "notes": [
+      "查核 CLI 與 JIT generator；命令未執行。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_examples/basic/matrix_multiplication/whole_array/whole_array.py#L442-L524",
+    "label": "IRON whole_array 矩陣乘法",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "iron"
+    ],
+    "notes": [
+      "查核 npu2、8 欄、BF16 / f32 與 Peano 參數。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_guide/core_data_memory.md#L9-L153",
+    "label": "核心資料記憶體與 stack",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "iron",
+      "debug"
+    ],
+    "notes": [
+      "stack、FIFO buffer、靜態資料共用 SRAM；需連續空間。"
+    ]
+  },
+  {
+    "url": "https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/generate_readme.py#L187-L239",
+    "label": "Dashboard 勾選產生邏輯",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "triton",
+      "debug"
+    ],
+    "notes": [
+      "exists() 檢查 transform 檔案，不執行 NPU 測試。"
+    ]
+  },
+  {
+    "url": "https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/matmul_bf16_m64_n64_k64/matmul_bf16_m64_n64_k64.py",
+    "label": "Triton BF16 matmul 範例",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "triton"
+    ],
+    "notes": [
+      "尺寸掃描與 torch assert_close；測試存在不表示本次通過。"
+    ]
+  },
+  {
+    "url": "https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/qwen2_5/kernels/matmul.py",
+    "label": "Qwen linear wrapper",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "triton",
+      "llm-graph",
+      "qwen-case"
+    ],
+    "notes": [
+      "NPU M/N 補齊 256、full-K launch、BF16 入 f32 出；GPU 權重快取。"
+    ]
+  },
+  {
+    "url": "https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/qwen2_5/kernels/backend_utils.py",
+    "label": "Qwen CachedNPUKernel",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "triton"
+    ],
+    "notes": [
+      "首次 JIT、後續直接 launcher；快取 key 是 grid 與 keyword constexpr。"
+    ]
+  },
+  {
+    "url": "https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/qwen2_5/kernels/softmax.py",
+    "label": "Qwen softmax wrapper",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "triton",
+      "llm-graph"
+    ],
+    "notes": [
+      "四列 chunk、最小補齊 128 欄；主模型 attention 未走此 NPU wrapper。"
+    ]
+  },
+  {
+    "url": "https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/qwen2_5/model.py#L826-L977",
+    "label": "Qwen 注意力與 forward 路由",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "triton",
+      "llm-graph",
+      "qwen-case"
+    ],
+    "notes": [
+      "npu 注意力核心 CPU；hetero-fast 按 S==1 切換。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_guide/hrx_runtime.md",
+    "label": "IRON HRX runtime",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "runtime"
+    ],
+    "notes": [
+      "libhrx / amdxdna HAL、xclbin + insts、flush / invalidate。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_guide/hsa_runtime.md",
+    "label": "IRON HSA runtime",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "runtime",
+      "debug"
+    ],
+    "notes": [
+      "PDI + insts、AIE ROCR、queue fences、同步與限制。"
+    ]
+  },
+  {
+    "url": "https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/zero_copy/shared_buffer_test.py",
+    "label": "共享緩衝測試來源",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "runtime",
+      "debug"
+    ],
+    "notes": [
+      "雙向 mapping、DLPack、pool lifetime、in-place / staged 計數與 skip。"
+    ]
+  },
+  {
+    "url": "https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/zero_copy/zero_copy_benchmark.py",
+    "label": "零拷貝分階段基準",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "runtime"
+    ],
+    "notes": [
+      "同 runtime 內比較 copy / shared；跨 runtime dispatch 次數不同。"
+    ]
+  },
+  {
+    "url": "https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/zero_copy/common/add_chain.py",
+    "label": "零拷貝共用 add chain",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "runtime"
+    ],
+    "notes": [
+      "兩個 f32 adds；單 op chain 重複呼叫問題僅為上游註解記載。"
+    ]
+  },
+  {
+    "url": "https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/qwen2_5/model.py",
+    "label": "Qwen2Model 實作",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "llm-graph",
+      "qwen-case",
+      "gemm",
+      "attention",
+      "kv-cache",
+      "prefill-decode",
+      "heterogeneous",
+      "validation",
+      "sources",
+      "wiki-method"
+    ],
+    "notes": [
+      "模型形狀、配置、fused chain、KV cache 與主機搬移。",
+      "固定 source snapshot；裝置分支必須以實際程式為準，未在本機執行。"
+    ]
+  },
+  {
+    "url": "https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/qwen2_5/kernels/rope.py",
+    "label": "Qwen RoPE 實作",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "llm-graph",
+      "qwen-case"
+    ],
+    "notes": [
+      "apply_rope 依 q.device 放置 cos/sin；檔頭 GPU 敘述已過時。"
+    ]
+  },
+  {
+    "url": "https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/qwen2_5/kernels/rmsnorm.py",
+    "label": "Qwen RMSNorm wrapper",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "llm-graph",
+      "qwen-case"
+    ],
+    "notes": [
+      "bare NPU norm 使用真實欄數；獨立 gamma 乘法在 CPU。"
+    ]
+  },
+  {
+    "url": "https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/qwen2_5/kernels/swiglu.py",
+    "label": "Qwen SwiGLU wrapper",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "llm-graph"
+    ],
+    "notes": [
+      "獨立 NPU SiLU + multiply 兩段；與 fused chain 不同。"
+    ]
+  },
+  {
+    "url": "https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/qwen2_5/kernels/add.py",
+    "label": "Qwen residual add",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "llm-graph",
+      "qwen-case"
+    ],
+    "notes": [
+      "NPU f32 路徑與補齊；GPU wrapper 搬移 CPU 輸入。"
+    ]
+  },
+  {
+    "url": "https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/qwen2_5/kernels/attention.py",
+    "label": "Qwen GPU fused attention",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "llm-graph",
+      "qwen-case"
+    ],
+    "notes": [
+      "online softmax 與 BF16 dot；wrapper 固定 cuda。"
+    ]
+  },
+  {
+    "url": "https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/qwen2_5/README.md",
+    "label": "Qwen2.5 README",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "qwen-case",
+      "attention",
+      "prefill-decode",
+      "sources"
+    ],
+    "notes": [
+      "路由表已更新但其後仍有 always iGPU 舊段落；採 model.py 分支裁決。",
+      "部分敘述與 routing table 有差異，須交叉閱讀 model.py。"
+    ]
+  },
+  {
+    "url": "https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/qwen2_5/model.py#L1106-L1144",
+    "label": "Qwen final norm / LM head",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "qwen-case"
+    ],
+    "notes": [
+      "npu 的 LM head 明確用 CPU torch matmul。"
+    ]
+  },
+  {
+    "url": "https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/qwen2_5/model.py#L732-L824",
+    "label": "Qwen helper 例外與 fallback",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "qwen-case",
+      "debug"
+    ],
+    "notes": [
+      "linear / norm / SwiGLU / add / softmax helper 的 try / except。"
+    ]
+  },
+  {
+    "url": "https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/qwen2_5/qwen_inference.py#L349-L443",
+    "label": "Qwen CLI 與正確性閘門",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "qwen-case",
+      "debug"
+    ],
+    "notes": [
+      "預設 npu / max-tokens=0；cosine 0.95，不要求 top-1；generation 不同。"
+    ]
+  },
+  {
+    "url": "https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/qwen2_5/qwen_inference.py#L167-L241",
+    "label": "Qwen 生成計時呈現",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "qwen-case"
+    ],
+    "notes": [
+      "TTFT、TPOT、含 prefill TPS 與排除首次 decode 的 steady 統計。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_examples/basic/matrix_multiplication/whole_array/whole_array.py",
+    "label": "IRON whole-array GEMM",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "gemm",
+      "prefill-decode",
+      "performance"
+    ],
+    "notes": [
+      "固定 SHA 範例；參數、packing、partition 須一起檢查。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/python/iron/kernels/linalg.py",
+    "label": "IRON linalg kernel geometry",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "gemm",
+      "quantization",
+      "performance",
+      "validation"
+    ],
+    "notes": [
+      "dtype / mac_dims 與 kernel 路徑，非 API shape 全集。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_guide/core_data_memory.md",
+    "label": "Core data memory guide",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "gemm",
+      "kv-cache",
+      "heterogeneous",
+      "glossary"
+    ],
+    "notes": [
+      "SRAM 配置、bank 與 linker context。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/aie_api/blob/bec000fd312b407c61f25ef86fd582042e42d28a/include/aie_api/detail/aie2p/mmul_bf16_bf16.hpp",
+    "label": "AIE2P BF16 MMUL helper",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "gemm",
+      "attention",
+      "quantization",
+      "validation",
+      "glossary"
+    ],
+    "notes": [
+      "macro 與 specialization 決定 emulation 路徑。"
+    ]
+  },
+  {
+    "url": "https://arxiv.org/abs/2205.14135v2",
+    "label": "FlashAttention paper v2",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "attention",
+      "performance"
+    ],
+    "notes": [
+      "GPU IO-aware 演算法論文，不是 XDNA2 kernel 的可用性證明。"
+    ]
+  },
+  {
+    "url": "https://arxiv.org/abs/2305.13245v3",
+    "label": "GQA paper v3",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "attention",
+      "kv-cache",
+      "glossary"
+    ],
+    "notes": [
+      "query / KV heads 分組與品質權衡。"
+    ]
+  },
+  {
+    "url": "https://arxiv.org/abs/2309.06180v1",
+    "label": "PagedAttention paper v1",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "kv-cache",
+      "prefill-decode"
+    ],
+    "notes": [
+      "分頁與共享的系統概念，不是本 wiki 已實作的 runtime。"
+    ]
+  },
+  {
+    "url": "https://arxiv.org/abs/2306.00978v6",
+    "label": "AWQ paper v6",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "quantization"
+    ],
+    "notes": [
+      "weight-only quantization 與平台感知 packing；GPU 結果不能移植成 NPU 吞吐。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/docs/Devices.md",
+    "label": "NPU device models",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "heterogeneous",
+      "glossary",
+      "sources",
+      "wiki-method"
+    ],
+    "notes": [
+      "裝置型號與 partition 描述，不能直接推出效能。"
+    ]
+  },
+  {
+    "url": "https://github.com/ROCm/FastFlowLM/blob/089e56d29416990e168abed43aff88fc0ad664f3/README.md",
+    "label": "FastFlowLM README 固定快照",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "deployment",
+      "sources"
+    ],
+    "notes": [
+      "固定 SHA；README 的商用敘述與同版 TERMS.md 不一致，不能當成無條件商用授權。"
+    ]
+  },
+  {
+    "url": "https://github.com/ROCm/FastFlowLM/blob/089e56d29416990e168abed43aff88fc0ad664f3/TERMS.md",
+    "label": "FastFlowLM proprietary binary 條款",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "deployment",
+      "sources"
+    ],
+    "notes": [
+      "同版條款列公司年營收 USD 10 million 門檻，與 README 免費任何商用的敘述有衝突；部署前須向權利人確認。"
+    ]
+  },
+  {
+    "url": "https://fastflowlm.com/docs/install_lin/",
+    "label": "FastFlowLM Linux 安裝指南",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "deployment",
+      "sources"
+    ],
+    "notes": [
+      "外部可變來源；2026-09-12 查閱。需求專屬於此 runtime，不是所有 IRON 版本的要求。"
+    ]
+  },
+  {
+    "url": "https://lemonade-server.ai/flm_npu_linux.html",
+    "label": "Lemonade Linux NPU guide",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "deployment"
+    ],
+    "notes": [
+      "外部可變來源；2026-09-12 查閱，未執行安裝。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/lib/Conversion/AIEVecToLLVM/AIEVecToLLVM.cpp#L4849-L5048",
+    "label": "AIEVec 舊式直接 matmul lowering",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "debug"
+    ],
+    "notes": [
+      "i16 8×2×8 固定 conf=24 的 signedness 靜態風險；未動態重現。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/clang/lib/Headers/aie2p/aie2p_vmult.h#L15-L22",
+    "label": "Peano AIE2P 控制字",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "debug"
+    ],
+    "notes": [
+      "signX / signY 位於 bit 9 / 8；API 不等於所有 lowering 已驗證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_guide/section-4/section-4b/README.md#L17-L120",
+    "label": "IRON trace 設定",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "debug"
+    ],
+    "notes": [
+      "enable_trace、事件與 DDR trace buffer；不可混用不同世代事件值。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/README.md#L29-L45",
+    "label": "Peano README：外露管線 VLIW",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "glossary"
+    ],
+    "notes": [
+      "固定 SHA；編譯器安排指令相依與暫存器讀寫時點，不是 lock／stream 等資料流等待的說明。"
+    ]
+  },
+  {
+    "url": "https://www.amd.com/en/technologies/xdna.html",
+    "label": "AMD XDNA architecture",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "sources"
+    ],
+    "notes": [
+      "廠商公共架構介紹，包含不同世代內容，不能視為完整 AIE2P ISA 規格。"
+    ]
+  }
+]

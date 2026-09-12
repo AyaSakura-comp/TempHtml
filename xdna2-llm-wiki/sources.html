@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="主張要能回到原始文件與固定 source；公共架構介紹、API 表、compiler 實作和 benchmark 各有不同證明力。"><meta name="color-scheme" content="light"><title>來源地圖、證據等級與未解問題 — XDNA 2 LLM Wiki</title><link rel="icon" href="assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="assets/wiki.css"><script src="assets/model.js" defer></script><script src="assets/search-data.js" defer></script><script src="assets/app.js" defer></script></head>
+<body><a class="skip" href="#main">跳到正文</a><header class="topbar"><a class="wordmark" href="index.html"><span class="seal" aria-hidden="true">文</span><span>XDNA 2 <b>LLM WIKI</b></span></a><nav class="header-links" aria-label="常用連結"><a href="index.html#search">搜尋</a><a href="glossary.html">術語</a><a href="llms.txt">LLM 索引</a></nav></header><div class="layout"><aside class="sidebar" aria-label="知識庫導覽"><details id="nav-menu"><summary>全站目錄 <span>＋</span></summary><nav class="navtree"><div class="nav-group"><h3>架構</h3><a href="system.html">XDNA2 系統：空間資料流與 NPU2 分區</a><a href="compute.html">計算核心：scalar、SIMD、VLIW 與累加器</a><a href="memory.html">記憶體：program、data、banks 與局部地址</a><a href="dma.html">DMA：描述子、通道與資料布局</a><a href="synchronization.html">同步：鎖、背壓、停頓與死鎖</a><a href="isa.html">ISA 閱讀：從 AIE2P header 追到後端原語</a></div><div class="nav-group"><h3>數值</h3><a href="datatypes.html">數值型別：INT4、BF16、BFP16 與 FP32 的分層支援</a><a href="mma.html">矩陣乘加：原語、API 包裝與 LLM microtile</a><a href="quantization.html">LLM 量化：格式、數學與 kernel 是三件事</a></div><div class="nav-group"><h3>程式設計</h3><a href="compiler.html">編譯器分工：從資料流到 XDNA2 產物</a><a href="iron.html">IRON：以 Worker 與 ObjectFifo 設計資料流</a><a href="triton.html">Triton-XDNA：算子、Transform 與支援證據</a><a href="runtime.html">執行期與共享緩衝：格式、ABI、可見性</a><a href="deployment.html">LLM 部署生態：研究 compiler 與成品 runtime</a><a href="debug.html">除錯與證據分級：不要把 fallback 當 NPU 成功</a></div><div class="nav-group"><h3>LLM推論</h3><a href="llm-graph.html">LLM 計算圖：算子、狀態與裝置邊界</a><a href="qwen-case.html">Qwen2.5 案例：CPU＋NPU、GPU 與異質路由</a><a href="gemm.html">GEMM：把矩陣切成可搬、可算的工作</a><a href="attention.html">Attention：算子可拆，不代表整體已能在 NPU 跑</a><a href="kv-cache.html">KV cache：容量、頻寬與生命週期</a><a href="prefill-decode.html">Prefill 與 decode：兩個不同的效能問題</a><a href="heterogeneous.html">CPU × GPU × NPU：分工與資料所有權</a></div><div class="nav-group"><h3>驗證與知識庫</h3><a href="performance.html">效能模型：容量、Roofline 與端到端下界</a><a href="validation.html">正確性與效能驗證：一套不把 fallback 當成功的流程</a><a href="glossary.html">術語辭典：同一個字，在不同層可能不同意思</a><a href="sources.html" aria-current="page">來源地圖、證據等級與未解問題</a><a href="wiki-method.html">LLM Wiki 使用與維護：來源 → 條目 → 連結</a></div></nav></details></aside><main id="main" tabindex="-1"><div class="breadcrumbs"><a href="index.html">首頁</a> / 驗證與知識庫</div><div class="article-meta"><span>來源登錄與缺口</span><span>來源快照 2026-09-12</span><a href="markdown/sources.md" download>Markdown ↓</a></div><h1>來源地圖、證據等級與未解問題</h1><p class="lede">主張要能回到原始文件與固定 source；公共架構介紹、API 表、compiler 實作和 benchmark 各有不同證明力。</p><div class="evidence-note">本文區分公開來源、原始碼查核與工程推導。未在本機執行 compiler 或 NPU；可用型別、可編譯、可派送、無 fallback、效能達標是不同證據。</div><nav class="toc" aria-label="本頁目錄"><strong>本頁導覽</strong><a href="#section-1">這份 Wiki 能做到的完整性</a><a href="#section-2">證據分層</a><a href="#section-3">固定快照與可變文件</a><a href="#section-4">已發現的矛盾</a><a href="#section-5">尚未建立的證據</a><a href="#section-6">擴充來源的規則</a><a href="#references">來源與延伸</a></nav><article class="article-body"><h2 id="section-1">這份 Wiki 能做到的完整性</h2>
+<p>這是依公共文件、下載 source snapshots 與演算法文獻整理的廣泛技術知識庫，不是 AMD 保密設計文件或逐一列出所有 opcode 的正式 ISA 手冊。沒有公開或沒有查核的 latency、bus width、clock、firmware 排程與全部 SKU差異會留白；不以「完整」之名補猜測。</p>
+<p>每頁提供來源與 related/backlinks；首頁可下载 source-register.json，列出唯一 URL 與引用條目。knowledge.json 保留結構化內容，Markdown 與 llms-full.txt 保留來源文字和界線。另可直接開啟 <a href="research-manifest.json">原始 manifest</a>、<a href="type-mma-audit.md">型別／MMA 稽核</a>、<a href="guide/index.html">原始長篇指南</a>。</p>
+<h2 id="section-2">證據分層</h2>
+<div aria-label="可橫向捲動的資料表" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>等級</th>
+<th>能支持什麼</th>
+<th>不可替代</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>廠商公開架構文件</td>
+<td>大方向、產品級設計與其限定規格</td>
+<td>每個compiler實際lowering</td>
+</tr>
+<tr>
+<td>固定source/header</td>
+<td>這個版本的型別、primitive wrapper、配置與分支</td>
+<td>silicon實測或所有版本行為</td>
+</tr>
+<tr>
+<td>上游測試/範例</td>
+<td>預定支援範圍與驗證方法</td>
+<td>本機重現；存在文件不等於測試已pass</td>
+</tr>
+<tr>
+<td>論文</td>
+<td>演算法與論文條件下的結果</td>
+<td>自動移植到XDNA2的加速比</td>
+</tr>
+<tr>
+<td>工程推導</td>
+<td>由明確假設推導的容量/成本</td>
+<td>實際配置器大小或throughput</td>
+</tr>
+<tr>
+<td>本機量測</td>
+<td>若真的執行才可如此標記</td>
+<td>本Wiki尚無NPU量測</td>
+</tr>
+</tbody>
+</table></div>
+<p><a href="https://www.amd.com/en/technologies/xdna.html">AMD XDNA 公共頁</a> 同時談不同世代，引用時須切分範圍。多個 AMD/Xilinx repositories 互相一致可提高解讀把握，仍不是三份獨立 silicon validation。</p>
+<h2 id="section-3">固定快照與可變文件</h2>
+<p>MLIR-AIE、Peano、AIR、Triton-XDNA、AIE API 與 IREE-AMDAIE 的 SHA 可在原始 manifest 找到。這些 snapshot 是分別取得，<strong>未驗證組成同一套可建置工具鏈</strong>。LLVM-AIE 是指定範圍的 sparse checkout，不是完整離線 LLVM bundle。</p>
+<p>新增的 FLM/Lemonade 官方網站與論文頁以查閱日期和版本標記；動態安裝需求應部署前再核對。<a href="https://fastflowlm.com/docs/install_lin/">FLM Linux</a> 和 IRON guide 可能針對不同runtime/firmware協定，不能選一個版本號就當整個XDNA2平台的唯一要求。</p>
+<h2 id="section-4">已發現的矛盾</h2>
+<ul>
+<li>AIE API 模式名不一定代表一條 native matrix instruction；INT4 wrapper 可展開成 INT8，BF16 helper 可展開成多次向量原語。</li>
+<li>AIE2P arch21 與 AIE2PS arch22 的 FP16/FP8 型別不能混用。</li>
+<li><a href="https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/qwen2_5/README.md">Qwen README</a> 的舊 prose 與新 routing table 有不同裝置描述；<a href="https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/qwen2_5/model.py">model.py</a> 的分支是本版本查核的優先依據。</li>
+<li><a href="https://github.com/ROCm/FastFlowLM/blob/089e56d29416990e168abed43aff88fc0ad664f3/README.md">FLM官方README</a> 區分 CLI/orchestration 與 binary kernels；它的「任何用途含商用免費」又與同版 <a href="https://github.com/ROCm/FastFlowLM/blob/089e56d29416990e168abed43aff88fc0ad664f3/TERMS.md">TERMS.md</a> 的年營收授權門檻矛盾。不可裁定無条件商用，也不可把binary runtime當完整可重建開源stack。</li>
+</ul>
+<p>不能解決的矛盾應留在條目，不應刪掉不利證據讓敘述更順。</p>
+<h2 id="section-5">尚未建立的證據</h2>
+<p>沒有量到本機 NPU 的時脈、真實可用partition、頻寬、每指令週期與功耗。沒有證實本環境可編譯所有範例、完整NPU attention、任意GGUF直接執行、無fallback的所有LLM或最高context。純capacity/roofline計算器不回答這些問題。</p>
+<p>AM027 portal 先前只取得 loading頁，沒有假裝下載完整手冊；而且不同target的手冊不能直接拿來證明Ryzen AIE2P的所有指令能力。</p>
+<h2 id="section-6">擴充來源的規則</h2>
+<p>先保存來源身份、版本/日期、精確段落或行號與hash；將一句主張縮到可驗證範圍；找不同層的反例；決定是事實、推導、待測還是已過期。更新相關條目、backlinks、log与exports，最後跑網站與連結測試。更多維護方式見 <a href="wiki-method.html">Wiki方法</a>。</p></article><section id="references" class="references"><h2>來源與查核範圍</h2><ol><li><a href="https://www.amd.com/en/technologies/xdna.html">AMD XDNA architecture</a><span>廠商公共架構介紹，包含不同世代內容，不能視為完整 AIE2P ISA 規格。</span><small>https://www.amd.com/en/technologies/xdna.html</small></li><li><a href="https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/docs/Devices.md">NPU device models</a><span>裝置型號與 partition 描述，不能直接推出效能。</span><small>https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/docs/Devices.md</small></li><li><a href="https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/qwen2_5/model.py">Qwen2.5 model.py</a><span>固定 source snapshot；裝置分支必須以實際程式為準，未在本機執行。</span><small>https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/qwen2_5/model.py</small></li><li><a href="https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/qwen2_5/README.md">Qwen2.5 README</a><span>部分敘述與 routing table 有差異，須交叉閱讀 model.py。</span><small>https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/qwen2_5/README.md</small></li><li><a href="https://github.com/ROCm/FastFlowLM/blob/089e56d29416990e168abed43aff88fc0ad664f3/README.md">FastFlowLM README 固定快照</a><span>固定 SHA；README 的商用敘述與同版 TERMS.md 不一致，不能當成無條件商用授權。</span><small>https://github.com/ROCm/FastFlowLM/blob/089e56d29416990e168abed43aff88fc0ad664f3/README.md</small></li><li><a href="https://github.com/ROCm/FastFlowLM/blob/089e56d29416990e168abed43aff88fc0ad664f3/TERMS.md">FastFlowLM proprietary binary 條款</a><span>同版條款列公司年營收 USD 10 million 門檻，與 README 免費任何商用的敘述有衝突；部署前須向權利人確認。</span><small>https://github.com/ROCm/FastFlowLM/blob/089e56d29416990e168abed43aff88fc0ad664f3/TERMS.md</small></li><li><a href="https://fastflowlm.com/docs/install_lin/">FastFlowLM Linux 安裝指南</a><span>外部可變來源；2026-09-12 查閱。需求專屬於此 runtime，不是所有 IRON 版本的要求。</span><small>https://fastflowlm.com/docs/install_lin/</small></li><li><a href="https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/README.md">Triton-XDNA README</a><span>實驗性 compiler；上游效能數字不代表本機量測。</span><small>https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/README.md</small></li></ol></section><div class="link-panels"><section><h2>接著閱讀</h2><div class="related-links"><a href="wiki-method.html">LLM Wiki 使用與維護：來源 → 條目 → 連結</a><a href="validation.html">正確性與效能驗證：一套不把 fallback 當成功的流程</a><a href="qwen-case.html">Qwen2.5 案例：CPU＋NPU、GPU 與異質路由</a><a href="datatypes.html">數值型別：INT4、BF16、BFP16 與 FP32 的分層支援</a><a href="deployment.html">LLM 部署生態：研究 compiler 與成品 runtime</a></div></section><section><h2>哪些條目連到這裡？</h2><div class="related-links"><a href="isa.html">ISA 閱讀：從 AIE2P header 追到後端原語</a><a href="deployment.html">LLM 部署生態：研究 compiler 與成品 runtime</a><a href="wiki-method.html">LLM Wiki 使用與維護：來源 → 條目 → 連結</a></div></section></div><a class="back-top" href="#main">回到本文頂端 ↑</a></main></div><footer class="footer">XDNA 2 / AIE2P · 繁體中文知識庫 · 來源快照 2026-09-12<br>公開文件與固定版本原始碼查核，不是完整保密 ISA 手冊；未執行 NPU 實驗。<a href="wiki-method.html">維護方法與證據界線</a> · <a href="guide/index.html">原始長篇指南</a></footer></body></html>

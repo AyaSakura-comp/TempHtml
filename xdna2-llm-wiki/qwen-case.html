@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="以固定 model.py 裁決 README 舊段落，逐項追蹤注意力、LM head、fused MLP、fallback 與計時邊界。"><meta name="color-scheme" content="light"><title>Qwen2.5 案例：CPU＋NPU、GPU 與異質路由 — XDNA 2 LLM Wiki</title><link rel="icon" href="assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="assets/wiki.css"><script src="assets/model.js" defer></script><script src="assets/search-data.js" defer></script><script src="assets/app.js" defer></script></head>
+<body><a class="skip" href="#main">跳到正文</a><header class="topbar"><a class="wordmark" href="index.html"><span class="seal" aria-hidden="true">文</span><span>XDNA 2 <b>LLM WIKI</b></span></a><nav class="header-links" aria-label="常用連結"><a href="index.html#search">搜尋</a><a href="glossary.html">術語</a><a href="llms.txt">LLM 索引</a></nav></header><div class="layout"><aside class="sidebar" aria-label="知識庫導覽"><details id="nav-menu"><summary>全站目錄 <span>＋</span></summary><nav class="navtree"><div class="nav-group"><h3>架構</h3><a href="system.html">XDNA2 系統：空間資料流與 NPU2 分區</a><a href="compute.html">計算核心：scalar、SIMD、VLIW 與累加器</a><a href="memory.html">記憶體：program、data、banks 與局部地址</a><a href="dma.html">DMA：描述子、通道與資料布局</a><a href="synchronization.html">同步：鎖、背壓、停頓與死鎖</a><a href="isa.html">ISA 閱讀：從 AIE2P header 追到後端原語</a></div><div class="nav-group"><h3>數值</h3><a href="datatypes.html">數值型別：INT4、BF16、BFP16 與 FP32 的分層支援</a><a href="mma.html">矩陣乘加：原語、API 包裝與 LLM microtile</a><a href="quantization.html">LLM 量化：格式、數學與 kernel 是三件事</a></div><div class="nav-group"><h3>程式設計</h3><a href="compiler.html">編譯器分工：從資料流到 XDNA2 產物</a><a href="iron.html">IRON：以 Worker 與 ObjectFifo 設計資料流</a><a href="triton.html">Triton-XDNA：算子、Transform 與支援證據</a><a href="runtime.html">執行期與共享緩衝：格式、ABI、可見性</a><a href="deployment.html">LLM 部署生態：研究 compiler 與成品 runtime</a><a href="debug.html">除錯與證據分級：不要把 fallback 當 NPU 成功</a></div><div class="nav-group"><h3>LLM推論</h3><a href="llm-graph.html">LLM 計算圖：算子、狀態與裝置邊界</a><a href="qwen-case.html" aria-current="page">Qwen2.5 案例：CPU＋NPU、GPU 與異質路由</a><a href="gemm.html">GEMM：把矩陣切成可搬、可算的工作</a><a href="attention.html">Attention：算子可拆，不代表整體已能在 NPU 跑</a><a href="kv-cache.html">KV cache：容量、頻寬與生命週期</a><a href="prefill-decode.html">Prefill 與 decode：兩個不同的效能問題</a><a href="heterogeneous.html">CPU × GPU × NPU：分工與資料所有權</a></div><div class="nav-group"><h3>驗證與知識庫</h3><a href="performance.html">效能模型：容量、Roofline 與端到端下界</a><a href="validation.html">正確性與效能驗證：一套不把 fallback 當成功的流程</a><a href="glossary.html">術語辭典：同一個字，在不同層可能不同意思</a><a href="sources.html">來源地圖、證據等級與未解問題</a><a href="wiki-method.html">LLM Wiki 使用與維護：來源 → 條目 → 連結</a></div></nav></details></aside><main id="main" tabindex="-1"><div class="breadcrumbs"><a href="index.html">首頁</a> / LLM推論</div><div class="article-meta"><span>來源查核</span><span>來源快照 2026-09-12</span><a href="markdown/qwen-case.md" download>Markdown ↓</a></div><h1>Qwen2.5 案例：CPU＋NPU、GPU 與異質路由</h1><p class="lede">以固定 model.py 裁決 README 舊段落，逐項追蹤注意力、LM head、fused MLP、fallback 與計時邊界。</p><div class="evidence-note">本文區分公開來源、原始碼查核與工程推導。未在本機執行 compiler 或 NPU；可用型別、可編譯、可派送、無 fallback、效能達標是不同證據。</div><nav class="toc" aria-label="本頁目錄"><strong>本頁導覽</strong><a href="#section-1">先固定來源，再裁決文件矛盾</a><a href="#section-2">路由表應讀作預期主算子位置</a><a href="#section-3">注意力核心與主機工作不能藏起來</a><a href="#section-4">融合預設值與 fallback 的邊界</a><a href="#section-5">驗證與計時不是同一條 CLI 路徑</a><a href="#section-6">可成立的結論與待驗證事項</a><a href="#section-7">案例重現紀錄的具體欄位</a><a href="#references">來源與延伸</a></nav><article class="article-body"><h2 id="section-1">先固定來源，再裁決文件矛盾</h2>
+<p>本機 Triton-XDNA HEAD 已核對為 <code>5c33df1263f29de30f71616780c2e8a88e623782</code>。<a href="https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/qwen2_5/README.md">Qwen2.5 README</a> 前段及路由表寫明 <code>npu</code> 是 CPU＋NPU、<code>hetero-fast</code> 的 decode 是 GPU，後方卻殘留把注意力與 LM head 概括為 always iGPU 的舊段落。本頁不複製該句，而以 <a href="https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/qwen2_5/model.py#L826-L977">Qwen 注意力與 forward 路由</a> 和 <a href="https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/qwen2_5/model.py#L1106-L1144">Qwen final norm / LM head</a> 的條件分支為準；沒有再次開 live 網頁或宣稱已比較遠端 HEAD。</p>
+<p>同樣要警覺程式註解：初始化附近仍說 npu 的 LM head 在 NPU，但 forward 實作明確用 CPU torch matmul。可執行分支的證據優先於說明文字，且本次只是靜態查核，不是模型推論結果。</p>
+<h2 id="section-2">路由表應讀作預期主算子位置</h2>
+<div aria-label="可橫向捲動的資料表" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>工作</th>
+<th>gpu</th>
+<th>npu</th>
+<th>hetero</th>
+<th>hetero-fast 的 S=1</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>input／final norm</td>
+<td>GPU</td>
+<td>NPU bare norm＋CPU gamma</td>
+<td>NPU／主機輔助</td>
+<td>GPU</td>
+</tr>
+<tr>
+<td>QKV 與 O 投影</td>
+<td>GPU</td>
+<td>NPU</td>
+<td>GPU</td>
+<td>GPU</td>
+</tr>
+<tr>
+<td>RoPE、分數、softmax、乘 V</td>
+<td>GPU</td>
+<td>CPU</td>
+<td>GPU</td>
+<td>GPU</td>
+</tr>
+<tr>
+<td>MLP 與殘差主算子</td>
+<td>GPU</td>
+<td>NPU</td>
+<td>NPU</td>
+<td>GPU</td>
+</tr>
+<tr>
+<td>LM head</td>
+<td>GPU</td>
+<td>CPU</td>
+<td>GPU</td>
+<td>GPU</td>
+</tr>
+</tbody>
+</table></div>
+<p>表依 <a href="https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/qwen2_5/model.py">Qwen2Model 實作</a>、<a href="https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/qwen2_5/kernels/rmsnorm.py">Qwen RMSNorm wrapper</a>；融合時 gamma 處理會改變。<code>hetero-fast</code> 的 S 大於一走 hetero 分支，<code>hetero</code> 不會因 decode 自動全換 GPU。<code>reference</code> 是另外的 HuggingFace 路徑，不列入四種 Triton 路由比較。GPU 列也不能解讀成整個 Python 程序沒有 CPU 工作或拷貝。</p>
+<h2 id="section-3">注意力核心與主機工作不能藏起來</h2>
+<p><code>_attention()</code> 在 npu 模式把 QKV／O 的 backend 設為 npu，取得 CPU 可見的投影結果，RoPE 隨 tensor 裝置執行，分數與 softmax 用 CPU f32。<a href="https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/qwen2_5/kernels/rope.py">Qwen RoPE 實作</a> 的實作依 <code>q.device</code> 放置表格，故檔頭 GPU 敘述已不適用所有 backend。GPU／hetero 則呼叫 <a href="https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/qwen2_5/kernels/attention.py">Qwen GPU fused attention</a> 的 fused attention；先把 GQA 的 KV heads 展開，不表示已有原生 GQA NPU attention。</p>
+<p>另外，model.py 的一般 gpu／npu 共用分支會無條件 <code>_to_cpu(attn_out)</code>，再由 <a href="https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/qwen2_5/kernels/add.py">Qwen residual add</a> 的 GPU wrapper 將 CPU operand 搬回 GPU。這是 fullGPU 標籤仍可能含主機往返的靜態證據，不能稱為零搬移 GPU baseline；此處未實測其代價。hetero 分支也明列 <code>_to_gpu</code>／<code>_to_cpu</code>，所以共享 DRAM 不代表模型自動使用 zero_copy 範例。</p>
+<h2 id="section-4">融合預設值與 fallback 的邊界</h2>
+<p><a href="https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/qwen2_5/model.py">Qwen2Model 實作</a> 的環境讀取是 <code>AMD_TRITON_NPU_FUSED_MLP</code> 預設字串 <code>"1"</code>，即使旁邊註解寫 opt-in，本快照符合 npu／hetero 條件時預設會建立鏈。BM 為一百二十八，真實 <code>B×S</code> 超過此值走未融合分支；不是 README 所述所有情況都使用獨立二百五十六列 block。</p>
+<p><a href="https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/qwen2_5/kernels/matmul.py">Qwen linear wrapper</a> 的獨立 linear 是 BF16 輸入、full-K 一次 launch、f32 輸出；<a href="https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/qwen2_5/kernels/rmsnorm.py">Qwen RMSNorm wrapper</a> 的 bare norm 回來再乘 gamma。融合鏈則串接殘差、正規化、MLP 並折入 gamma，故不能把每個名稱視為一個獨立 dispatch。</p>
+<p><a href="https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/qwen2_5/model.py#L732-L824">Qwen helper 例外與 fallback</a> 的 linear、norm、SwiGLU、add、softmax helper 捕捉例外後記錄 warning 並以 PyTorch 備援。檔案層級 kernel wrappers 不都自帶 try／except；fused chain 的 <code>run()</code> 與直接 fused attention 呼叫也沒有同樣保護。fallback 的裝置取決於當下 tensor，可能仍失敗，不能宣稱所有編譯錯誤都會安全退回 CPU。成功產生文字更不能證明 NPU 主算子真的執行。</p>
+<h2 id="section-5">驗證與計時不是同一條 CLI 路徑</h2>
+<p><a href="https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/qwen2_5/qwen_inference.py#L349-L443">Qwen CLI 與正確性閘門</a> 預設 <code>--backend npu --max-tokens 0</code>，單次 forward 會比較 logits，僅以 cosine 不低於零點九五作為退出閘門，不要求 top-1 一致。最大／平均誤差與 top-k 另行印出，這不等於 token 完全一致、任務品質相同或所有值有限的完整證明。生成路徑主要輸出文字及計時，不具備同樣的錯誤輸出 assertion。</p>
+<p>以下參數已查核，但未執行；若執行會載入模型並可能下載權重，本次不做：</p>
+<button aria-label="複製程式碼" class="copy-code" type="button">複製</button><pre tabindex="0"><code class="language-bash">cd sources/Triton-XDNA/examples/qwen2_5
+python qwen_inference.py --model qwen2.5-0.5b \
+  --backend npu --max-tokens 0 --profile
+</code></pre>
+<p><a href="https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/qwen2_5/qwen_inference.py#L167-L241">Qwen 生成計時呈現</a> 把 prefill forward 時間稱為 TTFT，decode 平均稱 TPOT；總 TPS 包含 prefill，steady TPOT 另排除第一次 decode。模型載入、tokenization 和 cache 配置不全在這個 TTFT 內；首次 JIT 與暖機狀態也須另記。不能用 hetero-fast 的 GPU decode TPOT 當成 NPU decode 成績，再與 CPU＋NPU 的端到端平均直接比較。</p>
+<h2 id="section-6">可成立的結論與待驗證事項</h2>
+<p>來源支持的是：此範例具備 CPU＋NPU 路徑、GPU 路徑與按形狀切換的異質策略，並有可讀的 KV cache、補齊、融合及容錯實作。不支持的是：全模型純 NPU、任意 prompt 品質無損、所有 fallback 都被統計、或任何模式普遍最快。</p>
+<p>重現報告應列模型尺寸、prompt 長度、精度、融合開關、每階段 backend、warning、實際 dispatch 與拷貝，再附 logits／token 檢查。本頁沒有下載模型、變更 ROCm 或執行 NPU；註解內的毫秒或每 token 數字只能標為上游背景敘述。與 <a href="validation.html">驗證方法</a> 及 <a href="performance.html">效能比較</a> 合讀，才能避免把功能跑通當成加速證明。</p>
+<h2 id="section-7">案例重現紀錄的具體欄位</h2>
+<p>以五億與十五億參數版本比較時，應保存設定表中的層數、隱藏寬度、注意力頭與中間寬度，而不是只記權重檔名。相同 kernel 程式服務多種模型，仍可能因補齊後的尺寸不同而產生不同產物和記憶體成本；中間寬度增大也會放大 gate／up 暫存與 down projection 的歸約長度。這些是來源形狀導出的差異，本文不從參數數量直接推算速度。</p>
+<p>每次實驗再分成冷啟動與重用兩組，明列哪些時間包含權重放置、編譯、硬體 context 建立，以及首次特定形狀的 dispatch。若只報穩態，應同時交代排除哪些樣本；若包含首次開銷，就不要把結果稱為純核心吞吐。尤其不同 prompt 長度可能落在融合條件的兩側，或讓首次 decode 產生另一套快取，必須把這些條件放在表格中才有可比性。</p>
+<p>數值欄位則分別保留 logits 的有限值檢查、最大與平均誤差、餘弦相似度、下一 token 及後續生成差異。不同精度路徑可能在接近的候選分數間翻轉首選 token，不能把所有差異都當成程式錯誤，也不能因餘弦過關就忽略任務品質。只有把容忍的差異事先定義清楚，才能判斷融合、補齊或異質切分是否仍滿足使用目的。</p>
+<p>最後另外列出預期 NPU 節點與確實觀察到的 dispatch，不把 CPU 注意力、CPU 輸出頭或例外備援算進 NPU 覆蓋率。若沒有足夠的活動紀錄，應誠實填寫尚未確認，而非用 backend 名稱代替證據。</p></article><section id="references" class="references"><h2>來源與查核範圍</h2><ol><li><a href="https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/qwen2_5/README.md">Qwen2.5 README</a><span>路由表已更新但其後仍有 always iGPU 舊段落；採 model.py 分支裁決。</span><small>https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/qwen2_5/README.md</small></li><li><a href="https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/qwen2_5/model.py#L826-L977">Qwen 注意力與 forward 路由</a><span>npu 注意力核心 CPU；hetero-fast 按 S==1 切換。</span><small>https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/qwen2_5/model.py#L826-L977</small></li><li><a href="https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/qwen2_5/model.py#L1106-L1144">Qwen final norm / LM head</a><span>npu 的 LM head 明確用 CPU torch matmul。</span><small>https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/qwen2_5/model.py#L1106-L1144</small></li><li><a href="https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/qwen2_5/model.py">Qwen2Model 實作</a><span>模型形狀、配置、fused chain、KV cache 與主機搬移。</span><small>https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/qwen2_5/model.py</small></li><li><a href="https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/qwen2_5/kernels/rmsnorm.py">Qwen RMSNorm wrapper</a><span>bare NPU norm 使用真實欄數；獨立 gamma 乘法在 CPU。</span><small>https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/qwen2_5/kernels/rmsnorm.py</small></li><li><a href="https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/qwen2_5/kernels/rope.py">Qwen RoPE 實作</a><span>apply_rope 依 q.device 放置 cos/sin；檔頭 GPU 敘述已過時。</span><small>https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/qwen2_5/kernels/rope.py</small></li><li><a href="https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/qwen2_5/kernels/attention.py">Qwen GPU fused attention</a><span>online softmax 與 BF16 dot；wrapper 固定 cuda。</span><small>https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/qwen2_5/kernels/attention.py</small></li><li><a href="https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/qwen2_5/kernels/add.py">Qwen residual add</a><span>NPU f32 路徑與補齊；GPU wrapper 搬移 CPU 輸入。</span><small>https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/qwen2_5/kernels/add.py</small></li><li><a href="https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/qwen2_5/kernels/matmul.py">Qwen linear wrapper</a><span>NPU M/N 補齊 256、full-K launch、BF16 入 f32 出；GPU 權重快取。</span><small>https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/qwen2_5/kernels/matmul.py</small></li><li><a href="https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/qwen2_5/model.py#L732-L824">Qwen helper 例外與 fallback</a><span>linear / norm / SwiGLU / add / softmax helper 的 try / except。</span><small>https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/qwen2_5/model.py#L732-L824</small></li><li><a href="https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/qwen2_5/qwen_inference.py#L349-L443">Qwen CLI 與正確性閘門</a><span>預設 npu / max-tokens=0；cosine 0.95，不要求 top-1；generation 不同。</span><small>https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/qwen2_5/qwen_inference.py#L349-L443</small></li><li><a href="https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/qwen2_5/qwen_inference.py#L167-L241">Qwen 生成計時呈現</a><span>TTFT、TPOT、含 prefill TPS 與排除首次 decode 的 steady 統計。</span><small>https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/qwen2_5/qwen_inference.py#L167-L241</small></li></ol></section><div class="link-panels"><section><h2>接著閱讀</h2><div class="related-links"><a href="llm-graph.html">LLM 計算圖：算子、狀態與裝置邊界</a><a href="triton.html">Triton-XDNA：算子、Transform 與支援證據</a><a href="runtime.html">執行期與共享緩衝：格式、ABI、可見性</a><a href="prefill-decode.html">Prefill 與 decode：兩個不同的效能問題</a><a href="validation.html">正確性與效能驗證：一套不把 fallback 當成功的流程</a><a href="performance.html">效能模型：容量、Roofline 與端到端下界</a></div></section><section><h2>哪些條目連到這裡？</h2><div class="related-links"><a href="triton.html">Triton-XDNA：算子、Transform 與支援證據</a><a href="llm-graph.html">LLM 計算圖：算子、狀態與裝置邊界</a><a href="attention.html">Attention：算子可拆，不代表整體已能在 NPU 跑</a><a href="prefill-decode.html">Prefill 與 decode：兩個不同的效能問題</a><a href="heterogeneous.html">CPU × GPU × NPU：分工與資料所有權</a><a href="deployment.html">LLM 部署生態：研究 compiler 與成品 runtime</a><a href="validation.html">正確性與效能驗證：一套不把 fallback 當成功的流程</a><a href="debug.html">除錯與證據分級：不要把 fallback 當 NPU 成功</a><a href="sources.html">來源地圖、證據等級與未解問題</a></div></section></div><a class="back-top" href="#main">回到本文頂端 ↑</a></main></div><footer class="footer">XDNA 2 / AIE2P · 繁體中文知識庫 · 來源快照 2026-09-12<br>公開文件與固定版本原始碼查核，不是完整保密 ISA 手冊；未執行 NPU 實驗。<a href="wiki-method.html">維護方法與證據界線</a> · <a href="guide/index.html">原始長篇指南</a></footer></body></html>

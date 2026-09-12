@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="快速對照 XDNA2、AIE2P、tile、buffer、MMA、BF16/BFP16 與 LLM 推論常用語，並連回完整條目。"><meta name="color-scheme" content="light"><title>術語辭典：同一個字，在不同層可能不同意思 — XDNA 2 LLM Wiki</title><link rel="icon" href="assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="assets/wiki.css"><script src="assets/model.js" defer></script><script src="assets/search-data.js" defer></script><script src="assets/app.js" defer></script></head>
+<body><a class="skip" href="#main">跳到正文</a><header class="topbar"><a class="wordmark" href="index.html"><span class="seal" aria-hidden="true">文</span><span>XDNA 2 <b>LLM WIKI</b></span></a><nav class="header-links" aria-label="常用連結"><a href="index.html#search">搜尋</a><a href="glossary.html">術語</a><a href="llms.txt">LLM 索引</a></nav></header><div class="layout"><aside class="sidebar" aria-label="知識庫導覽"><details id="nav-menu"><summary>全站目錄 <span>＋</span></summary><nav class="navtree"><div class="nav-group"><h3>架構</h3><a href="system.html">XDNA2 系統：空間資料流與 NPU2 分區</a><a href="compute.html">計算核心：scalar、SIMD、VLIW 與累加器</a><a href="memory.html">記憶體：program、data、banks 與局部地址</a><a href="dma.html">DMA：描述子、通道與資料布局</a><a href="synchronization.html">同步：鎖、背壓、停頓與死鎖</a><a href="isa.html">ISA 閱讀：從 AIE2P header 追到後端原語</a></div><div class="nav-group"><h3>數值</h3><a href="datatypes.html">數值型別：INT4、BF16、BFP16 與 FP32 的分層支援</a><a href="mma.html">矩陣乘加：原語、API 包裝與 LLM microtile</a><a href="quantization.html">LLM 量化：格式、數學與 kernel 是三件事</a></div><div class="nav-group"><h3>程式設計</h3><a href="compiler.html">編譯器分工：從資料流到 XDNA2 產物</a><a href="iron.html">IRON：以 Worker 與 ObjectFifo 設計資料流</a><a href="triton.html">Triton-XDNA：算子、Transform 與支援證據</a><a href="runtime.html">執行期與共享緩衝：格式、ABI、可見性</a><a href="deployment.html">LLM 部署生態：研究 compiler 與成品 runtime</a><a href="debug.html">除錯與證據分級：不要把 fallback 當 NPU 成功</a></div><div class="nav-group"><h3>LLM推論</h3><a href="llm-graph.html">LLM 計算圖：算子、狀態與裝置邊界</a><a href="qwen-case.html">Qwen2.5 案例：CPU＋NPU、GPU 與異質路由</a><a href="gemm.html">GEMM：把矩陣切成可搬、可算的工作</a><a href="attention.html">Attention：算子可拆，不代表整體已能在 NPU 跑</a><a href="kv-cache.html">KV cache：容量、頻寬與生命週期</a><a href="prefill-decode.html">Prefill 與 decode：兩個不同的效能問題</a><a href="heterogeneous.html">CPU × GPU × NPU：分工與資料所有權</a></div><div class="nav-group"><h3>驗證與知識庫</h3><a href="performance.html">效能模型：容量、Roofline 與端到端下界</a><a href="validation.html">正確性與效能驗證：一套不把 fallback 當成功的流程</a><a href="glossary.html" aria-current="page">術語辭典：同一個字，在不同層可能不同意思</a><a href="sources.html">來源地圖、證據等級與未解問題</a><a href="wiki-method.html">LLM Wiki 使用與維護：來源 → 條目 → 連結</a></div></nav></details></aside><main id="main" tabindex="-1"><div class="breadcrumbs"><a href="index.html">首頁</a> / 驗證與知識庫</div><div class="article-meta"><span>術語整理</span><span>來源快照 2026-09-12</span><a href="markdown/glossary.md" download>Markdown ↓</a></div><h1>術語辭典：同一個字，在不同層可能不同意思</h1><p class="lede">快速對照 XDNA2、AIE2P、tile、buffer、MMA、BF16/BFP16 與 LLM 推論常用語，並連回完整條目。</p><div class="evidence-note">本文區分公開來源、原始碼查核與工程推導。未在本機執行 compiler 或 NPU；可用型別、可編譯、可派送、無 fallback、效能達標是不同證據。</div><nav class="toc" aria-label="本頁目錄"><strong>本頁導覽</strong><a href="#section-1">裝置與架構</a><a href="#section-2">Tile、記憶體與資料流</a><a href="#section-3">算术與格式</a><a href="#section-4">Compiler 與 runtime</a><a href="#section-5">LLM 與量測</a><a href="#references">來源與延伸</a></nav><article class="article-body"><h2 id="section-1">裝置與架構</h2>
+<div aria-label="可橫向捲動的資料表" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>術語</th>
+<th>本 Wiki 的意思</th>
+<th>延伸</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>XDNA 2</td>
+<td>Ryzen AI 平台的一代 NPU 架構</td>
+<td><a href="system.html">系統</a></td>
+</tr>
+<tr>
+<td>AIE2P / arch21</td>
+<td>本次 source 查核的 XDNA2 core target</td>
+<td><a href="isa.html">ISA</a></td>
+</tr>
+<tr>
+<td>AIE2PS / arch22</td>
+<td>不同 target，不能移植其 FP8/FP16 支援結論</td>
+<td><a href="datatypes.html">資料型別</a></td>
+</tr>
+<tr>
+<td>gfx1151</td>
+<td>Strix Halo iGPU 的 ROCm GPU target，不是 NPU</td>
+<td><a href="heterogeneous.html">分工</a></td>
+</tr>
+<tr>
+<td>NPU2</td>
+<td>MLIR-AIE device model 家族名稱</td>
+<td><a href="system.html">系統</a></td>
+</tr>
+<tr>
+<td>Partition</td>
+<td>Runtime 分配的 array 區域，不一定等於整顆硬體</td>
+<td><a href="runtime.html">runtime</a></td>
+</tr>
+</tbody>
+</table></div>
+<p>架構命名依 <a href="https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/docs/Devices.md">Devices.md</a> 與固定版本 backend；勿把 API 文件中所有世代的同名型別合併成一張 XDNA2 能力表。</p>
+<h2 id="section-2">Tile、記憶體與資料流</h2>
+<div aria-label="可橫向捲動的資料表" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>術語</th>
+<th>重點</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Compute tile</td>
+<td>執行本地 scalar/vector 程式，搭配 data/program memory</td>
+</tr>
+<tr>
+<td>Memory tile / MemTile</td>
+<td>staging、重排、分配資料，不是透明一般 CPU L2 cache</td>
+</tr>
+<tr>
+<td>Shim tile</td>
+<td>Host 與 array 的資料入口/出口與相關連接</td>
+</tr>
+<tr>
+<td>Scratchpad</td>
+<td>軟體顯式管理的 SRAM，不是硬體自動替換cache</td>
+</tr>
+<tr>
+<td>Bank</td>
+<td>影響存取衝突與配置的記憶體分區，不能僅靠總容量判斷速度</td>
+</tr>
+<tr>
+<td>DMA / BD</td>
+<td>搬運引擎與其 buffer descriptor；descriptor 不是資料本身</td>
+</tr>
+<tr>
+<td>ObjectFifo</td>
+<td>編譯器可 lowering 的資料生命週期抽象，不是 Python queue 在 NPU 裡跑</td>
+</tr>
+<tr>
+<td>Lock / token</td>
+<td>協調可用資料與可用空間，錯誤 acquire 順序會阻塞</td>
+</tr>
+<tr>
+<td>Cascade</td>
+<td>傳遞特定資料／部分累加值的專用路徑；可用性與例子需分開查</td>
+</tr>
+</tbody>
+</table></div>
+<p>更多細節見 <a href="memory.html">記憶體</a>、<a href="dma.html">DMA</a>、<a href="synchronization.html">同步</a>；精確數量與地址不可只從這張辭典推導。<a href="https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_guide/core_data_memory.md">core_data_memory</a> 是 SRAM 的原始閱讀入口。</p>
+<h2 id="section-3">算术與格式</h2>
+<div aria-label="可橫向捲動的資料表" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>術語</th>
+<th>容易混淆之處</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SIMD</td>
+<td>多 lanes 執行相同類別向量計算；不等於 GPU warp</td>
+</tr>
+<tr>
+<td>VLIW</td>
+<td>Compiler 將多種操作排入 instruction bundle；AIE2P 的外露管線由編譯器安排指令相依與讀寫時點，不靠一般指令相依性 stall 邏輯；lock／stream 等資料流等待是另一層問題。見 <a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/README.md#L29-L45">Peano README</a>。</td>
+</tr>
+<tr>
+<td>MMA / MAC</td>
+<td>矩陣或向量乘加；API call 可能展開多條 primitives</td>
+</tr>
+<tr>
+<td>Accumulator</td>
+<td>中間累加表示，寬度不是輸出dtype</td>
+</tr>
+<tr>
+<td>BF16</td>
+<td>每個元素具有自己的 exponent</td>
+</tr>
+<tr>
+<td>BFP16</td>
+<td>Block floating point，共享 exponent；不是 BF16/IEEE FP16</td>
+</tr>
+<tr>
+<td>EBS</td>
+<td>Exponent block size，不是單個數值的 bit width</td>
+</tr>
+<tr>
+<td>Packing</td>
+<td>把資料排成 kernel operand layout，可能包含轉置與量化封装</td>
+</tr>
+<tr>
+<td>Emulation</td>
+<td>以其他算術路徑合成；成本與精度要看實作</td>
+</tr>
+</tbody>
+</table></div>
+<p><a href="https://github.com/Xilinx/aie_api/blob/bec000fd312b407c61f25ef86fd582042e42d28a/include/aie_api/detail/aie2p/mmul_bf16_bf16.hpp">BF16 helper</a> 顯示 macro/specialization 對實作的影響。看「支援」時要問：可表示、可搬運、可做單一primitive、API有組合，還是 frontend已有測試？</p>
+<h2 id="section-4">Compiler 與 runtime</h2>
+<p>IRON 是 Python dataflow programming 入口；MLIR-AIE 是 array 配置與 lowering 基礎；Peano 是 LLVM-AIE core backend；Triton-XDNA 把高階 kernel 經 triton-shared、Transform、AIR 與 AIE stack 降到裝置。<a href="compiler.html">compiler</a> 串起各層。</p>
+<p>XRT 與 HSA 是不同 runtime 路徑；ELF、xclbin、PDI、instruction stream 是不同 artifact，不能只按副檔名交換。Zero-copy 是避免特定 staging copy，不是零交通、零同步或零映射。Fallback 是改由其他 backend 執行；編譯器成功 return 不一定代表所有工作真的在 NPU。</p>
+<h2 id="section-5">LLM 與量測</h2>
+<p>Prefill 處理 prompt 並建立 cache；decode 依賴上一 token 逐步生成；KV cache 保存 keys/values；GQA 共享較少的 KV heads。<a href="https://arxiv.org/abs/2305.13245v3">GQA 論文</a> 是 query/KV分組的來源。TTFT 是到第一 token 的延遲；TPOT 是後續 token 間隔；tokens/s 可是 batch aggregate 或單序列，必須寫清。</p>
+<p>Roofline 用 arithmetic intensity 連接頻寬與算力上界；本 Wiki 工具顯示的是理想時間下界，不是硬體實測。KiB/MiB/GiB 用2的冪，GB/s和TOPS用10的冪。「固定source快照」表示版本可追溯，不代表相互相容可建置的 dependency lock。</p></article><section id="references" class="references"><h2>來源與查核範圍</h2><ol><li><a href="https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/docs/Devices.md">NPU device models</a><span>裝置型號與 partition 描述，不能直接推出效能。</span><small>https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/docs/Devices.md</small></li><li><a href="https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_guide/core_data_memory.md">Core data memory guide</a><span>SRAM 配置、bank 與 linker context。</span><small>https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_guide/core_data_memory.md</small></li><li><a href="https://github.com/Xilinx/aie_api/blob/bec000fd312b407c61f25ef86fd582042e42d28a/include/aie_api/detail/aie2p/mmul_bf16_bf16.hpp">AIE2P BF16 MMUL helper</a><span>macro 與 specialization 決定 emulation 路徑。</span><small>https://github.com/Xilinx/aie_api/blob/bec000fd312b407c61f25ef86fd582042e42d28a/include/aie_api/detail/aie2p/mmul_bf16_bf16.hpp</small></li><li><a href="https://arxiv.org/abs/2305.13245v3">GQA paper v3</a><span>query / KV heads 分組與品質權衡。</span><small>https://arxiv.org/abs/2305.13245v3</small></li><li><a href="https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/README.md">Triton-XDNA README</a><span>實驗性 compiler；上游效能數字不代表本機量測。</span><small>https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/README.md</small></li><li><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/README.md#L29-L45">Peano README：外露管線 VLIW</a><span>固定 SHA；編譯器安排指令相依與暫存器讀寫時點，不是 lock／stream 等資料流等待的說明。</span><small>https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/README.md#L29-L45</small></li></ol></section><div class="link-panels"><section><h2>接著閱讀</h2><div class="related-links"><a href="system.html">XDNA2 系統：空間資料流與 NPU2 分區</a><a href="datatypes.html">數值型別：INT4、BF16、BFP16 與 FP32 的分層支援</a><a href="compiler.html">編譯器分工：從資料流到 XDNA2 產物</a><a href="llm-graph.html">LLM 計算圖：算子、狀態與裝置邊界</a><a href="wiki-method.html">LLM Wiki 使用與維護：來源 → 條目 → 連結</a></div></section><section><h2>哪些條目連到這裡？</h2><div class="related-links"><a href="wiki-method.html">LLM Wiki 使用與維護：來源 → 條目 → 連結</a></div></section></div><a class="back-top" href="#main">回到本文頂端 ↑</a></main></div><footer class="footer">XDNA 2 / AIE2P · 繁體中文知識庫 · 來源快照 2026-09-12<br>公開文件與固定版本原始碼查核，不是完整保密 ISA 手冊；未執行 NPU 實驗。<a href="wiki-method.html">維護方法與證據界線</a> · <a href="guide/index.html">原始長篇指南</a></footer></body></html>

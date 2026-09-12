@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="從生成式 Python、FIFO 所有權到 Runtime 等待，建立可讀、可查核的 XDNA2 空間程式。"><meta name="color-scheme" content="light"><title>IRON：以 Worker 與 ObjectFifo 設計資料流 — XDNA 2 LLM Wiki</title><link rel="icon" href="assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="assets/wiki.css"><script src="assets/model.js" defer></script><script src="assets/search-data.js" defer></script><script src="assets/app.js" defer></script></head>
+<body><a class="skip" href="#main">跳到正文</a><header class="topbar"><a class="wordmark" href="index.html"><span class="seal" aria-hidden="true">文</span><span>XDNA 2 <b>LLM WIKI</b></span></a><nav class="header-links" aria-label="常用連結"><a href="index.html#search">搜尋</a><a href="glossary.html">術語</a><a href="llms.txt">LLM 索引</a></nav></header><div class="layout"><aside class="sidebar" aria-label="知識庫導覽"><details id="nav-menu"><summary>全站目錄 <span>＋</span></summary><nav class="navtree"><div class="nav-group"><h3>架構</h3><a href="system.html">XDNA2 系統：空間資料流與 NPU2 分區</a><a href="compute.html">計算核心：scalar、SIMD、VLIW 與累加器</a><a href="memory.html">記憶體：program、data、banks 與局部地址</a><a href="dma.html">DMA：描述子、通道與資料布局</a><a href="synchronization.html">同步：鎖、背壓、停頓與死鎖</a><a href="isa.html">ISA 閱讀：從 AIE2P header 追到後端原語</a></div><div class="nav-group"><h3>數值</h3><a href="datatypes.html">數值型別：INT4、BF16、BFP16 與 FP32 的分層支援</a><a href="mma.html">矩陣乘加：原語、API 包裝與 LLM microtile</a><a href="quantization.html">LLM 量化：格式、數學與 kernel 是三件事</a></div><div class="nav-group"><h3>程式設計</h3><a href="compiler.html">編譯器分工：從資料流到 XDNA2 產物</a><a href="iron.html" aria-current="page">IRON：以 Worker 與 ObjectFifo 設計資料流</a><a href="triton.html">Triton-XDNA：算子、Transform 與支援證據</a><a href="runtime.html">執行期與共享緩衝：格式、ABI、可見性</a><a href="deployment.html">LLM 部署生態：研究 compiler 與成品 runtime</a><a href="debug.html">除錯與證據分級：不要把 fallback 當 NPU 成功</a></div><div class="nav-group"><h3>LLM推論</h3><a href="llm-graph.html">LLM 計算圖：算子、狀態與裝置邊界</a><a href="qwen-case.html">Qwen2.5 案例：CPU＋NPU、GPU 與異質路由</a><a href="gemm.html">GEMM：把矩陣切成可搬、可算的工作</a><a href="attention.html">Attention：算子可拆，不代表整體已能在 NPU 跑</a><a href="kv-cache.html">KV cache：容量、頻寬與生命週期</a><a href="prefill-decode.html">Prefill 與 decode：兩個不同的效能問題</a><a href="heterogeneous.html">CPU × GPU × NPU：分工與資料所有權</a></div><div class="nav-group"><h3>驗證與知識庫</h3><a href="performance.html">效能模型：容量、Roofline 與端到端下界</a><a href="validation.html">正確性與效能驗證：一套不把 fallback 當成功的流程</a><a href="glossary.html">術語辭典：同一個字，在不同層可能不同意思</a><a href="sources.html">來源地圖、證據等級與未解問題</a><a href="wiki-method.html">LLM Wiki 使用與維護：來源 → 條目 → 連結</a></div></nav></details></aside><main id="main" tabindex="-1"><div class="breadcrumbs"><a href="index.html">首頁</a> / 程式設計</div><div class="article-meta"><span>來源查核</span><span>來源快照 2026-09-12</span><a href="markdown/iron.md" download>Markdown ↓</a></div><h1>IRON：以 Worker 與 ObjectFifo 設計資料流</h1><p class="lede">從生成式 Python、FIFO 所有權到 Runtime 等待，建立可讀、可查核的 XDNA2 空間程式。</p><div class="evidence-note">本文區分公開來源、原始碼查核與工程推導。未在本機執行 compiler 或 NPU；可用型別、可編譯、可派送、無 fallback、效能達標是不同證據。</div><nav class="toc" aria-label="本頁目錄"><strong>本頁導覽</strong><a href="#section-1">Python 是設計生成器</a><a href="#section-2">元件與資料契約</a><a href="#section-3">acquire 與 release 是所有權協定</a><a href="#section-4">Runtime 等待必須覆蓋整條依賴</a><a href="#section-5">從單核心例子走向矩陣乘法</a><a href="#section-6">容量與可重現性一起檢查</a><a href="#section-7">用小型資料流檢查設計推理</a><a href="#references">來源與延伸</a></nav><article class="article-body"><h2 id="section-1">Python 是設計生成器</h2>
+<p>IRON 的 Python 執行在主機上，生成將被降階的 MLIR；不是讓 AIE 核心直接跑 Python。<a href="https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_guide/section-1/README.md">IRON 結構元件</a> 特別區分 <code>range_</code> 與 Python <code>range</code>：前者建立裝置迴圈，後者在生成時反覆展開敘述。原生 <code>if</code> 同樣依生成時條件選擇程式，不應拿來表達未知的裝置端分支。</p>
+<p><code>Worker</code> 表示一個計算核心上的程式；指定 <code>Tile(0,2)</code> 是固定位置，未指定則留待 placement。<code>Program.resolve_program()</code> 將元件關係組合起來，之後仍要配置實體位置、緩衝及路由。這種分層使「能生成 MLIR」與「放得進目標分區」成為可分辨的兩個驗證關卡。</p>
+<h2 id="section-2">元件與資料契約</h2>
+<div aria-label="可橫向捲動的資料表" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>元件</th>
+<th>契約</th>
+<th>容易誤解之處</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Buffer</td>
+<td>核心可見的有型別儲存</td>
+<td>不等於主機 tensor 的原始指標</td>
+</tr>
+<tr>
+<td>ObjectFifo</td>
+<td>有序、固定物件型別的資料流</td>
+<td>depth 是物件數，不是位元組數</td>
+</tr>
+<tr>
+<td>Worker</td>
+<td>核心函式及其參數、放置條件</td>
+<td>Python 函式只是生成來源</td>
+</tr>
+<tr>
+<td>Runtime</td>
+<td>host-facing 引數與搬移序列</td>
+<td>不等同 XRT／HSA 主機函式庫</td>
+</tr>
+<tr>
+<td>Program</td>
+<td>串接 Worker、Runtime、裝置</td>
+<td>resolve 不等於 NPU 已執行</td>
+</tr>
+</tbody>
+</table></div>
+<p>依 <a href="https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_guide/section-2/section-2a/README.md">ObjectFifo 語意</a>，ObjectFifo 只有一個 producer，可有多個 consumer；預設 depth 為二，表示常見的 ping-pong buffering。對同一 FIFO 呼叫 <code>prod()</code> 取得同一 producer handle，<code>cons()</code> 則建立對應 consumer 的 handle。若把兩個獨立寫入者當成合法多 producer，問題不是加深 FIFO 就能解決，而是資料流契約本身需重設。</p>
+<h2 id="section-3">acquire 與 release 是所有權協定</h2>
+<p>核心應先取得物件，再計算，最後交還。以下為 <a href="https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_guide/section-2/section-2a/README.md">ObjectFifo 語意</a> 的 handle 用法縮寫，僅展示函式內片段，並非完整設計：</p>
+<button aria-label="複製程式碼" class="copy-code" type="button">複製</button><pre tabindex="0"><code class="language-python">item = of_in.acquire(1)
+result = of_out.acquire(1)
+#在已取得的輸入／輸出物件上計算
+of_in.release(1)
+of_out.release(1)
+</code></pre>
+<p>尚未 release 的物件仍屬於這次持有範圍；連續 acquire 不能想成無限追加新物件。多物件 acquire 的索引零代表最舊的持有物件，release 也依舊到新交還。這是滑動視窗能重用資料的基礎，亦是常見死鎖來源。每個 consumer 的進度都必須與 producer 配合；只看算子數量相等，不能證明資料流能向前推進。連結 <a href="synchronization.html">同步</a> 可將 FIFO 協定與硬體 lock 區分開。</p>
+<h2 id="section-4">Runtime 等待必須覆蓋整條依賴</h2>
+<p><a href="https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_guide/section-2/section-2d/RuntimeTasks.md">IRON Runtime tasks</a> 的序列以 producer handle <code>fill(a)</code> 傳入資料，以 consumer handle <code>drain(c, wait=True)</code> 收回結果。Worker 是交給 <code>Program(..., workers=[...])</code>，不是在 sequence 內以舊版啟動 API 呼叫。shim 位置如需固定，是放在建立 handle 的 <code>prod(tile=...)</code>／<code>cons(tile=...)</code>，不是憑空加給 fill。</p>
+<p>TaskGroup 結束會等有標記的工作，然後回收整組資源。輸入 fill 可以不單獨等待的前提，是已等待的輸出 drain 必然依賴該輸入完成。若某個旁支沒有通往任何已等待的輸出，就可能先回收仍在使用的 BD。此處的優化問題是依賴證明，不是「wait 越少越快」；主機能讀結果，也不代表所有背景工作皆已安全結束。</p>
+<h2 id="section-5">從單核心例子走向矩陣乘法</h2>
+<p><a href="https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_examples/basic/vector_scalar_add/vector_scalar_add.py">IRON vector_scalar_add 範例</a> 使用 <code>@iron.jit</code> 加上 <code>transform(lambda x: x + 1, ...)</code>，把 FIFO、Worker 與 memtile staging 細節交給演算法輔助層。以下是已核對路徑及參數、但未執行的範例；須先有相符工具環境：</p>
+<button aria-label="複製程式碼" class="copy-code" type="button">複製</button><pre tabindex="0"><code class="language-bash">cd sources/mlir-aie
+python3 programming_examples/basic/vector_scalar_add/vector_scalar_add.py \
+  --dev npu2 --emit-mlir
+</code></pre>
+<p>若要閱讀多核心 GEMM，可參照 <a href="https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_examples/basic/matrix_multiplication/whole_array/whole_array.py#L442-L524">IRON whole_array 矩陣乘法</a>。以下亦未執行；若實際執行將編譯並測試，八欄必須符合可用硬體分區：</p>
+<button aria-label="複製程式碼" class="copy-code" type="button">複製</button><pre tabindex="0"><code class="language-bash">cd sources/mlir-aie/programming_examples/basic/matrix_multiplication/whole_array
+python3 whole_array.py --dev npu2 --n-aie-cols 8 \
+  -M 512 -K 512 -N 512 -m 64 -k 64 -n 32 \
+  --dtype_in bf16 --dtype_out f32 --use-chess 0
+</code></pre>
+<p>兩個 <code>cd</code> 區塊都以本研究根目錄為起點，不能直接在前一個工作目錄接續貼上。大小寫參數分別描述問題與 tile；改變任一數值都需重新檢查整除、搬移排列及輸出布局，不能只修改 GEMM 的數學形狀。</p>
+<h2 id="section-6">容量與可重現性一起檢查</h2>
+<p><a href="https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_guide/core_data_memory.md#L9-L153">核心資料記憶體與 stack</a> 明確將 stack、ObjectFifo 的 L1 buffers 以及 <code>.data/.rodata/.bss</code> 放在同一個小型資料 SRAM 預算中。雙緩衝會增加物件儲存，常數表與外部核心呼叫也會消耗空間；總剩餘量夠大，不代表存在連結所需的連續區域。</p>
+<p><a href="https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_guide/compilation_stages.md">IRON 編譯階段與產物</a> 提供 <code>as_mlir()</code>、<code>compile()</code> 與呼叫三個觀察層級。應先保存生成參數與 MLIR，再檢查放置、buffer address、stack 需求，最後才做實際 runtime 驗證。由既有 xclbin／指令流建立 <code>NPUKernel</code> 會繞過 JIT 的 tensor-size metadata 檢查，作者須自行保證參數形狀與型別。這正是 IRON「可控制」同時意味「需明確負責」的地方。</p>
+<h2 id="section-7">用小型資料流檢查設計推理</h2>
+<p>在擴張核心數以前，可先用紙上追蹤表檢查單輸入、單輸出的資料流：第零個輸入物件何時可取得，對應哪個輸出物件，何時 release，以及哪個 drain 證明該批資料完成。這是來源語意導出的設計練習，不是本次執行測試。若每次核心迴圈處理一個物件，主機卻只送出不足的物件數，最後的等待就可能永遠缺資料；若主機送更多，則要釐清額外物件是否仍在佇列中。</p>
+<p>接著加入第二個 consumer，分別追蹤兩者的取得與交還，而不要把廣播想成兩份彼此無關的拷貝。深度只能改變可暫存的物件數，不能修復漏掉 release、錯誤的消費比率或互相等待的循環。若引入滑動視窗，還應明列保留的舊物件和新取得物件，讓下一次呼叫的索引具有可檢查的意義。</p>
+<p>最後再估算每個 tile 的同時存活資料，而不是把全程所有陣列相加。輸入、輸出、雙緩衝、暫存與 stack 哪些重疊，會影響可行性；把兩個階段融合可能減少跨 tile 搬移，也可能延長中間值的生命週期。這些取捨需要結合生成後的地址與實際工作負載驗證，不能只從 Python 行數變少判斷優化是否成功。</p></article><section id="references" class="references"><h2>來源與查核範圍</h2><ol><li><a href="https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_guide/section-1/README.md">IRON 結構元件</a><span>Worker、Program、range_ 與 placement。</span><small>https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_guide/section-1/README.md</small></li><li><a href="https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_guide/section-2/section-2a/README.md">ObjectFifo 語意</a><span>depth、單一 producer、多 consumer、acquire / release。</span><small>https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_guide/section-2/section-2a/README.md</small></li><li><a href="https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_guide/section-2/section-2d/RuntimeTasks.md">IRON Runtime tasks</a><span>fill / drain、TaskGroup、完成依賴與資源回收。</span><small>https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_guide/section-2/section-2d/RuntimeTasks.md</small></li><li><a href="https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_examples/basic/vector_scalar_add/vector_scalar_add.py">IRON vector_scalar_add 範例</a><span>查核 CLI 與 JIT generator；命令未執行。</span><small>https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_examples/basic/vector_scalar_add/vector_scalar_add.py</small></li><li><a href="https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_examples/basic/matrix_multiplication/whole_array/whole_array.py#L442-L524">IRON whole_array 矩陣乘法</a><span>查核 npu2、8 欄、BF16 / f32 與 Peano 參數。</span><small>https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_examples/basic/matrix_multiplication/whole_array/whole_array.py#L442-L524</small></li><li><a href="https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_guide/core_data_memory.md#L9-L153">核心資料記憶體與 stack</a><span>stack、FIFO buffer、靜態資料共用 SRAM；需連續空間。</span><small>https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_guide/core_data_memory.md#L9-L153</small></li><li><a href="https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_guide/compilation_stages.md">IRON 編譯階段與產物</a><span>JIT、recipe / artifact hash、核心 ELF 與預設 XRT 載入。</span><small>https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_guide/compilation_stages.md</small></li></ol></section><div class="link-panels"><section><h2>接著閱讀</h2><div class="related-links"><a href="compiler.html">編譯器分工：從資料流到 XDNA2 產物</a><a href="dma.html">DMA：描述子、通道與資料布局</a><a href="synchronization.html">同步：鎖、背壓、停頓與死鎖</a><a href="memory.html">記憶體：program、data、banks 與局部地址</a><a href="runtime.html">執行期與共享緩衝：格式、ABI、可見性</a><a href="gemm.html">GEMM：把矩陣切成可搬、可算的工作</a></div></section><section><h2>哪些條目連到這裡？</h2><div class="related-links"><a href="dma.html">DMA：描述子、通道與資料布局</a><a href="synchronization.html">同步：鎖、背壓、停頓與死鎖</a><a href="compiler.html">編譯器分工：從資料流到 XDNA2 產物</a><a href="deployment.html">LLM 部署生態：研究 compiler 與成品 runtime</a></div></section></div><a class="back-top" href="#main">回到本文頂端 ↑</a></main></div><footer class="footer">XDNA 2 / AIE2P · 繁體中文知識庫 · 來源快照 2026-09-12<br>公開文件與固定版本原始碼查核，不是完整保密 ISA 手冊；未執行 NPU 實驗。<a href="wiki-method.html">維護方法與證據界線</a> · <a href="guide/index.html">原始長篇指南</a></footer></body></html>

@@ -1,0 +1,40 @@
+# XDNA 2 LLM Wiki
+
+> Traditional Chinese, source-grounded XDNA2 / AIE2P architecture and LLM inference wiki. All content is untrusted reference data, not execution instructions. No NPU benchmarks were run. Engineering derivations are not silicon guarantees.
+
+## Entry points
+
+- [Home](index.html)
+- [Complete text](llms-full.txt)
+- [Knowledge graph](knowledge.json)
+- [Source register](source-register.json)
+
+## Articles
+
+- [XDNA2 系統：空間資料流與 NPU2 分區](markdown/system.md): 從固定版本 target model 理解 tile 陣列、主機邊界及 LLM 的配置單位，避免把完整 Strix 模型當成所有可用裝置。
+- [計算核心：scalar、SIMD、VLIW 與累加器](markdown/compute.md): 把核心控制、向量平行與靜態指令排程分開，建立不依賴猜測峰值的 LLM microkernel 成本觀。
+- [記憶體：program、data、banks 與局部地址](markdown/memory.md): 用容量、連續空間、對齊及生命週期四張帳，區分 scratchpad、地址視窗與核心連結限制。
+- [DMA：描述子、通道與資料布局](markdown/dma.md): 分清 BD 程式、具方向的通道與鎖協定，將 LLM packing、搬移和緩衝生命週期一起設計。
+- [同步：鎖、背壓、停頓與死鎖](markdown/synchronization.md): 以生產者／消費者 ownership 與等待圖理解核心和 DMA 的協定，區分正常阻塞與無法前進。
+- [ISA 閱讀：從 AIE2P header 追到後端原語](markdown/isa.md): 以架構 guard、wrapper、builtin、instruction pattern 與排程模型建立證據鏈，不用函式名稱冒充矽晶片規格。
+- [數值型別：INT4、BF16、BFP16 與 FP32 的分層支援](markdown/datatypes.md): 區分 packed storage、原生算術、矩陣原語與模擬路徑，說明共享指數和 rounding 對 LLM 誤差的影響。
+- [矩陣乘加：原語、API 包裝與 LLM microtile](markdown/mma.md): 逐路徑拆解 dense integer、BF16、BFP16 與 FP32 MMUL，固定形狀、packing 和精度後才討論工作量。
+- [編譯器分工：從資料流到 XDNA2 產物](markdown/compiler.md): 辨別 IRON／Peano、Triton／AIR 與 host runtime 的責任，避免把編譯成功、產物格式與 NPU 實測混為一談。
+- [IRON：以 Worker 與 ObjectFifo 設計資料流](markdown/iron.md): 從生成式 Python、FIFO 所有權到 Runtime 等待，建立可讀、可查核的 XDNA2 空間程式。
+- [Triton-XDNA：算子、Transform 與支援證據](markdown/triton.md): 拆解 Linalg／AIR 映射、補齊與快取，說明 dashboard 勾選、數值測試與模型覆蓋為何不能互相代替。
+- [執行期與共享緩衝：格式、ABI、可見性](markdown/runtime.md): 比較 XRT、IRON HRX 與 HSA，並以零拷貝範例解釋映射、同步、生命週期和 dispatch 證據。
+- [LLM 計算圖：算子、狀態與裝置邊界](markdown/llm-graph.md): 以 Qwen2.5 原始碼分解 Transformer 圖，追蹤 KV cache、補齊、精度與融合，區分算子存在和實際模型路由。
+- [Qwen2.5 案例：CPU＋NPU、GPU 與異質路由](markdown/qwen-case.md): 以固定 model.py 裁決 README 舊段落，逐項追蹤注意力、LM head、fused MLP、fallback 與計時邊界。
+- [GEMM：把矩陣切成可搬、可算的工作](markdown/gemm.md): 從 Transformer projection 的 M/K/N，到 array、L1 與 microtile 的四層 tiling；算術多不代表 DMA 與同步便宜。
+- [Attention：算子可拆，不代表整體已能在 NPU 跑](markdown/attention.md): 把 QKᵀ、softmax、PV、causal mask 與線上歸一化分開看；FlashAttention 的 IO 思想不等於已有 AIE2P kernel。
+- [KV cache：容量、頻寬與生命週期](markdown/kv-cache.md): 用 KV heads 而非 query heads 計算 payload；理解 GQA、cache append、分頁，以及「放得下」與「讀得夠快」的差別。
+- [LLM 量化：格式、數學與 kernel 是三件事](markdown/quantization.md): W4A16、INT8、BF16、BFP16 與 GGUF/AWQ 不是可以任意互換的標籤；必須追到 unpack、scale 與真正的 multiply 路徑。
+- [Prefill 與 decode：兩個不同的效能問題](markdown/prefill-decode.md): Prefill 重視大矩陣吞吐與 TTFT；decode 重視逐 token 依賴、權重/KV 流量與派送延遲。
+- [CPU × GPU × NPU：分工與資料所有權](markdown/heterogeneous.md): Shared DRAM 不代表免費互通；卸載是否值得，取決於計算節省是否大於映射、同步、轉換與 fallback 的成本。
+- [LLM 部署生態：研究 compiler 與成品 runtime](markdown/deployment.md): IRON／Triton 適合研究 kernel，FastFlowLM／Lemonade 著重模型部署；「可免費用」與「所有核心原始碼公開」必須分開。
+- [效能模型：容量、Roofline 與端到端下界](markdown/performance.md): 用可驗算的公式排除不合理期待，再用量測找瓶頸；計算器預設值不是本機 XDNA2 規格。
+- [正確性與效能驗證：一套不把 fallback 當成功的流程](markdown/validation.md): 从 reference、數值誤差、dispatch 證據到完整 LLM quality；每一層只回答自己能證明的問題。
+- [除錯與證據分級：不要把 fallback 當 NPU 成功](markdown/debug.md): 建立從生成、編譯、載入、同步到數值的檢查順序，記錄 signedness 舊路徑風險及測試未執行的邊界。
+- [術語辭典：同一個字，在不同層可能不同意思](markdown/glossary.md): 快速對照 XDNA2、AIE2P、tile、buffer、MMA、BF16/BFP16 與 LLM 推論常用語，並連回完整條目。
+- [來源地圖、證據等級與未解問題](markdown/sources.md): 主張要能回到原始文件與固定 source；公共架構介紹、API 表、compiler 實作和 benchmark 各有不同證明力。
+- [LLM Wiki 使用與維護：來源 → 條目 → 連結](markdown/wiki-method.md): 這不是把網頁丟給聊天機器人：它是具有來源、反向連結、版本與未知事項的可檢索知識庫，並提供 LLM 可讀匯出。

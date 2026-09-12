@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="W4A16、INT8、BF16、BFP16 與 GGUF/AWQ 不是可以任意互換的標籤；必須追到 unpack、scale 與真正的 multiply 路徑。"><meta name="color-scheme" content="light"><title>LLM 量化：格式、數學與 kernel 是三件事 — XDNA 2 LLM Wiki</title><link rel="icon" href="assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="assets/wiki.css"><script src="assets/model.js" defer></script><script src="assets/search-data.js" defer></script><script src="assets/app.js" defer></script></head>
+<body><a class="skip" href="#main">跳到正文</a><header class="topbar"><a class="wordmark" href="index.html"><span class="seal" aria-hidden="true">文</span><span>XDNA 2 <b>LLM WIKI</b></span></a><nav class="header-links" aria-label="常用連結"><a href="index.html#search">搜尋</a><a href="glossary.html">術語</a><a href="llms.txt">LLM 索引</a></nav></header><div class="layout"><aside class="sidebar" aria-label="知識庫導覽"><details id="nav-menu"><summary>全站目錄 <span>＋</span></summary><nav class="navtree"><div class="nav-group"><h3>架構</h3><a href="system.html">XDNA2 系統：空間資料流與 NPU2 分區</a><a href="compute.html">計算核心：scalar、SIMD、VLIW 與累加器</a><a href="memory.html">記憶體：program、data、banks 與局部地址</a><a href="dma.html">DMA：描述子、通道與資料布局</a><a href="synchronization.html">同步：鎖、背壓、停頓與死鎖</a><a href="isa.html">ISA 閱讀：從 AIE2P header 追到後端原語</a></div><div class="nav-group"><h3>數值</h3><a href="datatypes.html">數值型別：INT4、BF16、BFP16 與 FP32 的分層支援</a><a href="mma.html">矩陣乘加：原語、API 包裝與 LLM microtile</a><a href="quantization.html" aria-current="page">LLM 量化：格式、數學與 kernel 是三件事</a></div><div class="nav-group"><h3>程式設計</h3><a href="compiler.html">編譯器分工：從資料流到 XDNA2 產物</a><a href="iron.html">IRON：以 Worker 與 ObjectFifo 設計資料流</a><a href="triton.html">Triton-XDNA：算子、Transform 與支援證據</a><a href="runtime.html">執行期與共享緩衝：格式、ABI、可見性</a><a href="deployment.html">LLM 部署生態：研究 compiler 與成品 runtime</a><a href="debug.html">除錯與證據分級：不要把 fallback 當 NPU 成功</a></div><div class="nav-group"><h3>LLM推論</h3><a href="llm-graph.html">LLM 計算圖：算子、狀態與裝置邊界</a><a href="qwen-case.html">Qwen2.5 案例：CPU＋NPU、GPU 與異質路由</a><a href="gemm.html">GEMM：把矩陣切成可搬、可算的工作</a><a href="attention.html">Attention：算子可拆，不代表整體已能在 NPU 跑</a><a href="kv-cache.html">KV cache：容量、頻寬與生命週期</a><a href="prefill-decode.html">Prefill 與 decode：兩個不同的效能問題</a><a href="heterogeneous.html">CPU × GPU × NPU：分工與資料所有權</a></div><div class="nav-group"><h3>驗證與知識庫</h3><a href="performance.html">效能模型：容量、Roofline 與端到端下界</a><a href="validation.html">正確性與效能驗證：一套不把 fallback 當成功的流程</a><a href="glossary.html">術語辭典：同一個字，在不同層可能不同意思</a><a href="sources.html">來源地圖、證據等級與未解問題</a><a href="wiki-method.html">LLM Wiki 使用與維護：來源 → 條目 → 連結</a></div></nav></details></aside><main id="main" tabindex="-1"><div class="breadcrumbs"><a href="index.html">首頁</a> / 數值</div><div class="article-meta"><span>工程推導</span><span>來源快照 2026-09-12</span><a href="markdown/quantization.md" download>Markdown ↓</a></div><h1>LLM 量化：格式、數學與 kernel 是三件事</h1><p class="lede">W4A16、INT8、BF16、BFP16 與 GGUF/AWQ 不是可以任意互換的標籤；必須追到 unpack、scale 與真正的 multiply 路徑。</p><div class="evidence-note">本文區分公開來源、原始碼查核與工程推導。未在本機執行 compiler 或 NPU；可用型別、可編譯、可派送、無 fallback、效能達標是不同證據。</div><nav class="toc" aria-label="本頁目錄"><strong>本頁導覽</strong><a href="#section-1">先拆開五個層次</a><a href="#section-2">W4A16 不等於 4×16 matrix primitive</a><a href="#section-3">常見 affine 量化的數學</a><a href="#section-4">BF16 與 BFP16 的風險不同</a><a href="#section-5">一個 7B 權重容量的理想下界</a><a href="#section-6">實作前的核對清單</a><a href="#references">來源與延伸</a></nav><article class="article-body"><h2 id="section-1">先拆開五個層次</h2>
+<p>檔案格式描述 bytes 怎麼保存；量化方案描述如何近似數值；kernel layout 描述 SIMD/MMA 需要的排列；compiler lowering 選擇指令；runtime 決定資料在哪裡解包與運算。讀到 GGUF Q4 或 AWQ 4-bit，不能直接推出 AIE2P 有相同格式的 native MMA。<a href="https://arxiv.org/abs/2306.00978v6">AWQ</a> 本身就把平台感知 packing 與 kernel fusion 視為效能要素。</p>
+<h2 id="section-2">W4A16 不等於 4×16 matrix primitive</h2>
+<p>W4A16 通常意指權重以低位元表示，activation 使用較高精度；真正計算可能是先反量化 W，再做 BF16 算術，也可能融合 unpack、scale 和累加。A/B 的順序、signedness、group size、zero point、scale dtype 會影響可用 implementation。僅看檔案中每個權重 4 bits，不足以用「4-bit TOPS」估算速度。</p>
+<p>本次 Peano snapshot 的 INT8×INT4 4×16×16 wrapper 是 unpack + 兩次 INT8 primitives；這是該工具鏈的靜態路徑，不是「整顆 XDNA2 永遠沒有其他 INT4 能力」的證明。完整 immutable 展開見 <a href="mma.html">MMA 條目</a> 與原始稽核。</p>
+<h2 id="section-3">常見 affine 量化的數學</h2>
+<button aria-label="複製程式碼" class="copy-code" type="button">複製</button><pre tabindex="0"><code class="language-text">近似權重 w_hat = scale × (q - zero_point)
+weight-only linear:
+  y_j ≈ sum_k x_k × scale_group(k,j) × (q_kj - zero_group(k,j))
+</code></pre>
+<p>這是常見示意，不是所有 GGUF/AWQ 編碼的精確格式。scale 若每 group 改變，就不能毫無條件移到整個 K reduction 外。非對稱 zero point 也會帶來 correction term。要先寫清數學，再判斷可融合哪一段、用哪種 accumulator，以及輸出縮位在哪裡发生。</p>
+<h2 id="section-4">BF16 與 BFP16 的風險不同</h2>
+<p>BF16 每個值有自己的 exponent；AIE2P BFP16 EBS8 的 block 共用 exponent，不能叫 IEEE FP16 或 FP8。對 outlier 強烈的 block，共享 exponent 會犧牲較小值精度。<a href="https://github.com/Xilinx/aie_api/blob/bec000fd312b407c61f25ef86fd582042e42d28a/include/aie_api/detail/aie2p/mmul_bf16_bf16.hpp">AIE2P BF16 helper</a> 的 BFP emulation macro 會改變數值路徑，並不保證無損等價。</p>
+<p>BFP packing 可能減少 operands 的 bytes，但若額外保留 BF16 原本張量、conversion buffer 與轉置副本，peak memory 未必下降。對 LLM 應分別評估 projection、attention normalization、residual 與 KV，不能只在隨機矩陣上過 tolerance 就宣告整個模型可靠。</p>
+<h2 id="section-5">一個 7B 權重容量的理想下界</h2>
+<p>假設全部 7×10⁹ 個參數都用固定 4 bits，裸 payload 是 <code>7e9 × 4 / 8 = 3.5e9 bytes</code>，約 3.26 GiB。這不是實際模型檔案大小：有 scales、block headers、某些保留高精度的 tensors、metadata 與 runtime workspace。也不代表 7B 模型在 NPU 上全部算子都有 kernel。</p>
+<div aria-label="可橫向捲動的資料表" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>要比較</th>
+<th>必須固定</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>誤差</td>
+<td>calibration、輸入範圍、rounding、accumulator</td>
+</tr>
+<tr>
+<td>Kernel 速度</td>
+<td>同形狀、同 packing、相同輸出精度與有效工作量</td>
+</tr>
+<tr>
+<td>端到端品質</td>
+<td>tokenizer、prompt、採樣參數、模型版本</td>
+</tr>
+<tr>
+<td>記憶體</td>
+<td>權重 + KV + peak activations + 額外轉換副本</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="section-6">實作前的核對清單</h2>
+<p>列出每一個格式的 bit order、group 與 padding；用正負數、全零、飽和邊界、極大極小值驗證 dequant reference；再看 compiler IR 與 core disassembly 是否有意外 CPU fallback 或重複 conversion。先確定 <a href="datatypes.html">資料型別</a> 和 <a href="validation.html">數值驗證</a>，再談量化加速。AWQ 論文的 GPU speedup 不能轉抄為本機 XDNA2 實測。</p></article><section id="references" class="references"><h2>來源與查核範圍</h2><ol><li><a href="https://arxiv.org/abs/2306.00978v6">AWQ paper v6</a><span>weight-only quantization 與平台感知 packing；GPU 結果不能移植成 NPU 吞吐。</span><small>https://arxiv.org/abs/2306.00978v6</small></li><li><a href="https://github.com/Xilinx/aie_api/blob/bec000fd312b407c61f25ef86fd582042e42d28a/include/aie_api/detail/aie2p/mmul_bf16_bf16.hpp">AIE2P BF16 MMUL helper</a><span>macro 與 specialization 決定 emulation 路徑。</span><small>https://github.com/Xilinx/aie_api/blob/bec000fd312b407c61f25ef86fd582042e42d28a/include/aie_api/detail/aie2p/mmul_bf16_bf16.hpp</small></li><li><a href="https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/python/iron/kernels/linalg.py">IRON linalg kernel geometry</a><span>dtype / mac_dims 與 kernel 路徑，非 API shape 全集。</span><small>https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/python/iron/kernels/linalg.py</small></li><li><a href="https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/README.md">Triton-XDNA README</a><span>實驗性 compiler；上游效能數字不代表本機量測。</span><small>https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/README.md</small></li></ol></section><div class="link-panels"><section><h2>接著閱讀</h2><div class="related-links"><a href="datatypes.html">數值型別：INT4、BF16、BFP16 與 FP32 的分層支援</a><a href="mma.html">矩陣乘加：原語、API 包裝與 LLM microtile</a><a href="validation.html">正確性與效能驗證：一套不把 fallback 當成功的流程</a><a href="kv-cache.html">KV cache：容量、頻寬與生命週期</a><a href="deployment.html">LLM 部署生態：研究 compiler 與成品 runtime</a></div></section><section><h2>哪些條目連到這裡？</h2><div class="related-links"><a href="datatypes.html">數值型別：INT4、BF16、BFP16 與 FP32 的分層支援</a><a href="mma.html">矩陣乘加：原語、API 包裝與 LLM microtile</a><a href="llm-graph.html">LLM 計算圖：算子、狀態與裝置邊界</a><a href="validation.html">正確性與效能驗證：一套不把 fallback 當成功的流程</a></div></section></div><a class="back-top" href="#main">回到本文頂端 ↑</a></main></div><footer class="footer">XDNA 2 / AIE2P · 繁體中文知識庫 · 來源快照 2026-09-12<br>公開文件與固定版本原始碼查核，不是完整保密 ISA 手冊；未執行 NPU 實驗。<a href="wiki-method.html">維護方法與證據界線</a> · <a href="guide/index.html">原始長篇指南</a></footer></body></html>

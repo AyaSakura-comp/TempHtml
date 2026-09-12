@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="用 KV heads 而非 query heads 計算 payload；理解 GQA、cache append、分頁，以及「放得下」與「讀得夠快」的差別。"><meta name="color-scheme" content="light"><title>KV cache：容量、頻寬與生命週期 — XDNA 2 LLM Wiki</title><link rel="icon" href="assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="assets/wiki.css"><script src="assets/model.js" defer></script><script src="assets/search-data.js" defer></script><script src="assets/app.js" defer></script></head>
+<body><a class="skip" href="#main">跳到正文</a><header class="topbar"><a class="wordmark" href="index.html"><span class="seal" aria-hidden="true">文</span><span>XDNA 2 <b>LLM WIKI</b></span></a><nav class="header-links" aria-label="常用連結"><a href="index.html#search">搜尋</a><a href="glossary.html">術語</a><a href="llms.txt">LLM 索引</a></nav></header><div class="layout"><aside class="sidebar" aria-label="知識庫導覽"><details id="nav-menu"><summary>全站目錄 <span>＋</span></summary><nav class="navtree"><div class="nav-group"><h3>架構</h3><a href="system.html">XDNA2 系統：空間資料流與 NPU2 分區</a><a href="compute.html">計算核心：scalar、SIMD、VLIW 與累加器</a><a href="memory.html">記憶體：program、data、banks 與局部地址</a><a href="dma.html">DMA：描述子、通道與資料布局</a><a href="synchronization.html">同步：鎖、背壓、停頓與死鎖</a><a href="isa.html">ISA 閱讀：從 AIE2P header 追到後端原語</a></div><div class="nav-group"><h3>數值</h3><a href="datatypes.html">數值型別：INT4、BF16、BFP16 與 FP32 的分層支援</a><a href="mma.html">矩陣乘加：原語、API 包裝與 LLM microtile</a><a href="quantization.html">LLM 量化：格式、數學與 kernel 是三件事</a></div><div class="nav-group"><h3>程式設計</h3><a href="compiler.html">編譯器分工：從資料流到 XDNA2 產物</a><a href="iron.html">IRON：以 Worker 與 ObjectFifo 設計資料流</a><a href="triton.html">Triton-XDNA：算子、Transform 與支援證據</a><a href="runtime.html">執行期與共享緩衝：格式、ABI、可見性</a><a href="deployment.html">LLM 部署生態：研究 compiler 與成品 runtime</a><a href="debug.html">除錯與證據分級：不要把 fallback 當 NPU 成功</a></div><div class="nav-group"><h3>LLM推論</h3><a href="llm-graph.html">LLM 計算圖：算子、狀態與裝置邊界</a><a href="qwen-case.html">Qwen2.5 案例：CPU＋NPU、GPU 與異質路由</a><a href="gemm.html">GEMM：把矩陣切成可搬、可算的工作</a><a href="attention.html">Attention：算子可拆，不代表整體已能在 NPU 跑</a><a href="kv-cache.html" aria-current="page">KV cache：容量、頻寬與生命週期</a><a href="prefill-decode.html">Prefill 與 decode：兩個不同的效能問題</a><a href="heterogeneous.html">CPU × GPU × NPU：分工與資料所有權</a></div><div class="nav-group"><h3>驗證與知識庫</h3><a href="performance.html">效能模型：容量、Roofline 與端到端下界</a><a href="validation.html">正確性與效能驗證：一套不把 fallback 當成功的流程</a><a href="glossary.html">術語辭典：同一個字，在不同層可能不同意思</a><a href="sources.html">來源地圖、證據等級與未解問題</a><a href="wiki-method.html">LLM Wiki 使用與維護：來源 → 條目 → 連結</a></div></nav></details></aside><main id="main" tabindex="-1"><div class="breadcrumbs"><a href="index.html">首頁</a> / LLM推論</div><div class="article-meta"><span>工程推導</span><span>來源快照 2026-09-12</span><a href="markdown/kv-cache.md" download>Markdown ↓</a></div><h1>KV cache：容量、頻寬與生命週期</h1><p class="lede">用 KV heads 而非 query heads 計算 payload；理解 GQA、cache append、分頁，以及「放得下」與「讀得夠快」的差別。</p><div class="evidence-note">本文區分公開來源、原始碼查核與工程推導。未在本機執行 compiler 或 NPU；可用型別、可編譯、可派送、無 fallback、效能達標是不同證據。</div><nav class="toc" aria-label="本頁目錄"><strong>本頁導覽</strong><a href="#section-1">Cache 保存什麼、不保存什麼</a><a href="#section-2">先算理想 payload</a><a href="#section-3">GQA 與 MQA 如何省容量</a><a href="#section-4">Payload 之外的記憶體</a><a href="#section-5">Decode 的頻寬問題</a><a href="#section-6">分頁與正確性</a><a href="#calculator">互動計算器</a><a href="#references">來源與延伸</a></nav><article class="article-body"><h2 id="section-1">Cache 保存什麼、不保存什麼</h2>
+<p>自回歸 decoder 保存各層已生成 tokens 的 keys 與 values，避免每一步重算所有過去投影。它通常不保存每一步完整 attention score matrix，也不是普通 CPU cache 的自動替換機制。配置、位置索引、append、重用、釋放都由模型/runtime 管理。<a href="https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/qwen2_5/model.py">Qwen model.py</a> 有預先配置並原地寫入 KV 的具體例子。</p>
+<h2 id="section-2">先算理想 payload</h2>
+<p>若每層 KV shape 相同、所有序列長度都為 T、無 sliding window、無共享 prefix，則：</p>
+<button aria-label="複製程式碼" class="copy-code" type="button">複製</button><pre tabindex="0"><code class="language-text">KV bytes = 2 × B × L × Hkv × D × T × s
+B = batch / 並行序列數
+L = layers, Hkv = KV heads, D = 每 head 維度
+T = 每序列保留 tokens, s = 每 KV 元素 bytes
+2 = K 與 V 兩份
+</code></pre>
+<p>這是張量元素計數的推導，不是配置器的實測佔用。B=1、L=32、Hkv=8、D=128、T=8192、s=2 時，結果為 <strong>1,073,741,824 bytes = 1 GiB</strong>。每層尺寸不同則改用逐層加總；不同序列長度則按各序列有效或配置長度分別計算。</p>
+<h2 id="section-3">GQA 與 MQA 如何省容量</h2>
+<p>MHA 常有 Hkv=Hq；MQA 的 Hkv=1；GQA 介於兩者之間。<a href="https://arxiv.org/abs/2305.13245v3">GQA</a> 研究品質與效率的權衡。因此不能用 Q heads 代替 KV heads；也不能在模型未修改時任意減少 KV heads，因為那會改變模型架構與权重相容性。</p>
+<p>若 query 分組讀取共享 K/V，理想可避免重複存儲。但若為滿足某 kernel layout 而把 cache 展開成完整 heads，應把 expanded buffer 另外計算；理論 GQA payload 不等於這個 backend 的真實 peak memory。</p>
+<h2 id="section-4">Payload 之外的記憶體</h2>
+<div aria-label="可橫向捲動的資料表" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>項目</th>
+<th>為什麼多出來</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Alignment / padding</td>
+<td>Tile geometry、頁面與 vector 對齊</td>
+</tr>
+<tr>
+<td>Quantization metadata</td>
+<td>scales、zero points、block headers</td>
+</tr>
+<tr>
+<td>Runtime workspace</td>
+<td>staging、packing、雙緩衝、暫存 output</td>
+</tr>
+<tr>
+<td>Prefix / beam bookkeeping</td>
+<td>page tables、索引與共享管理</td>
+</tr>
+<tr>
+<td>Peak activation</td>
+<td>Prefill 或重排階段與 KV 同時存在</td>
+</tr>
+</tbody>
+</table></div>
+<p><a href="https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_guide/core_data_memory.md">核心 SRAM 文件</a> 討論 tile 級容量；系統 DRAM 裡的完整 KV 不會因為 L1/L2 命名就自動被透明快取進 NPU。一次計算應只搬需要的 block，並清楚指定順序與 buffer 生命週期。</p>
+<h2 id="section-5">Decode 的頻寬問題</h2>
+<p>假設每步需要讀一次全層已有 K/V，KV read traffic 會隨 T 成長；GQA 若重用不佳則可能讀更多。權重也需要讀取，因此「模型權重小了」不代表長 context 的 decode 一定快。NPU DMA、DRAM、GPU 與 CPU 可能競爭同一實體頻寬；不能給每個裝置各算一次完整峰值頻寬後再相加。</p>
+<h2 id="section-6">分頁與正確性</h2>
+<p><a href="https://arxiv.org/abs/2309.06180v1">PagedAttention</a> 的 block 管理可減少 fragmentation、預留浪費與重複 prefix，但不會讓相同 K/V 數值的 payload 憑空消失。它也不保證 XDNA2 runtime 已有相同功能。要移植時，page table traversal、非連續地址、DMA BD 限制與 host 介入成本都需另外設計。</p>
+<p>驗證 append 時要測 cache slot 只更新一次、query causal offset 正確、跨 page 邊界正確、不同序列彼此隔離、reset 不洩漏舊資料。下方計算器只處理理想容量；不推估本機可跑 context 上限或 tokens/s。</p></article><section class="calculator" id="calculator"><h2>KV cache payload 計算器</h2><p>2 × batch × layers × KV heads × head dim × tokens × bytes。1 byte 選項不是原生 INT8 KV kernel 證明；不含 scales、分頁、對齊、暫存或權重。GiB = 2³⁰ bytes。</p><form id="kv-form" class="calc-fields"><label for="kv-batch">Batch<input id="kv-batch" name="kv-batch" type="number" value="1" min="1" max="1000000" step="1" required></label><label for="kv-layers">Layers<input id="kv-layers" name="kv-layers" type="number" value="32" min="1" max="1000000" step="1" required></label><label for="kv-heads">KV heads（非 Q heads）<input id="kv-heads" name="kv-heads" type="number" value="8" min="1" max="1000000" step="1" required></label><label for="kv-dim">Head dimension<input id="kv-dim" name="kv-dim" type="number" value="128" min="1" max="1000000" step="1" required></label><label for="kv-tokens">Context tokens<input id="kv-tokens" name="kv-tokens" type="number" value="8192" min="1" max="1000000" step="1" required></label><label for="kv-bytes">每個 KV 元素<select id="kv-bytes"><option value="2">2 bytes · BF16 / FP16 儲存</option><option value="1">1 byte · 量化 payload</option><option value="4">4 bytes · FP32 儲存</option></select></label></form><div id="kv-result" class="result" role="status">啟用 JavaScript 後可計算；預設理想 payload 為 1 GiB。</div></section><section id="references" class="references"><h2>來源與查核範圍</h2><ol><li><a href="https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/qwen2_5/model.py">Qwen2.5 model.py</a><span>固定 source snapshot；裝置分支必須以實際程式為準，未在本機執行。</span><small>https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/qwen2_5/model.py</small></li><li><a href="https://arxiv.org/abs/2305.13245v3">GQA paper v3</a><span>query / KV heads 分組與品質權衡。</span><small>https://arxiv.org/abs/2305.13245v3</small></li><li><a href="https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_guide/core_data_memory.md">Core data memory guide</a><span>SRAM 配置、bank 與 linker context。</span><small>https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_guide/core_data_memory.md</small></li><li><a href="https://arxiv.org/abs/2309.06180v1">PagedAttention paper v1</a><span>分頁與共享的系統概念，不是本 wiki 已實作的 runtime。</span><small>https://arxiv.org/abs/2309.06180v1</small></li></ol></section><div class="link-panels"><section><h2>接著閱讀</h2><div class="related-links"><a href="attention.html">Attention：算子可拆，不代表整體已能在 NPU 跑</a><a href="memory.html">記憶體：program、data、banks 與局部地址</a><a href="prefill-decode.html">Prefill 與 decode：兩個不同的效能問題</a><a href="performance.html">效能模型：容量、Roofline 與端到端下界</a><a href="validation.html">正確性與效能驗證：一套不把 fallback 當成功的流程</a></div></section><section><h2>哪些條目連到這裡？</h2><div class="related-links"><a href="memory.html">記憶體：program、data、banks 與局部地址</a><a href="llm-graph.html">LLM 計算圖：算子、狀態與裝置邊界</a><a href="attention.html">Attention：算子可拆，不代表整體已能在 NPU 跑</a><a href="quantization.html">LLM 量化：格式、數學與 kernel 是三件事</a><a href="prefill-decode.html">Prefill 與 decode：兩個不同的效能問題</a></div></section></div><a class="back-top" href="#main">回到本文頂端 ↑</a></main></div><footer class="footer">XDNA 2 / AIE2P · 繁體中文知識庫 · 來源快照 2026-09-12<br>公開文件與固定版本原始碼查核，不是完整保密 ISA 手冊；未執行 NPU 實驗。<a href="wiki-method.html">維護方法與證據界線</a> · <a href="guide/index.html">原始長篇指南</a></footer></body></html>

@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="XDNA 2 / AIE2P：從 tile 架構、資料型別與矩陣乘加，到 IRON、Peano、MLIR-AIR 和 Triton-XDNA 的可追溯開源技術指南。"><title>XDNA 2 — From Architecture to Programming</title><link rel="icon" type="image/svg+xml" href="favicon.svg"><link rel="stylesheet" href="style.css"><script src="model.js" defer></script><script src="app.js" defer></script></head>
+<body><header class="top"><div class="wrap"><div class="brand">FIELD NOTES <span style="color:var(--cyan)">/ XDNA 2</span></div><div class="version">SOURCE SNAPSHOT<br>2026.09.12 · TAIPEI</div></div></header>
+<div class="wrap"><div class="hero" id="overview"><div><div class="eyebrow">AMD NPU · OPEN-SOURCE COMPILER FIELD GUIDE</div><h1>From architecture<br>to <span>programming.</span></h1><p class="lead">把 XDNA 2 看成一座<strong>可程式化資料流工廠</strong>：資料如何搬、在哪裡算、用什麼精度，和選哪個 compiler 一樣重要。</p><p>以 Strix Halo 為起點，從 AIE2P 矩陣運算單元，一路走到可以閱讀、修改與編譯的 Python／C++。</p><div class="hero-actions"><a class="button-link" href="#architecture">01 · 開始看架構 ↓</a><a class="button-link" href="#programming">直接看 programming ↗</a></div><div class="status">已下載原始碼與文件，固定 commit。尚未安裝 toolchain、編譯 kernel 或實測本機 NPU。</div></div>
+<div class="array-box"><div class="array-top"><b>AIE2P / NPU2</b><span class="label" style="color:var(--cyan)">8 COLUMNS × 4 CORES</span></div><div class="array-grid" id="tile-array" role="img" aria-label="NPU2 示意圖，8 欄，每欄 4 個 compute tiles，下方各一個 memory tile 與 shim tile"><span class="tile">0,5</span><span class="tile">1,5</span><span class="tile">2,5</span><span class="tile">3,5</span><span class="tile">4,5</span><span class="tile">5,5</span><span class="tile">6,5</span><span class="tile">7,5</span><span class="tile">0,4</span><span class="tile">1,4</span><span class="tile">2,4</span><span class="tile">3,4</span><span class="tile">4,4</span><span class="tile">5,4</span><span class="tile">6,4</span><span class="tile">7,4</span><span class="tile">0,3</span><span class="tile">1,3</span><span class="tile">2,3</span><span class="tile">3,3</span><span class="tile">4,3</span><span class="tile">5,3</span><span class="tile">6,3</span><span class="tile">7,3</span><span class="tile">0,2</span><span class="tile">1,2</span><span class="tile">2,2</span><span class="tile">3,2</span><span class="tile">4,2</span><span class="tile">5,2</span><span class="tile">6,2</span><span class="tile">7,2</span><span class="tile mem">MEM</span><span class="tile mem">MEM</span><span class="tile mem">MEM</span><span class="tile mem">MEM</span><span class="tile mem">MEM</span><span class="tile mem">MEM</span><span class="tile mem">MEM</span><span class="tile mem">MEM</span><span class="tile shim">DMA</span><span class="tile shim">DMA</span><span class="tile shim">DMA</span><span class="tile shim">DMA</span><span class="tile shim">DMA</span><span class="tile shim">DMA</span><span class="tile shim">DMA</span><span class="tile shim">DMA</span></div><div class="array-footer">↑ SHIM DMA ↓ &nbsp; HOST / SYSTEM DRAM</div><div class="legend"><span><i class="dot"></i>Compute</span><span><i class="dot purple"></i>Memory</span><span><i class="dot yellow"></i>Shim</span></div><p class="small">邏輯 device model 示意，不是 die photo；可使用欄數仍依 SKU、driver 與 runtime partition 而定。<a class="cite" href="#s1">[1]</a></p></div></div></div>
+<nav class="nav" aria-label="章節導覽"><div class="wrap"><a href="#decision">00 選 compiler</a><a href="#architecture">01 架構</a><a href="#types">02 Types</a><a href="#mma">03 MMA / GEMM</a><a href="#compiler">04 Compilation</a><a href="#programming">05 Programming</a><a href="#performance">06 Optimization</a><a href="#sources">07 文件與來源</a></div></nav>
+<main>
+<section id="decision"><div class="chapter">00 / THE TOOLCHAIN CHOICE</div><h2>「SOTA」不是單一執行檔。</h2><p class="lead">這次選擇<strong> IRON／MLIR-AIE + Peano 當核心研究底座</strong>，再加入 <strong>Triton-XDNA + MLIR-AIR</strong> 作為高階、自動產生 kernel 的前沿路線。它們是同一生態系的不同層，不是六個互斥 compiler。</p>
+<div class="grid3"><article class="card"><span class="pill good">推薦 · 理解與手動最佳化</span><h3>IRON + MLIR-AIE</h3><p>Python 描述 Workers、ObjectFifos、DMA 與 placement；C++ AIE API 寫單核 compute。可以追蹤到每個 tile、buffer、core ELF。</p><p class="small">想回答「硬體到底怎麼跑」：從這裡開始。<a class="cite" href="#s2">[2]</a></p></article><article class="card"><span class="pill" style="color:var(--amber)">前沿 · 官方標示 experimental</span><h3>Triton-XDNA + AIR</h3><p>從 <code>tl.dot</code> 等 Triton kernel 出發，經 Linalg、Transform dialect、AIR，編成 AIE 程式；不必先手寫 C++ matmul library。</p><p class="small">特定 matmul 有接近手寫 baseline 的證據；不是任意 Triton 都能無修改跑。<a class="cite" href="#s5">[5]</a></p></article><article class="card"><span class="pill">所有路線的關鍵底層</span><h3>Peano / LLVM-AIE</h3><p>LLVM fork 中的 AIE backend，負責單核指令選擇、register allocation、software pipelining 與 VLIW 排程。</p><p class="small"><code>--target=aie2p-none-unknown-elf</code><br>不是 <code>gfx1151</code> GPU target。<a class="cite" href="#s4">[4]</a></p></article></div>
+<div class="note"><strong>對 SOTA 的證據界線：</strong>Triton-XDNA README 報告：測試的 dense matmul 中，超過 90% configurations 達手寫 baseline 的至少 90%，沒有低於 80%。這是<strong>上游自報、特定測試範圍</strong>，不是本機重跑或所有 compiler 的公平排行榜。MLIR-AIR 論文另報最高 78.7% compute efficiency。<a class="cite" href="#s5">[5]</a><a class="cite" href="#s10">[10]</a></div>
+<p><strong>IREE-AMDAIE</strong> 也已下載供比較：上游自稱 early-phase compiler/runtime plugin，適合研究 graph／IREE HAL 整合；文件仍提到部分最佳效能測試需要專有 Chess。這次不把它當首選教學路線。<strong>Ryzen AI Software</strong> 則偏向模型部署，不等於本指南的完全開源自訂 kernel compiler。<a class="cite" href="#s13">[13]</a></p>
+</section>
+<section id="architecture"><div class="chapter">01 / THINK IN SPACE & DATAFLOW</div><h2>不是小 GPU。是編譯器排好班的 tile array。</h2><div class="grid3"><div class="card"><div class="number">32</div><h3>Compute tiles</h3><p>NPU2 模型為 8 欄 × 4 計算列。每核執行自己的程式；核心不是一個 warp 的 lane。<a class="cite" href="#s1">[1]</a></p></div><div class="card"><div class="number">64 <small style="font-size:22px">KiB</small></div><h3>每個 compute tile 的 L1</h3><p>軟體管理 SRAM，不是透明 cache。FIFO buffers、stack、常數與 globals 都要占空間。<a class="cite" href="#s14">[14]</a></p></div><div class="card"><div class="number">512 <small style="font-size:22px">KiB</small></div><h3>每個 memory tile 的 L2</h3><p>用於 staging、重排與廣播。L1/L2 是分散 scratchpads，不能當成一塊任意可存取的大 cache。<a class="cite" href="#s3">[3]</a></p></div></div>
+<h3 style="margin-top:34px">一欄裡的三種工作：點選切換</h3><div class="tile-controls" aria-label="Tile 類型"><button type="button" data-tile="compute" aria-pressed="true">Compute · rows 2–5</button><button type="button" data-tile="memory" aria-pressed="false">Memory · row 1</button><button type="button" data-tile="shim" aria-pressed="false">Shim · row 0</button></div><div class="inspect" id="tile-detail" aria-live="polite"><h3>Compute tile：算，也負責本地控制</h3><p>Scalar control + SIMD/vector 計算 + VLIW 指令 bundle。從本地 SRAM 載入向量，送入 multiply/accumulate 路徑；與 DMA、鄰近 tile、stream switch 配合。</p></div>
+<div class="grid2"><article><h3>VLIW：一個 cycle 裡做多件事</h3><p>AI Engine 是 in-order、exposed-pipeline 處理器；compiler 必須知道運算延遲、register 使用時刻與 issue slots，安排 load、compute、store 的重疊。Peano 甚至要處理 negative operand latency 與特殊 register hierarchy。</p><p>這不同於讓大量 GPU wavefronts 由硬體輪替隱藏延遲；也不代表整個 NPU 永遠不會阻塞，stream／lock／DMA 等待仍然存在。<a class="cite" href="#s4">[4]</a></p></article><article><h3>Spatial dataflow：搬運本身也是程式</h3><p>Host DRAM → Shim DMA → MemTile → Compute L1 → vector registers → accumulator。結果可回到 memory tile，也可透過專用 cascade 路徑傳遞中間累加值。</p><p><code>acquire()</code>／<code>release()</code> 描述資料生命週期；ObjectFifo lowering 產生 buffers、locks、DMA。它不是 Python queue 在 NPU 上執行。<a class="cite" href="#s7">[7]</a></p></article></div>
+<div class="callout"><strong>gfx1151 ≠ AIE2P</strong><br>gfx1151 是 Strix Halo 內 RDNA 3.5 iGPU 的 GPU target；XDNA 2 NPU 用 <code>npu2</code> device model 與 <code>aie2p</code> core target。共享系統 DRAM，不代表可以把 GPU pointer 或 HIP binary 直接交给 NPU。新 runtime 的 zero-copy 是另外一層映射與同步機制。</div>
+<p class="small">文件閱讀注意：<strong>AIE2P（arch 21）≠ AIE2PS（arch 22）</strong>。AM027 的 Versal AIE-ML v2 不是可直接當成 Ryzen XDNA2 指令集手冊的同一 target，尤其不可移植它的 FP16／FP8 型別支援結論。本文以 NPU2 device model 與 AIE2P headers 為準；AMD Hot Chips 的 XDNA 2 簡報另已下載。<a class="cite" href="#s15">[15]</a></p>
+</section>
+<section id="types"><div class="chapter">02 / THREE MEANINGS OF “SUPPORTED”</div><h2>有這個 type，不代表有這個 type 的原生 MMA。</h2><p>必須拆成三層：<strong>能表示／搬運</strong> → <strong>有 intrinsic 或 emulation</strong> → <strong>frontend 有可用 mapping 與驗證範例</strong>。下表針對 AIE2P 的矩陣乘法，不是列出 Clang 所有語言型別。<a class="cite" href="#s6">[6]</a><a class="cite" href="#s8">[8]</a></p>
+<div class="table-wrap"><table><thead><tr><th>Input A × B</th><th>矩陣計算路徑</th><th>Accumulator / 寫回</th><th>Compiler / 範例界線</th></tr></thead><tbody>
+<tr><td><strong>INT8 × INT8</strong><br>signed / unsigned variants</td><td class="native">原生整數矩陣路徑<br>例如 8×8×8</td><td>通常 acc32；可轉 i8/i16/i32。縮位不是 accumulator 寬度。</td><td>IRON i8 kernel；Triton-XDNA AIE2P i8 transform。unsigned 組合仍需查 specialization。</td></tr>
+<tr><td><strong>INT8 × INT4</strong></td><td class="emul">API 有 4×16×16；本 Peano wrapper 先 unpack，再組合兩個 INT8 matrix primitives。</td><td>acc32；packed 4-bit 儲存存在，但不證明運算也是原生 4-bit。</td><td>不是所有 W4A16 或 GGUF Q4 都直接可跑；API 模式表不足以推導 INT4 TOPS。</td></tr>
+<tr><td><strong>INT16 × INT8</strong><br>INT8 × INT16</td><td>有 mixed integer 模式；反向 operand 組合可能需額外重排。</td><td>依 intrinsic 與 AccumTag 選擇；不能只從輸出 i16 推算。</td><td>查 16×8、8×16 各自形狀，不要假設交換 A/B 沒成本。</td></tr>
+<tr><td><strong>INT16 × INT16</strong></td><td class="native">原生整數路徑<br>IRON 常用 4×4×8</td><td>常用 acc64，轉出 i16 或 i32；須定義 shift／rounding／saturation。</td><td>IRON 有 kernel；Triton README 提到 I16 結果，但當前 dashboard 未列獨立 I16 matmul 範例。</td></tr>
+<tr><td><strong>INT32 參與乘法</strong></td><td>本 Peano 的 <strong>32×16 的 4×2×8 有直接 primitive</strong>；較大 K、16×32、32×32 常需分解。</td><td>例如 32×acc64；不是所有 INT32 都只有 software emulation。</td><td>舊 API 表註腳較籠統，本指南以固定版本 header/builtin 為準；不等於原生通用 INT32×INT32 MMA。</td></tr>
+<tr><td><strong>BF16 × BF16</strong></td><td>有 BF16 硬體乘法路徑；<code>mmul</code> 可組合多個 intrinsic。IRON 選 4×8×8。</td><td><code>accfloat</code>（FP32 accumulation）；寫回 BF16 或 FP32。</td><td>IRON 和 Triton 均有範例；Triton packing／lowering 可能選 BFP 路徑，需查 IR。</td></tr>
+<tr><td><strong>BFP16</strong></td><td class="native">EBS8 有直接 8×8×8 matrix primitive；EBS16 有儲存／轉換。</td><td>共享 exponent，不是 IEEE FP16。EBS8 / EBS16 是 exponent block size。</td><td>型別存在不保證每個 shape／EBS16 specialization 都能 instantiate。</td></tr>
+<tr><td><strong>BFP8：本次未證實</strong></td><td class="unknown">未找到 AIE2P 獨立 BFP8 block-vector／MMUL 登錄。</td><td>不能把 BFP16 的 8-bit mantissa 改叫 BFP8。</td><td>arch 22 的 bfloat8 / float8 不是 XDNA2 AIE2P 支援證據。</td></tr>
+<tr><td><strong>FP32 × FP32</strong></td><td class="emul">矩陣乘法由 BF16 運算 emulation，不是原生完整 FP32 MMA</td><td>FP32 輸出／accumulator ≠ FP32 input multiplication precision。</td><td>Triton padded f32 範例明示 BF16 emulation；不能推論符合完整 IEEE FP32 matmul。</td></tr>
+<tr><td><strong>FP16 / IEEE FP8 / FP64</strong></td><td class="unknown">本文查核的 AIE2P mmul 表未證實直接原生模式</td><td>需 conversion／software lowering 或其他 device。</td><td>「沒有查到 native MMA」不等於任何 load/store 或 scalar operation 都不支援。</td></tr>
+</tbody></table></div>
+<div class="grid2"><div class="card"><h3>BF16 ≠ BFP16</h3><p>BF16 每個元素各自有 exponent。BFP 把一群數值共用 exponent，以較窄的尾數表示整個 block；outlier 可能讓同組小數值失去有效位元。</p><p><code>AIE_API_EMULATE_BFLOAT16_MMUL_WITH_BFP16</code> 是從 BF16 語意介面切到 BFP16 計算的選項，明確以 accuracy 換 throughput。<a class="cite" href="#s6">[6]</a></p></div><div class="card"><h3>FP32 的兩種「看起來支援」</h3><p>① <code>BF16 × BF16 → FP32 accumulation</code>：輸入仍是 BF16。② <code>float × float</code>：API 以 BF16 multiplications 合成；而 Triton 的 emulation 選項可以先將 f32 截至 bf16。</p><p>它們不是同一個數值模型。需要比較誤差、輸入範圍與轉換設定，而不只看 output dtype。<a class="cite" href="#s5">[5]</a><a class="cite" href="#s6">[6]</a></p></div></div>
+<p class="small">AIE API 文件的 superscript a/b/c/e 分別涉及多 intrinsic、額外資料處理、32-bit 乘法合成與 BFP emulation。查 support table 時不能把註腳省略；headers 和本次固定版本的 kernel 才是實作依據。</p>
+<div class="callout"><strong>Source audit 抓到的三個陷阱</strong><ul><li><strong>INT4：API 不等於原生指令</strong>。<code>mul_4x16_16x16</code> 這個「intrinsic」wrapper 在本 Peano 中先 unpack，再執行兩次 INT8 運算。</li><li><strong>BF16 4×8×8 並非一條 matrix 指令</strong>。非 BFP 的 AIE API helper 使用 <strong>8 次 32-lane</strong> BF16 MUL/MAC 加上 shuffle/broadcast。直接 MLIR AIEVec lowering 的相同表面 shape 則可轉成 BFP16。</li><li><strong>BFP16 名字不是儲存位元數</strong>。EBS8 格式為<strong>每 8 個 signed 8-bit mantissa</strong> 共用 8-bit exponent：9 bytes / block，64 個值合計 72 bytes。EBS16 緊縮記憶體格式與 register representation 又不同。</li></ul><p class="small">逐條 immutable 原始碼、行號、signedness、accumulator、rounding 與 emulation 展開見 <a href="type-mma-audit.md">獨立查核報告</a>。這也說明為什麼不能直接抄 architecture cheatsheet 的 BF16 MAC/cycle 數字。</p></div>
+</section>
+<section id="mma"><div class="chapter">03 / MATRIX MULTIPLY–ACCUMULATE</div><h2>從一個 microtile，到整顆 NPU 的 GEMM。</h2><p class="lead"><code>aie::mmul&lt;M,K,N,TypeA,TypeB,AccumTag&gt;</code> 封裝矩陣乘加。<code>mul(A,B)</code> 初始化結果，<code>mac(A,B)</code> 累加新的乘積。每個 template shape 可能需要多條 intrinsic；<strong>不要用一次 API call 推算 cycle 數</strong>。<a class="cite" href="#s6">[6]</a></p>
+<div class="card"><label for="dtype">選擇 IRON microkernel 路徑</label><div class="controls"><select id="dtype"><option value="bf16">BF16 × BF16 → FP32</option><option value="i8">INT8 × INT8 → INT32</option><option value="i16">INT16 × INT16 → INT32</option><option value="bfp">BF16 → BFP16 emulation → FP32</option></select></div><div id="mma-detail" aria-live="polite"><div class="math">[4 × 8] · [8 × 8] + [4 × 8]</div><p>accfloat → FP32</p></div><div class="matrix-diagram" aria-hidden="true"><div class="matrix-block">A tile</div><b>×</b><div class="matrix-block b">B tile</div><b>+</b><div class="matrix-block c">C accum</div></div><p class="small">這裡顯示 IRON kernel 的幾種常用 geometry，不是 AIE API 支援形狀的完整全集；BFP 模式要連同 DMA packing 一起修改。<a class="cite" href="#s8">[8]</a></p></div>
+<h3 style="margin-top:30px">完整程式要解決四層 tiling</h3><div class="pipeline"><div class="pipe"><div class="step">01 · HOST</div><b>全矩陣 M×K×N</b><small>系統記憶體中的矩陣。Host 排列通常 row-major。</small></div><div class="pipe"><div class="step">02 · ARRAY</div><b>分工給 rows × columns</b><small>M/N 分配 output tiles；A/B 廣播重用，避免重複 DDR 讀取。</small></div><div class="pipe"><div class="step">03 · COMPUTE TILE</div><b>每核 m×k×n</b><small>L1 buffer + double buffering；K 分段累加。</small></div><div class="pipe"><div class="step">04 · VECTOR</div><b>microtile r×s×t</b><small>預先 packing 成 intrinsic 的 operand layout，再 mmul/mac。</small></div></div>
+<div class="grid2"><div><h3>不要讓核心忙著搬矩陣</h3><p>Host row-major 的一個 64×64 block，不等於一連串 microtile 的記憶體順序。可用 MemTile 的多維 DMA，把 transfer 同時做成 tile packing／transpose，再讓 core 用連續 vector loads。</p><pre><code># A block (m,k) → 一串 (r,s) microtiles
+# IRON dims_to_stream 示意；以目前 API element units 為準
+[
+  (m // r, r * k),
+  (k // s, s),
+  (r, k),
+  (s, 1),
+]</code></pre><p class="small">MemTile BD 支援 4 維 addressing；core/shim BD 為 3 維。不能把 4D reshape 任意放到任何 DMA。重排可減少 core 指令，但不代表 bus、descriptor 與 bandwidth 成本為零。<a class="cite" href="#s3">[3]</a><a class="cite" href="#s7">[7]</a></p></div><div><h3>Reuse、pipeline、cascade</h3><ul><li><strong>多 accumulator blocking：</strong>一次載入 A/B 後更新多個 C subtiles，提高 data reuse，避免 accumulator dependency 限制 issue。</li><li><strong>Double buffering：</strong>第 i 塊正在算時，DMA 填第 i+1 塊；FIFO 深度、bank 分配與鎖時序一起設計。</li><li><strong>Software pipelining：</strong>讓 load / MAC / store 在不同迭代間重疊；<code>__restrict</code> 幫助 alias 分析。</li><li><strong>Cascade reduction：</strong>用專用串流傳遞 partial accumulators，不必每段都轉成較低精度寫 SRAM。但本次 IRON <code>cascade_mm</code> 範例仍是 scalar-only，不能宣稱已有高效 vector cascade GEMM。</li></ul><p class="small"><a class="cite" href="#s7">[7]</a><a class="cite" href="#s8">[8]</a></p></div></div>
+<div class="note"><strong>Sparse MMA 是另一條路：</strong>AIE API 列有 XDNA 2 的 sparse-B integer matmul，例如 INT8 的 4×16×8、8×16×8。需要支援的壓縮 layout 與 sparse operand，不是把 dense tensor 中部分元素設成零就自動加速；也不要把 XDNA 1 的 BF16 sparse 模式搬到 XDNA 2。<a class="cite" href="#s6">[6]</a></div>
+<h3>一個最小 BF16 C++ microkernel</h3><p>教學用：A 有 32 個 BF16，B 有 64 個 BF16，C 有 32 個 FP32；各小矩陣在自身 block 內 row-major，指標至少 64-byte 對齊。只算一個 microtile，<strong>不含 host、DMA、placement 或大型矩陣外圈</strong>。</p><p class="small">以下非 BFP 解釋假設 <code>AIE_API_EMULATE_BFLOAT16_MMUL_WITH_BFP16</code> 未定義。若啟用，數值路徑會改變；請同時閱讀 audit 中的 rounding mode save／set／restore 範例。</p><pre><code>// AIE2P C++ fragment. Source-level checked, not compiled here.
+#include &lt;aie_api/aie.hpp&gt;
+
+extern "C" void bf16_tile(const bfloat16* __restrict a,
+                           const bfloat16* __restrict b,
+                           float* __restrict c) {
+  using MM = aie::mmul&lt;4, 8, 8, bfloat16, bfloat16, accfloat&gt;;
+  auto av = aie::load_v&lt;MM::size_A&gt;(a);
+  auto bv = aie::load_v&lt;MM::size_B&gt;(b);
+  MM sum;
+  sum.mul(av, bv);  // C := A * B
+  // More K blocks: sum.mac(next_a, next_b);
+  aie::store_v(c, sum.to_vector&lt;float&gt;());
+}</code></pre><p class="small">整數寫回則還涉及 <code>to_vector&lt;T&gt;(shift)</code>、rounding 與 saturation 設定。<code>accauto</code> 的決定依 operand type／target，不能把所有整數都假設成 acc32。<a class="cite" href="#s6">[6]</a></p>
+<div class="card"><h3>L1 工作集估算器</h3><p>沿用上面的 dtype。假設 <strong>A/B 各雙 buffer、C 一個 32-bit buffer、1 KiB stack</strong>。BFP 路徑仍儲存 BF16 輸入。這只是容量初篩，不是 compiler legality check 或效能預測。</p><div class="controls"><label>m<input id="dim-m" type="number" min="1" max="4096" step="1" value="64"></label><label>k<input id="dim-k" type="number" min="1" max="4096" step="1" value="64"></label><label>n<input id="dim-n" type="number" min="1" max="4096" step="1" value="64"></label></div><div class="result" id="estimate" aria-live="polite"></div><p class="small"><code>L1 bytes = 2 × (m·k + k·n) × inputBytes + m·n × 4 + 1024</code><br>通過仍可能因 bank conflict、alignment、globals、額外 buffers、compiler spills 或 kernel expansion 限制而失敗。</p></div>
+</section>
+<section id="compiler"><div class="chapter">04 / FOLLOW THE LOWERING</div><h2>程式經過哪些 compiler，變成哪些產物？</h2><h3>路線 A · 自己設計 spatial program</h3><div class="pipeline"><div class="pipe"><div class="step">USER</div><b>IRON Python</b><small>Worker / ObjectFifo / Runtime / Program</small></div><div class="pipe"><div class="step">ARRAY</div><b>MLIR-AIE</b><small>placement、routing、buffer addresses、DMA、locks</small></div><div class="pipe"><div class="step">CORE</div><b>Peano / LLVM-AIE</b><small>C++ / core IR → 指令選擇 → VLIW scheduling → core ELF</small></div><div class="pipe"><div class="step">RUNTIME</div><b>Package + launch</b><small>CDO/PDI、xclbin、instruction stream → XRT → amdxdna</small></div></div><p class="small">編譯器有 array configuration 與 per-core compute 兩條相互配合的支線，不是只有把 Python 翻成一個 ELF。IRON JIT 的各步驟與 cache 產物見 compilation_stages.md。<a class="cite" href="#s9">[9]</a></p>
+<h3>路線 B · compiler 幫你產生 spatial program</h3><pre><code>Triton (@triton.jit / tl.dot)
+  → triton-shared : structured Linalg
+  → MLIR Transform : tiling / packing / bufferization / vectorization
+  → MLIR-AIR : air.herd / channels / async dependencies
+  → MLIR-AIE + per-core code generation
+  → runtime artifact (取決於 target / XRT 或 HSA)
+  → NPU2 / AIE2P</code></pre><p><code>air.herd</code> 表示並行 worker 網格，<code>air.channel.put/get</code> 表示搬運端點，token 表示依賴。Compiler 可以用這些資訊安排資料與 compute 的重疊，不必由 host 每一小步同步。<a class="cite" href="#s10">[10]</a></p>
+<div class="grid2"><div class="card"><h3>可檢查的中間產物</h3><ul><li><code>tt.shared.mlir</code>：Triton shared/Linalg 表示。</li><li><code>air_project/</code>：AIR lowering 中間資料。</li><li><code>aie.mlir</code>、<code>input_with_addresses.mlir</code>：tile 配置與位址。</li><li><code>main_core_&lt;col&gt;_&lt;row&gt;.ll/.o/.elf</code>：per-core code。</li><li><code>final.xclbin</code>、<code>insts.bin</code>、<code>main.pdi</code>：IRON 常見產物。</li></ul></div><div class="card"><h3>Runtime 不只一條</h3><p>IRON 文件以 XRT xclbin + instruction stream 為主要示範。當前 Triton-XDNA README 指出 XRT 預設 NPU2 使用 ELF，也新增 Linux HSA/ROCr 的 AIE agent dispatch。</p><p>HSA 需要 AIE-capable ROCr，不能假設既有 ROCm 安裝就有。GPU/NPU 共用 PyTorch process 還要防範載入錯誤版本的 ROCr。這不是把 NPU 當 HIP GPU。<a class="cite" href="#s5">[5]</a><a class="cite" href="#s9">[9]</a></p></div></div>
+<div class="note"><strong>Open-source 範圍：</strong>這裡選 Peano，不要求專有 Chess／Vitis license。Compiler 原始碼開源，不等於 BIOS、NPU firmware、所有 driver packaging 或 Ryzen AI model runtime 都是同一授權，也不表示整個硬體平台完全 open-source。</div>
+</section>
+<section id="programming"><div class="chapter">05 / YOUR FIRST NPU PROGRAM</div><h2>先用上游範例跑通，再寫自己的 kernel。</h2><p class="lead">以下命令根據下載的 source snapshot 撰寫，<strong>尚未在這台機器安裝或執行</strong>。不會為了做網站而更換你的 kernel、driver、ROCm 或重啟服務。</p>
+<h3>Step 0 · 分離環境與版本</h3><p>IRON 和 Triton-XDNA 使用不同的 matching dependency pins，建議<strong>兩個 venv</strong>。不要把任意最新 mlir-aie、AIR、Peano wheels 混在一起；source snapshot HEAD 也不保證剛好有對應 wheel。</p><pre><code># 先唯讀確認 host / driver；沒有工具就先讀 upstream setup guide
+uname -r
+xrt-smi examine
+
+# 本次下載的位置
+cd /home/chihmin/xdna2-lab/sources/mlir-aie
+git rev-parse HEAD
+# 0ed8e7e477fd9094acee8dada7ab81604a7fb07a
+
+# 確認你要安裝的版本與 wheel 對應後，再執行：
+source utils/env_install.sh
+source utils/env_setup.sh</code></pre><p>當前 Ubuntu 指南的 packaged flow 指定 Linux 6.17+，PPA 的 <code>pyxrt</code> 綁 Python 3.12；其他 Python wheels 的可用範圍較廣。這不是「所有 Linux 必須 6.17」：non-Ubuntu／in-tree driver 有另一條安裝路線。這些是<strong>上游要求，不是本機已驗證的環境</strong>。<a class="cite" href="#s2">[2]</a></p>
+<h3>Step 1 · IRON vector add：學會資料生命週期</h3><p>這是自 README 改寫的可讀範例，加上明確 NPU2 device 與結果檢查。Python 函式建立 MLIR design；NPU 上不是在跑 CPython。</p><pre><code>import numpy as np
+import aie.iron as iron
+from aie.iron import In, Out, ObjectFifo, Program, Runtime, Worker
+from aie.iron.controlflow import range_
+from aie.iron.device import NPU2
+
+data_ty = np.ndarray[(1024,), np.dtype[np.int32]]
+
+@iron.jit
+def add_one(a_in: In, b_out: Out):
+    incoming = ObjectFifo(data_ty, name="in")
+    outgoing = ObjectFifo(data_ty, name="out")
+
+    def core_fn(src, dst):
+        a = src.acquire(1)
+        b = dst.acquire(1)
+        for i in range_(1024):
+            b[i] = a[i] + 1
+        src.release(1)
+        dst.release(1)
+
+    worker = Worker(core_fn, [incoming.cons(), outgoing.prod()])
+
+    def sequence(a, b, src, dst):
+        src.fill(a)
+        dst.drain(b, wait=True)
+
+    runtime = Runtime(sequence, [data_ty, data_ty,
+                                incoming.prod(), outgoing.cons()])
+    return Program(NPU2(), runtime, workers=[worker]).resolve_program()
+
+a = iron.arange(1024, dtype=np.int32, device="npu")
+b = iron.zeros(1024, dtype=np.int32, device="npu")
+add_one(a, b)  # first call compiles; subsequent calls may hit cache
+np.testing.assert_array_equal(np.asarray(b), np.arange(1024) + 1)</code></pre><p class="small">這段用來學 control flow 與 FIFO，不宣稱自動成為最佳向量化 kernel。若先執行原版範例，可從 <code>programming_examples/basic/vector_scalar_add/vector_scalar_add.py</code> 開始。<a class="cite" href="#s2">[2]</a></p>
+<h3>Step 2 · IRON whole-array matmul</h3><p>先用 upstream 的完整 host→DMA→microkernel→verify 流程；以 8 欄 NPU2、BF16 輸入、FP32 輸出為例。刻意明列尺寸，避免 README 與 CLI 預設值不同。</p><pre><code>cd /home/chihmin/xdna2-lab/sources/mlir-aie
+source utils/env_setup.sh
+cd programming_examples/basic/matrix_multiplication/whole_array
+
+python3 whole_array.py --dev npu2 --n-aie-cols 8 \
+  -M 512 -K 512 -N 512 -m 64 -k 64 -n 32 \
+  --dtype_in bf16 --dtype_out f32 --use-chess 0</code></pre><p>這組參數符合腳本的 array 級整除要求：<code>M % (m×4) = 0</code>、<code>K % k = 0</code>、<code>N % (n×columns) = 0</code>，且 <code>M/m/4</code> 為 transfer-block 要求的偶數。還需通過 compiler 的記憶體、route、kernel expansion 檢查。若 runtime 可用 partition 少於 8 欄，應改成可分配的欄數。<a class="cite" href="#s7">[7]</a></p>
+<pre><code># 換成 BFP16 emulation 時，不只改 dtype：
+# 在上面的 whole_array.py 命令後加：
+--emulate-bf16-mmul-with-bfp16 1</code></pre>
+<pre><code># Python：在已選 device 的 design 中查實際 geometry
+import numpy as np
+from aie.iron import kernels
+from ml_dtypes import bfloat16
+mm = kernels.mm(dim_m=64, dim_k=64, dim_n=32,
+                input_dtype=bfloat16, output_dtype=np.float32)
+r, s, t = mm.mac_dims
+zero = mm.zero</code></pre><p class="small">上段最後的 Python 片段應在已選定 device 的 design 環境中使用；完整做法以 whole_array.py 為準，不要把它獨立當成完整 GEMM 程式。</p>
+<h3>Step 3 · Triton：以 tl.dot 描述，再給 AIE2P mapping</h3><pre><code>cd /home/chihmin/xdna2-lab/sources/Triton-XDNA
+python3 -m venv sandbox
+source sandbox/bin/activate
+python3 -m pip install --upgrade pip
+
+# 上游 binary 安裝路徑。latest-wheels 是滾動版本，不是可重現 lock。
+# 若要研究本次 source snapshot，使用此 checkout 的 source-build
+# 說明及 utils/mlir-air-hash.txt / peano-requirements.txt 對齊依賴。
+pip install triton-xdna \
+  --find-links https://github.com/amd/Triton-XDNA/releases/expanded_assets/latest-wheels \
+  --find-links https://github.com/Xilinx/mlir-aie/releases/expanded_assets/latest-wheels-no-rtti-2 \
+  --find-links https://github.com/Xilinx/llvm-aie/releases/expanded_assets/nightly \
+  --find-links https://github.com/Xilinx/mlir-air/releases/expanded_assets/latest-air-wheels-no-rtti
+
+# 已正確安裝 XRT 與 pyxrt 後，source 你的 XRT setup.sh。
+# 例：source /opt/xilinx/xrt/setup.sh
+pip install torch --index-url https://download.pytorch.org/whl/cpu
+
+cd examples/matmul_bf16_m64_n64_k64
+AIR_TRANSFORM_TILING_SCRIPT=transform_aie2p.mlir \
+  python matmul_bf16_m64_n64_k64.py</code></pre><p class="small">最後命令執行上游多組尺寸驗證，不只是單一 64×64 matmul，第一次編譯可能很重。例子名稱中的 m64/n64/k64 描述內部 tiling，不代表整體 M/N/K。先讀 script 再決定縮小測試範圍。<a class="cite" href="#s5">[5]</a></p>
+<div class="grid2"><div><h3>Triton compute 片段</h3><pre><code># 摘錄自 upstream bare_matmul；省略 signature / launch
+# 這段示例只處理相容的整除尺寸，沒有 boundary masks。
+pid_m = tl.program_id(0)
+pid_n = tl.program_id(1)
+
+# ...build offsets / load A and B...
+a_block = tl.load(a_ptrs)
+b_block = tl.load(b_ptrs)
+c_block = tl.dot(a_block, b_block)
+tl.store(c_ptrs, c_block)</code></pre></div><div><h3>最容易忽略的 mapping</h3><p><code>transform_aie2p.mlir</code> 才是 NPU2 mapping；<code>transform_aie2.mlir</code> 是 NPU1。Triton <code>program_id</code> 的 logical grid 不等於一對一的實體 NPU tile。</p><p>當前 BF16 AIE2P transform 註明 <code>pack=[8,8,8]</code>、f32 accumulator；不要硬套 IRON 非 BFP 的 4×8×8 geometry。Compiler lowering 決定實際指令／精度路徑。<a class="cite" href="#s16">[16]</a></p></div></div>
+<div class="callout"><strong>Dashboard 的 ✅ 代表什麼？</strong><br>上游 legend 定義為「該 architecture 有 transform file」，不是我們確認每種 shape 都執行成功。BF16/INT8 matmul、softmax、layer norm、RMS norm 等有對應 coverage；f32 padded matmul 註明 BF16 emulation；BF16 autotune 範例目前只有 AIE2 mapping。<a class="cite" href="#s17">[17]</a></div>
+</section>
+<section id="performance"><div class="chapter">06 / MAKE IT FAST — AND CORRECT</div><h2>TOPS 是天花板，不是你的程式速度。</h2><p>AMD 的 XDNA 2 簡報列出 50 INT8 TOPS 與 50 Block FP16 TFLOPS 級峰值；<strong>後者不是 50 TFLOPS 原生 BF16 或 FP32</strong>。每個 SKU、時脈、功耗與可用 tiles 都會影響可達值。<a class="cite" href="#s15">[15]</a></p>
+<div class="grid3"><div class="card"><div class="label">COMPUTE</div><h3>GEMM arithmetic intensity</h3><p>用 <code>2MNK</code> 計算數學 operations，再除以<strong>實際</strong> DDR traffic。理想情況 bytes 約為 <code>MK·a + KN·b + MN·c</code>；重載、padding、packing 與 cache/mapping 會改變真實流量。</p></div><div class="card"><div class="label">DATA MOVEMENT</div><h3>看重用，不只看核數</h3><p>多用一倍 tile 可能增加 broadcast、BD 與同步壓力。單 token decode / GEMV 通常比大 batch prefill GEMM 更容易被權重 bandwidth 或 launch overhead 限制。</p></div><div class="card"><div class="label">END TO END</div><h3>冷編譯 ≠ 暖執行</h3><p>分開記錄 JIT compile、buffer allocation/mapping、copy、device execution、同步與驗證。要做 GPU/NPU 比較時，至少對齊精度、shape、batch、資料駐留與功耗。</p></div></div>
+<h3 style="margin-top:30px">建議的實驗順序</h3><ol><li><strong>先正確：</strong>小尺寸、固定 seed，INT 使用寬整數 reference；BF16/BFP 明列 atol、rtol、最大／平均誤差，加入 outlier、負數與極小值。</li><li><strong>再看 core：</strong>讀 per-core ELF disassembly 與 pipeline schedule，確認真的產生矩陣乘加，而非 scalar loop。檢查 spills、dependency chains 與 vector loads。</li><li><strong>調 tile 與 buffer：</strong>從單 core 到單欄，再到多欄。記錄 L1 占用、bank 分配、FIFO depth 與 BD 數目。</li><li><strong>看 trace：</strong>使用上游 trace / Perfetto 流程，區分 core 空等、DMA 飢餓、lock 阻塞與 host launch。</li><li><strong>最後比端到端：</strong>暖機後多次測量中位數與分位數，另列冷啟動；每個結果附 commit、dtype、M/N/K、clock/power 配置。</li></ol>
+<div class="note"><strong>研究 benchmark，不冒充本機 benchmark：</strong>GEMM 論文在其 XDNA2 測試平台報最高 38.05 TOPS INT8、14.71 TOPS BF16；不同 output precision 與不同 shape 的結果不能混用。論文使用的 XDNA2 主機為 Ryzen AI 7 350，而非這台 Strix Halo；本次也沒有證實其最佳數字全都来自 Peano-only flow。<a class="cite" href="#s11">[11]</a></div>
+<h3>對本機 gfx1151 / XDNA2 的合理分工</h3><p>先讓 GPU 繼續處理成熟 HIP/ROCm workload。選一個固定形狀、足夠高 reuse 的 INT8／BF16 operator，在 NPU 上建立 correctness + warm latency baseline。只有在<strong>包含 dispatch、資料交接與同步後</strong>仍划算，才考慮拆分整個模型。不要把 NPU 的 50 TOPS 直接加到 GPU FLOPS 上，宣稱 LLM 會快某個比例。</p>
+</section>
+<section id="sources"><div class="chapter">07 / SOURCE MAP & DOWNLOADS</div><h2>不是只有摘要：原始碼與文件都留下來。</h2><p>研究根目錄：<code>/home/chihmin/xdna2-lab/</code>。網站標註的日期是取得 snapshot 的日期，不代表所有資料都在當日發表。下載包包含 manifest、來源 URL、commit SHA 與檔案 SHA-256。</p><div class="table-wrap"><table><thead><tr><th>Repository</th><th>固定 commit</th><th>下載範圍</th></tr></thead><tbody><tr><td>Triton-XDNA</td><td><code>5c33df1263f29de30f71616780c2e8a88e623782</code></td><td>Shallow source snapshot；submodules 見 manifest</td></tr><tr><td>aie_api</td><td><code>bec000fd312b407c61f25ef86fd582042e42d28a</code></td><td>Shallow source snapshot；submodules 見 manifest</td></tr><tr><td>iree-amd-aie</td><td><code>fddfec1be6ceefbdb890079d957947dfa1fe0848</code></td><td>Shallow source snapshot；submodules 見 manifest</td></tr><tr><td>llvm-aie</td><td><code>386ca5c6634a84bb224b7248e79df8edabf0722f</code></td><td>LLVM sparse checkout / AIE backend + headers</td></tr><tr><td>mlir-aie</td><td><code>0ed8e7e477fd9094acee8dada7ab81604a7fb07a</code></td><td>Shallow source snapshot；submodules 見 manifest</td></tr><tr><td>mlir-air</td><td><code>ff95a9b35b692b4cfbdf1d52bf69e6ffe01facde</code></td><td>Shallow source snapshot；submodules 見 manifest</td></tr></tbody></table></div>
+<div class="grid2 download-grid"><div class="card"><h3>網站內可下載</h3><a href="research-manifest.json" download>來源、commit 與 SHA-256 manifest ↗</a><a href="guide-notes.md" download>重點與操作路線 Markdown ↗</a><a href="type-mma-audit.md" download>獨立 type／MMA source audit ↗</a><p class="small">大型 source archive 與原始 PDF 文件包另附於對話，不將整個 upstream repository 放上網站。</p></div><div class="card"><h3>本次完成 / 未完成</h3><p><span class="native">完成：</span>開源碼下載、原始文件下載、原始碼交叉查核、網站與互動模型測試。</p><p><span class="emul">未完成：</span>compiler build、wheels 安裝、driver 變更、NPU correctness／performance 實測。LLVM 為明確範圍的 sparse checkout；不宣稱已可離線完整重建 toolchain。</p></div></div>
+<h3 style="margin-top:32px">架構資料閱讀順序</h3><ol><li><strong>Devices.md + AMD Hot Chips：</strong>先分辨 SoC、NPU generation、tile array 與峰值的格式。</li><li><strong>Architecture / core_data_memory：</strong>看 SRAM、DMA、register 與 buffer 限制。</li><li><strong>AIE API mmul + AIE2P headers：</strong>看 type、shape、accumulator 與 emulation 註腳。</li><li><strong>whole_array.py / C++ mm.cc：</strong>把 array topology、DMA packing 和 compute 接起來。</li><li><strong>AIR / GEMM papers：</strong>理解 tiling、communication overlap 與實測 tradeoffs。</li></ol>
+<ul class="source-list"><li id="s1"><a href="https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/docs/Devices.md">[01] Devices.md ↗</a><span>NPU1/NPU2、Strix Halo、完整與 partition geometry</span></li><li id="s2"><a href="https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/README.md">[02] IRON / MLIR-AIE README ↗</a><span>Linux setup、IRON API、matching wheels、Peano 開源路徑</span></li><li id="s3"><a href="https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/skills/aie-code-creator/references/architecture.md">[03] Architecture reference ↗</a><span>memory、DMA、geometry；其中概略 latency/throughput 未當作已驗證規格</span></li><li id="s4"><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/README.md">[04] Peano architecture ↗</a><span>AIE2P target、exposed pipeline、VLIW scheduler</span></li><li id="s5"><a href="https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/README.md">[05] Triton-XDNA README ↗</a><span>實驗性定位、上游 benchmark 敘述、安裝、XRT/HSA runtime</span></li><li id="s6"><a href="https://xilinx.github.io/aie_api/group__group__mmul.html">[06] AIE API MMUL ↗</a><span>官方線上表與註腳；對應 HTML snapshot 已下載。實際 backend 差異見獨立 audit</span></li><li id="s7"><a href="https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_examples/basic/matrix_multiplication/whole_array/whole_array.py">[07] Whole-array GEMM ↗</a><span>精確 CLI、tile 分工、FIFO、packing 與 verification</span></li><li id="s8"><a href="https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/python/iron/kernels/linalg.py">[08] Kernel dtype / mac_dims ↗</a><span>BF16 / BFP macro 幾何、輸出型別、scalar cascade 現況</span></li><li id="s9"><a href="https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_guide/compilation_stages.md">[09] Compilation stages ↗</a><span>JIT、aiecc、per-core IR/ELF、xclbin/PDI/insts 與 cache</span></li><li id="s10"><a href="https://arxiv.org/abs/2510.14871">[10] MLIR-AIR paper ↗</a><span>From Loop Nests to Silicon，AIR constructs 與 compiler benchmark</span></li><li id="s11"><a href="https://arxiv.org/abs/2512.13282">[11] GEMM performance paper ↗</a><span>Striking the Balance，跨世代 tiling、記憶體與實測限制</span></li><li id="s12"><a href="https://github.com/Xilinx/aie_api/blob/bec000fd312b407c61f25ef86fd582042e42d28a/include/aie_api/detail/aie2p/mmul_bf16_bf16.hpp">[12] AIE API source ↗</a><span>直接讀 AIE2P specialization，而不是僅看文件分類</span></li><li id="s13"><a href="https://github.com/nod-ai/iree-amd-aie/blob/fddfec1be6ceefbdb890079d957947dfa1fe0848/README.md">[13] IREE-AMDAIE ↗</a><span>early-phase plugin、建置與 Chess／Peano 說明</span></li><li id="s14"><a href="https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_guide/core_data_memory.md">[14] Core data memory ↗</a><span>64 KiB 內 stack、buffers、.data/.bss/.rodata 的分配</span></li><li id="s15"><a href="https://hc2024.hotchips.org/assets/program/conference/day2/24_HC2024.AMD.Cohen.Subramony.final.pdf">[15] AMD Hot Chips 2024 ↗</a><span>第 22 頁 XDNA2 架構、50 INT8 TOPS / Block FP16 TFLOPS；PDF 已下載</span></li><li id="s16"><a href="https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/matmul_bf16_m64_n64_k64/transform_aie2p.mlir">[16] Triton BF16 AIE2P transform ↗</a><span>l1_m/n=64、pack=[8,8,8]、accum=f32 與 mapping</span></li><li id="s17"><a href="https://amd.github.io/Triton-XDNA/">[17] Triton examples dashboard ↗</a><span>✅ 的定義是 transform file available；HTML snapshot 已下載</span></li></ul>
+<h3 style="margin-top:32px">原始圖解 · 對照閱讀</h3><div class="grid2"><figure style="margin:0"><img class="figure evidence-image" src="assets/mmul.png" width="1631" height="759" loading="lazy" alt="AIE API 的矩陣乘法 microtile 圖解"><figcaption class="small">AMD AIE API：matrix multiplication 圖。用來理解 blocking，不代表每一個 shape 都是單一指令。<a href="https://xilinx.github.io/aie_api/group__group__mmul.html">原文</a></figcaption></figure><figure style="margin:0"><img class="figure evidence-image" src="assets/NPU_architecture.png" width="1712" height="2048" loading="lazy" alt="GEMM 論文的 Ryzen AI NPU 架構與 core memory 圖"><figcaption class="small">GEMM 論文 Fig. 1：通用架構示意；本指南的 NPU2 8 欄 layout 以 Devices.md 為準。<a href="https://arxiv.org/html/2512.13282v1">原文與作者</a></figcaption></figure></div>
+<p class="small">圖片與引用程式碼權利屬原作者；上游程式碼授權隨 source archive 保留。本文的解釋、估算器與重繪 tile 示意為本次製作。AM027 AMD portal 本次只取得載入頁，因此沒有把它冒充成已下載的完整手冊。</p>
+</section></main><footer class="end">XDNA 2 FIELD GUIDE · Built from source, not from TOPS marketing.<br>原始碼證據 ≠ 硬體實測。版本、shape、dtype 與 runtime 都是結論的一部分。<a href="#overview">回到頂端 ↑</a></footer></body></html>

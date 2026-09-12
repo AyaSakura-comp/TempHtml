@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Shared DRAM 不代表免費互通；卸載是否值得，取決於計算節省是否大於映射、同步、轉換與 fallback 的成本。"><meta name="color-scheme" content="light"><title>CPU × GPU × NPU：分工與資料所有權 — XDNA 2 LLM Wiki</title><link rel="icon" href="assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="assets/wiki.css"><script src="assets/model.js" defer></script><script src="assets/search-data.js" defer></script><script src="assets/app.js" defer></script></head>
+<body><a class="skip" href="#main">跳到正文</a><header class="topbar"><a class="wordmark" href="index.html"><span class="seal" aria-hidden="true">文</span><span>XDNA 2 <b>LLM WIKI</b></span></a><nav class="header-links" aria-label="常用連結"><a href="index.html#search">搜尋</a><a href="glossary.html">術語</a><a href="llms.txt">LLM 索引</a></nav></header><div class="layout"><aside class="sidebar" aria-label="知識庫導覽"><details id="nav-menu"><summary>全站目錄 <span>＋</span></summary><nav class="navtree"><div class="nav-group"><h3>架構</h3><a href="system.html">XDNA2 系統：空間資料流與 NPU2 分區</a><a href="compute.html">計算核心：scalar、SIMD、VLIW 與累加器</a><a href="memory.html">記憶體：program、data、banks 與局部地址</a><a href="dma.html">DMA：描述子、通道與資料布局</a><a href="synchronization.html">同步：鎖、背壓、停頓與死鎖</a><a href="isa.html">ISA 閱讀：從 AIE2P header 追到後端原語</a></div><div class="nav-group"><h3>數值</h3><a href="datatypes.html">數值型別：INT4、BF16、BFP16 與 FP32 的分層支援</a><a href="mma.html">矩陣乘加：原語、API 包裝與 LLM microtile</a><a href="quantization.html">LLM 量化：格式、數學與 kernel 是三件事</a></div><div class="nav-group"><h3>程式設計</h3><a href="compiler.html">編譯器分工：從資料流到 XDNA2 產物</a><a href="iron.html">IRON：以 Worker 與 ObjectFifo 設計資料流</a><a href="triton.html">Triton-XDNA：算子、Transform 與支援證據</a><a href="runtime.html">執行期與共享緩衝：格式、ABI、可見性</a><a href="deployment.html">LLM 部署生態：研究 compiler 與成品 runtime</a><a href="debug.html">除錯與證據分級：不要把 fallback 當 NPU 成功</a></div><div class="nav-group"><h3>LLM推論</h3><a href="llm-graph.html">LLM 計算圖：算子、狀態與裝置邊界</a><a href="qwen-case.html">Qwen2.5 案例：CPU＋NPU、GPU 與異質路由</a><a href="gemm.html">GEMM：把矩陣切成可搬、可算的工作</a><a href="attention.html">Attention：算子可拆，不代表整體已能在 NPU 跑</a><a href="kv-cache.html">KV cache：容量、頻寬與生命週期</a><a href="prefill-decode.html">Prefill 與 decode：兩個不同的效能問題</a><a href="heterogeneous.html" aria-current="page">CPU × GPU × NPU：分工與資料所有權</a></div><div class="nav-group"><h3>驗證與知識庫</h3><a href="performance.html">效能模型：容量、Roofline 與端到端下界</a><a href="validation.html">正確性與效能驗證：一套不把 fallback 當成功的流程</a><a href="glossary.html">術語辭典：同一個字，在不同層可能不同意思</a><a href="sources.html">來源地圖、證據等級與未解問題</a><a href="wiki-method.html">LLM Wiki 使用與維護：來源 → 條目 → 連結</a></div></nav></details></aside><main id="main" tabindex="-1"><div class="breadcrumbs"><a href="index.html">首頁</a> / LLM推論</div><div class="article-meta"><span>工程推導</span><span>來源快照 2026-09-12</span><a href="markdown/heterogeneous.md" download>Markdown ↓</a></div><h1>CPU × GPU × NPU：分工與資料所有權</h1><p class="lede">Shared DRAM 不代表免費互通；卸載是否值得，取決於計算節省是否大於映射、同步、轉換與 fallback 的成本。</p><div class="evidence-note">本文區分公開來源、原始碼查核與工程推導。未在本機執行 compiler 或 NPU；可用型別、可編譯、可派送、無 fallback、效能達標是不同證據。</div><nav class="toc" aria-label="本頁目錄"><strong>本頁導覽</strong><a href="#section-1">三個裝置不是同一個 execution target</a><a href="#section-2">一個最小卸載成本模型</a><a href="#section-3">Shared buffer 要回答四個問題</a><a href="#section-4">XRT 與 HSA 的邊界</a><a href="#section-5">算子放在哪裡：先當假說</a><a href="#section-6">共享 DRAM 的競爭與測量</a><a href="#references">來源與延伸</a></nav><article class="article-body"><h2 id="section-1">三個裝置不是同一個 execution target</h2>
+<p>Strix Halo 的 CPU、gfx1151 GPU 與 AIE2P NPU 可以共享系統記憶體資源，但各自有不同的程式模型、指令、runtime 與完成通知。HIP binary 不能直接交給 NPU；能在 CPU 看到同一 virtual address 也不代表對所有裝置都是可用的 handle。<a href="https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/README.md">Triton-XDNA README</a> 對 XRT、HSA 與 shared buffers 分別規範。</p>
+<h2 id="section-2">一個最小卸載成本模型</h2>
+<p>假設一段 GPU 工作耗時 t_gpu；改到 NPU 的完整替代成本為：</p>
+<button aria-label="複製程式碼" class="copy-code" type="button">複製</button><pre tabindex="0"><code class="language-text">t_replace = t_export_or_map + t_convert + t_npu
+          + t_sync + t_import_or_consume + t_fallback
+只有 t_replace &lt; t_gpu 才可能單段受益
+</code></pre>
+<p>這是無重疊的簡化估算。真正 pipeline 需分析 critical path，不能把可重疊成本與不可重疊成本一律相加或一律忽略。若 NPU 讓 GPU 同時做其他有效工作，還要比較整個 graph 的 makespan，而非局部算子速度。</p>
+<h2 id="section-3">Shared buffer 要回答四個問題</h2>
+<ol>
+<li><strong>位址與映射</strong>：配置者是誰，哪個 runtime 提供每個裝置的 handle？</li>
+<li><strong>可見性與順序</strong>：producer 完成後，consumer 如何等待並看見最新資料？</li>
+<li><strong>生命週期</strong>：所有裝置完成前不能回收、重用或解除映射。</li>
+<li><strong>表示法</strong>：相同 pages 上的 layout、dtype、padding 是否適合兩邊？</li>
+</ol>
+<p>Zero-copy 通常意指避免一份 tensor 的 staging copy，不表示沒有 DMA、DRAM traffic、cache maintenance、映射成本或同步。以 <code>shared</code> API 的 dispatch 計數確認 in-place / staged，再量端到端；不要只看函式名有 zero_copy 就當作達成。</p>
+<h2 id="section-4">XRT 與 HSA 的邊界</h2>
+<p>固定版本 README 提到兩種 NPU runtime 與對應 artifacts；HSA 路徑需要 AIE-capable ROCR，不能因為已安裝可跑 gfx1151 的 ROCm 就推論也能派送 AIE kernel。PyTorch 可能先載入另一份 libhsa-runtime，造成同 process ABI/功能不匹配。這是應在隔離環境裡查核的相容性問題，<strong>不是本 Wiki 要求你修改現有 GPU 服務</strong>。<a href="runtime.html">runtime 條目</a> 有更完整的核對方式。</p>
+<h2 id="section-5">算子放在哪裡：先當假說</h2>
+<div aria-label="可橫向捲動的資料表" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>工作</th>
+<th>合理的待測候選</th>
+<th>為何不能預先下結論</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>大 MLP / projection</td>
+<td>NPU dense matmul</td>
+<td>padding、dispatch、共享頻寬可能抵消</td>
+</tr>
+<tr>
+<td>Fused attention</td>
+<td>現有 GPU kernel</td>
+<td>NPU mapping 是否完整需另外驗證</td>
+</tr>
+<tr>
+<td>Tiny decode op</td>
+<td>GPU 保留或融合</td>
+<td>跨裝置一次 round trip 可能更貴</td>
+</tr>
+<tr>
+<td>Tokenization / sampling</td>
+<td>Host 控制</td>
+<td>CPU 工作不是「全 NPU」宣稱中可忽略的部分</td>
+</tr>
+</tbody>
+</table></div>
+<p><a href="https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/qwen2_5/model.py">Qwen 範例</a> 的 npu / hetero / hetero-fast 是具體 routing choices，不是各 workload 的最佳性證明。NPU 模式內仍有 CPU 工作；hetero-fast decode 回到 GPU。把模式名稱和實際 per-op 執行分開記錄。</p>
+<h2 id="section-6">共享 DRAM 的競爭與測量</h2>
+<p>同時跑 GPU 和 NPU 可能競爭 DRAM 與功耗預算，不應把兩邊獨立跑的 bandwidth 或 peak 算力直接相加。需量相同整體 workload 的 latency、energy、device residency、fallback 與記憶體峰值。改善圖分割時，優先合併相鄰子圖、延長 buffer 重用生命週期，避免每一個小 op 都跨裝置往返。</p></article><section id="references" class="references"><h2>來源與查核範圍</h2><ol><li><a href="https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/README.md">Triton-XDNA README</a><span>實驗性 compiler；上游效能數字不代表本機量測。</span><small>https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/README.md</small></li><li><a href="https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/qwen2_5/model.py">Qwen2.5 model.py</a><span>固定 source snapshot；裝置分支必須以實際程式為準，未在本機執行。</span><small>https://github.com/amd/Triton-XDNA/blob/5c33df1263f29de30f71616780c2e8a88e623782/examples/qwen2_5/model.py</small></li><li><a href="https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/docs/Devices.md">NPU device models</a><span>裝置型號與 partition 描述，不能直接推出效能。</span><small>https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/docs/Devices.md</small></li><li><a href="https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_guide/core_data_memory.md">Core data memory guide</a><span>SRAM 配置、bank 與 linker context。</span><small>https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_guide/core_data_memory.md</small></li></ol></section><div class="link-panels"><section><h2>接著閱讀</h2><div class="related-links"><a href="runtime.html">執行期與共享緩衝：格式、ABI、可見性</a><a href="synchronization.html">同步：鎖、背壓、停頓與死鎖</a><a href="prefill-decode.html">Prefill 與 decode：兩個不同的效能問題</a><a href="qwen-case.html">Qwen2.5 案例：CPU＋NPU、GPU 與異質路由</a><a href="performance.html">效能模型：容量、Roofline 與端到端下界</a></div></section><section><h2>哪些條目連到這裡？</h2><div class="related-links"><a href="system.html">XDNA2 系統：空間資料流與 NPU2 分區</a><a href="runtime.html">執行期與共享緩衝：格式、ABI、可見性</a><a href="llm-graph.html">LLM 計算圖：算子、狀態與裝置邊界</a><a href="attention.html">Attention：算子可拆，不代表整體已能在 NPU 跑</a><a href="prefill-decode.html">Prefill 與 decode：兩個不同的效能問題</a><a href="performance.html">效能模型：容量、Roofline 與端到端下界</a><a href="glossary.html">術語辭典：同一個字，在不同層可能不同意思</a></div></section></div><a class="back-top" href="#main">回到本文頂端 ↑</a></main></div><footer class="footer">XDNA 2 / AIE2P · 繁體中文知識庫 · 來源快照 2026-09-12<br>公開文件與固定版本原始碼查核，不是完整保密 ISA 手冊；未執行 NPU 實驗。<a href="wiki-method.html">維護方法與證據界線</a> · <a href="guide/index.html">原始長篇指南</a></footer></body></html>
