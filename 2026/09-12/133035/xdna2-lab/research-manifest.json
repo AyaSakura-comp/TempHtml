@@ -1,0 +1,182 @@
+{
+  "captured_at": "2026-09-12 13:03:29 +0800 CST",
+  "scope": "source and document acquisition only; not installed, built or executed on NPU",
+  "repositories": [
+    {
+      "name": "Triton-XDNA",
+      "path": "sources/Triton-XDNA",
+      "url": "https://github.com/amd/Triton-XDNA.git",
+      "commit": "5c33df1263f29de30f71616780c2e8a88e623782",
+      "scope": "shallow checkout; submodule initialization recorded below",
+      "submodules": [
+        "142586f90aac9b917af1081e4697b085027e13b2 third_party/triton (142586f)",
+        "-bb06016e8acbb9cacf21d1a6833397ffc4675fef third_party/triton-windows",
+        " 0c27923cbcb51f1565ae39c2de0e2245babb6067 third_party/triton_shared (0c27923)"
+      ]
+    },
+    {
+      "name": "aie_api",
+      "path": "sources/aie_api",
+      "url": "https://github.com/Xilinx/aie_api.git",
+      "commit": "bec000fd312b407c61f25ef86fd582042e42d28a",
+      "scope": "shallow checkout; submodule initialization recorded below",
+      "submodules": []
+    },
+    {
+      "name": "iree-amd-aie",
+      "path": "sources/iree-amd-aie",
+      "url": "https://github.com/nod-ai/iree-amd-aie.git",
+      "commit": "fddfec1be6ceefbdb890079d957947dfa1fe0848",
+      "scope": "shallow checkout; submodule initialization recorded below",
+      "submodules": [
+        "-a9fdf618ceba32d28bbf6715a5ee627a51a74b24 third_party/XRT",
+        "-a6196ebd905ceaf92cabc2e594017fa11b9e4323 third_party/aie-rt",
+        "-92e09bf37ea17d7b1f0e102a2548f27fb768651c third_party/bootgen",
+        "-26083307b8753a11870b8caf590afea15c9429fa third_party/iree",
+        "-ca2448548d66d7e8e05bacb9e81e7df48a9ef729 third_party/mlir-air",
+        "-0e04e101507df752500093ff4b04cce5a898abaa third_party/openssl"
+      ]
+    },
+    {
+      "name": "llvm-aie",
+      "path": "sources/llvm-aie",
+      "url": "https://github.com/Xilinx/llvm-aie.git",
+      "commit": "386ca5c6634a84bb224b7248e79df8edabf0722f",
+      "scope": "shallow sparse: llvm/lib/Target/AIE, llvm/docs, clang/lib/Headers/aie2p and top-level metadata; other blobs on demand",
+      "submodules": []
+    },
+    {
+      "name": "mlir-aie",
+      "path": "sources/mlir-aie",
+      "url": "https://github.com/Xilinx/mlir-aie.git",
+      "commit": "0ed8e7e477fd9094acee8dada7ab81604a7fb07a",
+      "scope": "shallow checkout; submodule initialization recorded below",
+      "submodules": [
+        "-d1b317cae9f96462faafc6583c26a2ea6693ddc9 cmake/modulesXilinx",
+        "-12db223623433fda5981fe85308878d0e390fcc9 platforms/boards",
+        " 8849e208bdcc533b20a0ed3f95c1ce961dee9c3a third_party/aie-rt (8849e20)",
+        " bec000fd312b407c61f25ef86fd582042e42d28a third_party/aie_api (heads/main)",
+        " e576e5e1e227a74c31e54607623c1bb7f38eec12 third_party/bootgen (e576e5e)"
+      ]
+    },
+    {
+      "name": "mlir-air",
+      "path": "sources/mlir-air",
+      "url": "https://github.com/Xilinx/mlir-air.git",
+      "commit": "ff95a9b35b692b4cfbdf1d52bf69e6ffe01facde",
+      "scope": "shallow checkout; submodule initialization recorded below",
+      "submodules": []
+    }
+  ],
+  "documents": [
+    {
+      "path": "documents/amd-hotchips2024-xdna2.pdf",
+      "url": "https://hc2024.hotchips.org/assets/program/conference/day2/24_HC2024.AMD.Cohen.Subramony.final.pdf",
+      "bytes": 1722658,
+      "sha256": "6f94eb92a4c44ad92db00740aafab5721b3a100a135948ba7d1dacc544046afa"
+    },
+    {
+      "path": "documents/iron-paper-2504.18430.pdf",
+      "url": "https://arxiv.org/pdf/2504.18430",
+      "bytes": 869717,
+      "sha256": "7ddb45031723ef3542a729d9184bcd0c02f32b24ddfb9c9644d3b695731449f1"
+    },
+    {
+      "path": "documents/mlir-air-paper-2510.14871.pdf",
+      "url": "https://arxiv.org/pdf/2510.14871",
+      "bytes": 1306270,
+      "sha256": "a4963277fa31d3aba01fe55f7f6c5ce24d15af0a2dd6ff9f4de7194bfd01272b"
+    },
+    {
+      "path": "documents/gemm-paper-2512.13282.pdf",
+      "url": "https://arxiv.org/pdf/2512.13282",
+      "bytes": 3887570,
+      "sha256": "5f25a44479e83348bb591974a8429b2d65db53b8fe4eaf7bfce907074f815f93"
+    },
+    {
+      "path": "documents/aie-api-mmul.html",
+      "url": "https://xilinx.github.io/aie_api/group__group__mmul.html",
+      "bytes": 101227,
+      "sha256": "f4cec07800ea4a7a5d7fecd22dc0c214328d14fdacfe09245881b814eab0e614"
+    },
+    {
+      "path": "documents/triton-dashboard.html",
+      "url": "https://amd.github.io/Triton-XDNA/",
+      "bytes": 16926,
+      "sha256": "5dd7f5952f43df844addbb3f35ea0a2bc9f25200b8216c17faf411442936e18f"
+    },
+    {
+      "path": "documents/mlir-air-paper.html",
+      "url": "https://arxiv.org/html/2510.14871v1",
+      "bytes": 1317134,
+      "sha256": "17b98db200db632727592dbb20e0f57ccfcb8d099411e7350cfbd9917f675855"
+    },
+    {
+      "path": "documents/gemm-paper.html",
+      "url": "https://arxiv.org/html/2512.13282v1",
+      "bytes": 421413,
+      "sha256": "b7cb9b1779b65621d7d0ed62c17b32c100b4e0f850c7861c5f3d3c9297f1af19"
+    },
+    {
+      "path": "documents/Devices.md",
+      "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/docs/Devices.md",
+      "bytes": 3744,
+      "sha256": "1081454f92b5566eb2842e004c5106f001a575c7187faf65224d91284d2b647d"
+    },
+    {
+      "path": "documents/xdna-architecture.md",
+      "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/skills/aie-code-creator/references/architecture.md",
+      "bytes": 7415,
+      "sha256": "fc6d8c5ed23ea5f803ca3d50bfb35d77fb79864e9951eafae0da77ac8bc09bad"
+    },
+    {
+      "path": "documents/kernel-intrinsics.md",
+      "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/skills/aie-code-creator/references/kernel_intrinsics.md",
+      "bytes": 9032,
+      "sha256": "1a09dcec343b2492a37da0c78f2f0273552a166ca0d4963dc79bec54d1e5bec1"
+    },
+    {
+      "path": "documents/compilation-stages.md",
+      "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_guide/compilation_stages.md",
+      "bytes": 20701,
+      "sha256": "571c81c6425988f3b1ade49b342fe885968733bf0c8c84d653fe4901e377fa6e"
+    },
+    {
+      "path": "documents/whole-array-matmul.md",
+      "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_examples/basic/matrix_multiplication/whole_array/README.md",
+      "bytes": 25047,
+      "sha256": "d721d643c1c7d7c4b689e81ebfccc4629550f07af97d074822fd03d2711ba4e2"
+    },
+    {
+      "path": "documents/core-data-memory.md",
+      "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_guide/core_data_memory.md",
+      "bytes": 12965,
+      "sha256": "b6a51d4007c59622080c70a3af75cdb021896dd44470238d3332325596072142"
+    },
+    {
+      "path": "documents/peano-architecture.md",
+      "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/README.md",
+      "bytes": 6113,
+      "sha256": "0e254ba41e4fa73f5ae144973c7d1b415d4fb62be703ad836803638abf6561df"
+    },
+    {
+      "path": "documents/peano-performance-guide.md",
+      "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/PERF_OPT_GUIDE.md",
+      "bytes": 55992,
+      "sha256": "c00c7df286538ef0f62802c497a358e714d9ea66387997a3d0879b1fd42f0714"
+    },
+    {
+      "path": "documents/programming-guide-index.md",
+      "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_guide/README.md",
+      "bytes": 14434,
+      "sha256": "02db5d73f774f34c57ad1138caed206bf59f7beff684dd75a65f05aff303a4f1"
+    }
+  ],
+  "limitations": [
+    "LLVM-AIE sparse checkout, not complete offline LLVM source tree.",
+    "Independently captured repository heads are not a tested compatible build lock.",
+    "Only selected Linux submodules of Triton-XDNA and MLIR-AIE initialized; all others recorded as uninitialized.",
+    "AM027 portal yielded only loading page, not an architecture manual download.",
+    "HTML documents are content snapshots, not complete offline website mirrors."
+  ]
+}
