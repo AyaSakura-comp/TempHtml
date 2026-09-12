@@ -83,6 +83,7 @@ program 放核心程式；data 工作區容納執行時資料。不可把兩者�
 
 ## 反向連結
 - [system](system.md)
+- [tile-microarchitecture](tile-microarchitecture.md)
 - [compute](compute.md)
 - [dma](dma.md)
 - [synchronization](synchronization.md)

@@ -67,6 +67,9 @@ TOPS 使用十進位 10¹² operations/s；GB/s 使用 10⁹ bytes/s；KiB/MiB/G
 
 ## 反向連結
 - [compute](compute.md)
+- [vliw-pipeline](vliw-pipeline.md)
+- [instruction-cycles](instruction-cycles.md)
+- [software-pipelining](software-pipelining.md)
 - [mma](mma.md)
 - [runtime](runtime.md)
 - [qwen-case](qwen-case.md)

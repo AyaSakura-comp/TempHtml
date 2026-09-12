@@ -82,6 +82,9 @@ Triton 的 [Triton 的 AIR 版本鎖](https://github.com/amd/Triton-XDNA/blob/5c
 - [debug](debug.md)
 
 ## 反向連結
+- [vliw-pipeline](vliw-pipeline.md)
+- [instruction-cycles](instruction-cycles.md)
+- [software-pipelining](software-pipelining.md)
 - [isa](isa.md)
 - [iron](iron.md)
 - [triton](triton.md)

@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="整理可用的事件識別欄位，說明如何區分資料相依、memory stall 與資料流阻塞。"><meta name="color-scheme" content="light"><title>Events 與可觀測微架構：stall、bank conflict、counters 與 trace — XDNA 2 LLM Wiki</title><link rel="icon" href="assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="assets/wiki.css"><script src="assets/model.js" defer></script><script src="assets/search-data.js?v=3af1ff7384b4" defer></script><script src="assets/app.js" defer></script></head>
+<body><a class="skip" href="#main">跳到正文</a><header class="topbar"><a class="wordmark" href="index.html"><span class="seal" aria-hidden="true">文</span><span>XDNA 2 <b>LLM WIKI</b></span></a><nav class="header-links" aria-label="常用連結"><a href="index.html#search">搜尋</a><a href="glossary.html">術語</a><a href="llms.txt">LLM 索引</a></nav></header><div class="layout"><aside class="sidebar" aria-label="知識庫導覽"><details id="nav-menu"><summary>全站目錄 <span>＋</span></summary><nav class="navtree"><div class="nav-group"><h3>架構</h3><a href="spec-index.html">XDNA2 規格總索引：ISA、cycles、VLIW、tile 與互連</a><a href="system.html">XDNA2 系統：空間資料流與 NPU2 分區</a><a href="tile-microarchitecture.html">Tile 微架構：SRAM、地址視窗、banks 與三種 tile</a><a href="compute.html">計算核心：scalar、SIMD、VLIW 與累加器</a><a href="isa-registers.html">AIE2P 暫存器：類別、寬度、編碼與重疊視圖</a><a href="vliw-pipeline.html">VLIW 與外露管線：bundle 格式、scoreboard 與 hazard</a><a href="instruction-cycles.html">指令週期：完整 itinerary、操作數時點與旁路</a><a href="isa-encoding.html">AIE2P 編碼：16–128-bit VLIW、slot 欄位與立即數</a><a href="isa-instructions.html">AIE2P 指令族：純量、向量、搬移、控制、串流與矩陣</a><a href="memory.html">記憶體：program、data、banks 與局部地址</a><a href="interconnect.html">Interconnect 規格：switch ports、packet routing 與 cascade</a><a href="dma.html">DMA：描述子、通道與資料布局</a><a href="dma-registers.html">DMA / MMIO 規格：BD 欄位、locks、burst 與完整 register 索引</a><a href="synchronization.html">同步：鎖、背壓、停頓與死鎖</a><a href="events-debug.html" aria-current="page">Events 與可觀測微架構：stall、bank conflict、counters 與 trace</a><a href="isa.html">ISA 閱讀：從 AIE2P header 追到後端原語</a><a href="spec-gaps.html">規格缺口與衝突：哪些已知，哪些不能由 compiler 推成 silicon</a></div><div class="nav-group"><h3>數值</h3><a href="datatypes.html">數值型別：INT4、BF16、BFP16 與 FP32 的分層支援</a><a href="mma.html">矩陣乘加：原語、API 包裝與 LLM microtile</a><a href="quantization.html">LLM 量化：格式、數學與 kernel 是三件事</a></div><div class="nav-group"><h3>程式設計</h3><a href="software-pipelining.html">軟體管線化：II、recurrence、resource 與迴圈總成本</a><a href="compiler.html">編譯器分工：從資料流到 XDNA2 產物</a><a href="iron.html">IRON：以 Worker 與 ObjectFifo 設計資料流</a><a href="triton.html">Triton-XDNA：算子、Transform 與支援證據</a><a href="runtime.html">執行期與共享緩衝：格式、ABI、可見性</a><a href="deployment.html">LLM 部署生態：研究 compiler 與成品 runtime</a><a href="debug.html">除錯與證據分級：不要把 fallback 當 NPU 成功</a></div><div class="nav-group"><h3>LLM推論</h3><a href="llm-graph.html">LLM 計算圖：算子、狀態與裝置邊界</a><a href="qwen-case.html">Qwen2.5 案例：CPU＋NPU、GPU 與異質路由</a><a href="gemm.html">GEMM：把矩陣切成可搬、可算的工作</a><a href="attention.html">Attention：算子可拆，不代表整體已能在 NPU 跑</a><a href="kv-cache.html">KV cache：容量、頻寬與生命週期</a><a href="prefill-decode.html">Prefill 與 decode：兩個不同的效能問題</a><a href="heterogeneous.html">CPU × GPU × NPU：分工與資料所有權</a></div><div class="nav-group"><h3>驗證與知識庫</h3><a href="performance.html">效能模型：容量、Roofline 與端到端下界</a><a href="validation.html">正確性與效能驗證：一套不把 fallback 當成功的流程</a><a href="glossary.html">術語辭典：同一個字，在不同層可能不同意思</a><a href="sources.html">來源地圖、證據等級與未解問題</a><a href="wiki-method.html">LLM Wiki 使用與維護：來源 → 條目 → 連結</a></div></nav></details></aside><main id="main" tabindex="-1"><div class="breadcrumbs"><a href="index.html">首頁</a> / 架構</div><div class="article-meta"><span>來源規格／缺口標示</span><span>來源快照 2026-09-12</span><a href="markdown/events-debug.md" download>Markdown ↓</a></div><h1>Events 與可觀測微架構：stall、bank conflict、counters 與 trace</h1><p class="lede">整理可用的事件識別欄位，說明如何區分資料相依、memory stall 與資料流阻塞。</p><div class="evidence-note">本文區分公開來源、原始碼查核與工程推導。未在本機執行 compiler 或 NPU；可用型別、可編譯、可派送、無 fallback、效能達標是不同證據。</div><nav class="toc" aria-label="本頁目錄"><strong>本頁導覽</strong><a href="#section-1">Event ID 絕對不是 cycle 數</a><a href="#section-2">資料相依與外部阻塞分開診斷</a><a href="#section-3">DMA starvation / backpressure / lock</a><a href="#section-4">Bank conflict 命名與 allocator 不一致</a><a href="#section-5">Counter / trace configuration 面</a><a href="#section-6">建議的驗證紀錄格式</a><a href="#references">來源與延伸</a></nav><article class="article-body"><h2 id="section-1">Event ID 絕對不是 cycle 數</h2>
+<p><a href="https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/events/xaie_events_aie2p.h#L50-L76">AIE2P event header</a>列出以下core事件：</p>
+<div aria-label="可橫向捲動的資料表" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>名稱後綴</th>
+<th>常數值</th>
+<th>所代表的分類</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GROUP_STALL</td>
+<td>22</td>
+<td>stall group</td>
+</tr>
+<tr>
+<td>MEMORY_STALL</td>
+<td>23</td>
+<td>記憶體等待</td>
+</tr>
+<tr>
+<td>STREAM_STALL</td>
+<td>24</td>
+<td>stream等待</td>
+</tr>
+<tr>
+<td>CASCADE_STALL</td>
+<td>25</td>
+<td>cascade等待</td>
+</tr>
+<tr>
+<td>LOCK_STALL</td>
+<td>26</td>
+<td>lock等待</td>
+</tr>
+<tr>
+<td>ECC_ERROR_STALL</td>
+<td>30</td>
+<td>ECC error stall</td>
+</tr>
+<tr>
+<td>ECC_SCRUBBING_STALL</td>
+<td>31</td>
+<td>ECC scrubbing stall</td>
+</tr>
+<tr>
+<td>INSTR_STREAM_GET / PUT</td>
+<td>40 / 41</td>
+<td>stream指令事件</td>
+</tr>
+<tr>
+<td>INSTR_CASCADE_GET / PUT</td>
+<td>42 / 43</td>
+<td>cascade指令事件</td>
+</tr>
+</tbody>
+</table></div>
+<p>數值23表示來源常數的識別值，<strong>不是memory latency=23 cycles</strong>。要得到時間，必須先知道counter mode、啟停／reset、clock domain、事件是否逐cycle維持與採樣條件。本次沒有配置或執行counter。</p>
+<h2 id="section-2">資料相依與外部阻塞分開診斷</h2>
+<p><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/README.md#L29-L45">Peano README</a>以exposed pipeline說明：compiler安排指令資料何時可讀，不靠一般CPU式相依interlock保護錯誤schedule。這不等於任何情況都不stall。Memory contention、lock、stream、cascade與ECC等待在runtime事件面均有不同分類。</p>
+<p>若MAC利用率低：先看loop中有多少VMAC與NOP，再看issue constraints和operand timing；若kernel停住：另看buffer protocol、DMA任務狀態與事件。不能從一個memory stall event便下結論某條LDA的基準latency錯了，也不能將stall total直接歸因給全部load instructions。</p>
+<h2 id="section-3">DMA starvation / backpressure / lock</h2>
+<p><a href="https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/events/xaie_events_aie2p.h#L187-L202">Core memory module events</a>將S2MM／MM2S的lock stall拆開，並列S2MM stream starvation與MM2S stream backpressure。工程上可把這些視為不同假設的觀察入口：S2MM等資料、MM2S下游收不進、或buffer條件不成立。<strong>事件名稱不是完整因果證明</strong>；需要同時間窗的producer/consumer狀態與route／BD配置佐證。</p>
+<p>對LLM，decode階段短工作可能主機dispatch佔比高，prefill則可能計算或搬移為主。Trace只看tile內kernel會漏掉host提交與queue等待，因此量測報告應把start/end boundary畫清楚。</p>
+<h2 id="section-4">Bank conflict 命名與 allocator 不一致</h2>
+<p><a href="https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/events/xaie_events_aie2p.h#L235-L255">Core memory bank events</a>有0..7，<a href="https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/events/xaie_events_aie2p.h#L527-L543">mem tile</a>有0..15，分別是8與16個命名索引；<a href="https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/include/aie/Dialect/AIE/IR/AIETargetModel.h#L830-L835">compiler getNumBanks</a>卻是4/8個allocator partitions。這是需要保留的層級差別，不把少一半的配置數誤當silicon bank總數。無同代mapping表時，不從event i推斷地址bit i。</p>
+<h2 id="section-5">Counter / trace configuration 面</h2>
+<p><a href="https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/global/xaie2pgbl_reginit.c#L2467-L2536">Runtime PerfMod</a>列memory/core的MaxCounterVal=2/4、PL=2、memtile=4；這是runtime的counter數量上限參數，不是counter最大可數值2或4，更不是2-bit／4-bit計時器。counter寄存器field WIDTH應另在 <a href="spec-data/registers-events.json">regdb</a>查詢。Trace結構的 <a href="https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/global/xaie2pgbl_reginit.c#L4116-L4197">NumTraceSlotIds=8、NumEventsPerSlot=4</a>是配置介面欄位；不能乘成32條同時全速輸出的physical trace links。</p>
+<p>Trace buffer容量、packet輸出、共享DMA與讀回本身可能影響觀測。事件配置需透過正確runtime/platform權限；本Wiki只給來源與解讀，不要求使用者直接寫debug registers。</p>
+<h2 id="section-6">建議的驗證紀錄格式</h2>
+<button aria-label="複製程式碼" class="copy-code" type="button">複製</button><pre tabindex="0"><code class="language-text">architecture / compiler_SHA / runtime_SHA / partition
+opcode_variant / itinerary / operand_edge
+input_dtype / shape / alignment / bank_placement
+counter_module / selected_event / start_stop_reset / interval
+core_cycles / measured_clock_if_known / host_elapsed_time
+DMA_bytes / completion_boundary / stalls / trace_overhead
+</code></pre>
+<p>這是未執行的量測設計。沒有測得clock就保留cycles，不用SKU行銷TOPS反推時脈再稱為測量；沒有完整host timeline就不要報端到端tokens/s。完整來源event名稱與field數值在資料集保留，未解的同步／時鐘／counter overflow條件須列為限制。</p></article><section id="references" class="references"><h2>來源與查核範圍</h2><ol><li><a href="https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/events/xaie_events_aie2p.h#L50-L76">AIE2P event header</a><span>固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。</span><small>https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/events/xaie_events_aie2p.h#L50-L76</small></li><li><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/README.md#L29-L45">Peano README</a><span>固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。</span><small>https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/README.md#L29-L45</small></li><li><a href="https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/events/xaie_events_aie2p.h#L187-L202">Core memory module events</a><span>固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。</span><small>https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/events/xaie_events_aie2p.h#L187-L202</small></li><li><a href="https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/events/xaie_events_aie2p.h#L235-L255">Core memory bank events</a><span>固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。</span><small>https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/events/xaie_events_aie2p.h#L235-L255</small></li><li><a href="https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/events/xaie_events_aie2p.h#L527-L543">mem tile</a><span>固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。</span><small>https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/events/xaie_events_aie2p.h#L527-L543</small></li><li><a href="https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/include/aie/Dialect/AIE/IR/AIETargetModel.h#L830-L835">compiler getNumBanks</a><span>固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。</span><small>https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/include/aie/Dialect/AIE/IR/AIETargetModel.h#L830-L835</small></li><li><a href="https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/global/xaie2pgbl_reginit.c#L2467-L2536">Runtime PerfMod</a><span>固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。</span><small>https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/global/xaie2pgbl_reginit.c#L2467-L2536</small></li><li><a href="https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/global/xaie2pgbl_reginit.c#L4116-L4197">NumTraceSlotIds=8、NumEventsPerSlot=4</a><span>固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。</span><small>https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/global/xaie2pgbl_reginit.c#L4116-L4197</small></li></ol></section><div class="link-panels"><section><h2>接著閱讀</h2><div class="related-links"><a href="instruction-cycles.html">指令週期：完整 itinerary、操作數時點與旁路</a><a href="vliw-pipeline.html">VLIW 與外露管線：bundle 格式、scoreboard 與 hazard</a><a href="dma-registers.html">DMA / MMIO 規格：BD 欄位、locks、burst 與完整 register 索引</a><a href="debug.html">除錯與證據分級：不要把 fallback 當 NPU 成功</a><a href="spec-gaps.html">規格缺口與衝突：哪些已知，哪些不能由 compiler 推成 silicon</a></div></section><section><h2>哪些條目連到這裡？</h2><div class="related-links"><a href="spec-index.html">XDNA2 規格總索引：ISA、cycles、VLIW、tile 與互連</a><a href="interconnect.html">Interconnect 規格：switch ports、packet routing 與 cascade</a><a href="dma-registers.html">DMA / MMIO 規格：BD 欄位、locks、burst 與完整 register 索引</a></div></section></div><a class="back-top" href="#main">回到本文頂端 ↑</a></main></div><footer class="footer">XDNA 2 / AIE2P · 繁體中文知識庫 · 來源快照 2026-09-12<br>公開文件與固定版本原始碼查核，不是完整保密 ISA 手冊；未執行 NPU 實驗。<a href="wiki-method.html">維護方法與證據界線</a> · <a href="guide/index.html">原始長篇指南</a></footer></body></html>

@@ -83,5 +83,6 @@ Result / unresolved gaps:
 - [deployment](deployment.md)
 - [performance](performance.md)
 - [debug](debug.md)
+- [spec-gaps](spec-gaps.md)
 - [sources](sources.md)
 - [wiki-method](wiki-method.md)

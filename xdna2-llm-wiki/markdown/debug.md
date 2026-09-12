@@ -95,6 +95,7 @@ python3 programming_examples/basic/vector_scalar_add/vector_scalar_add.py \
 ## 反向連結
 - [memory](memory.md)
 - [synchronization](synchronization.md)
+- [events-debug](events-debug.md)
 - [compiler](compiler.md)
 - [triton](triton.md)
 - [runtime](runtime.md)

@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="從抽象搬移操作下鑽到 AIE2P runtime 的 descriptors、field masks、地址單位與來源差異。"><meta name="color-scheme" content="light"><title>DMA / MMIO 規格：BD 欄位、locks、burst 與完整 register 索引 — XDNA 2 LLM Wiki</title><link rel="icon" href="assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="assets/wiki.css"><script src="assets/model.js" defer></script><script src="assets/search-data.js?v=3af1ff7384b4" defer></script><script src="assets/app.js" defer></script></head>
+<body><a class="skip" href="#main">跳到正文</a><header class="topbar"><a class="wordmark" href="index.html"><span class="seal" aria-hidden="true">文</span><span>XDNA 2 <b>LLM WIKI</b></span></a><nav class="header-links" aria-label="常用連結"><a href="index.html#search">搜尋</a><a href="glossary.html">術語</a><a href="llms.txt">LLM 索引</a></nav></header><div class="layout"><aside class="sidebar" aria-label="知識庫導覽"><details id="nav-menu"><summary>全站目錄 <span>＋</span></summary><nav class="navtree"><div class="nav-group"><h3>架構</h3><a href="spec-index.html">XDNA2 規格總索引：ISA、cycles、VLIW、tile 與互連</a><a href="system.html">XDNA2 系統：空間資料流與 NPU2 分區</a><a href="tile-microarchitecture.html">Tile 微架構：SRAM、地址視窗、banks 與三種 tile</a><a href="compute.html">計算核心：scalar、SIMD、VLIW 與累加器</a><a href="isa-registers.html">AIE2P 暫存器：類別、寬度、編碼與重疊視圖</a><a href="vliw-pipeline.html">VLIW 與外露管線：bundle 格式、scoreboard 與 hazard</a><a href="instruction-cycles.html">指令週期：完整 itinerary、操作數時點與旁路</a><a href="isa-encoding.html">AIE2P 編碼：16–128-bit VLIW、slot 欄位與立即數</a><a href="isa-instructions.html">AIE2P 指令族：純量、向量、搬移、控制、串流與矩陣</a><a href="memory.html">記憶體：program、data、banks 與局部地址</a><a href="interconnect.html">Interconnect 規格：switch ports、packet routing 與 cascade</a><a href="dma.html">DMA：描述子、通道與資料布局</a><a href="dma-registers.html" aria-current="page">DMA / MMIO 規格：BD 欄位、locks、burst 與完整 register 索引</a><a href="synchronization.html">同步：鎖、背壓、停頓與死鎖</a><a href="events-debug.html">Events 與可觀測微架構：stall、bank conflict、counters 與 trace</a><a href="isa.html">ISA 閱讀：從 AIE2P header 追到後端原語</a><a href="spec-gaps.html">規格缺口與衝突：哪些已知，哪些不能由 compiler 推成 silicon</a></div><div class="nav-group"><h3>數值</h3><a href="datatypes.html">數值型別：INT4、BF16、BFP16 與 FP32 的分層支援</a><a href="mma.html">矩陣乘加：原語、API 包裝與 LLM microtile</a><a href="quantization.html">LLM 量化：格式、數學與 kernel 是三件事</a></div><div class="nav-group"><h3>程式設計</h3><a href="software-pipelining.html">軟體管線化：II、recurrence、resource 與迴圈總成本</a><a href="compiler.html">編譯器分工：從資料流到 XDNA2 產物</a><a href="iron.html">IRON：以 Worker 與 ObjectFifo 設計資料流</a><a href="triton.html">Triton-XDNA：算子、Transform 與支援證據</a><a href="runtime.html">執行期與共享緩衝：格式、ABI、可見性</a><a href="deployment.html">LLM 部署生態：研究 compiler 與成品 runtime</a><a href="debug.html">除錯與證據分級：不要把 fallback 當 NPU 成功</a></div><div class="nav-group"><h3>LLM推論</h3><a href="llm-graph.html">LLM 計算圖：算子、狀態與裝置邊界</a><a href="qwen-case.html">Qwen2.5 案例：CPU＋NPU、GPU 與異質路由</a><a href="gemm.html">GEMM：把矩陣切成可搬、可算的工作</a><a href="attention.html">Attention：算子可拆，不代表整體已能在 NPU 跑</a><a href="kv-cache.html">KV cache：容量、頻寬與生命週期</a><a href="prefill-decode.html">Prefill 與 decode：兩個不同的效能問題</a><a href="heterogeneous.html">CPU × GPU × NPU：分工與資料所有權</a></div><div class="nav-group"><h3>驗證與知識庫</h3><a href="performance.html">效能模型：容量、Roofline 與端到端下界</a><a href="validation.html">正確性與效能驗證：一套不把 fallback 當成功的流程</a><a href="glossary.html">術語辭典：同一個字，在不同層可能不同意思</a><a href="sources.html">來源地圖、證據等級與未解問題</a><a href="wiki-method.html">LLM Wiki 使用與維護：來源 → 條目 → 連結</a></div></nav></details></aside><main id="main" tabindex="-1"><div class="breadcrumbs"><a href="index.html">首頁</a> / 架構</div><div class="article-meta"><span>來源規格／缺口標示</span><span>來源快照 2026-09-12</span><a href="markdown/dma-registers.md" download>Markdown ↓</a></div><h1>DMA / MMIO 規格：BD 欄位、locks、burst 與完整 register 索引</h1><p class="lede">從抽象搬移操作下鑽到 AIE2P runtime 的 descriptors、field masks、地址單位與來源差異。</p><div class="evidence-note">本文區分公開來源、原始碼查核與工程推導。未在本機執行 compiler 或 NPU；可用型別、可編譯、可派送、無 fallback、效能達標是不同證據。</div><nav class="toc" aria-label="本頁目錄"><strong>本頁導覽</strong><a href="#section-1">Register database 的涵蓋範圍</a><a href="#section-2">三種 DMA 資源比較</a><a href="#section-3">描述子位元欄位與單位</a><a href="#section-4">Burst units：兩份來源看起來不同</a><a href="#section-5">MMIO layout 與一般欄位解碼</a><a href="#section-6">Lock 與 buffer 生命週期</a><a href="#references">來源與延伸</a></nav><article class="article-body"><h2 id="section-1">Register database 的涵蓋範圍</h2>
+<p><a href="https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/global/xaie2pgbl_params.h#L1-L55">xaie2pgbl_params.h</a>說明它由regdb headers產生；<a href="https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/events/xaie_events_aie2p.h#L1-L65">events header</a>另外列事件常數。本Wiki完整擷取兩檔具值的 <code>XAIE2PGBL_*</code>／<code>XAIE2P_EVENTS_*</code> object-like宏，提供 <a href="spec-data/registers-events.json">registers-events.json</a>。資料含原始expression、decimal string（若是單一literal）、file/line/source URL、SHA256；未eval任意C expression，也未觸碰hardware。</p>
+<p><strong>宏數不等於register數</strong>：一個register的offset、width、mask、各field的LSB/WIDTH/MASK/DEFVAL各是不同records。128-bit mask不可經JavaScript Number中轉。所有register包括debug/error-injection名稱，都只是文件索引；存在offset不代表適合在運作中讀寫，沒有提供直接MMIO寫入腳本。</p>
+<h2 id="section-2">三種 DMA 資源比較</h2>
+<div aria-label="可橫向捲動的資料表" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>資源</th>
+<th>Core</th>
+<th>Mem tile</th>
+<th>Shim</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MM2S channels</td>
+<td>2</td>
+<td>6</td>
+<td>2</td>
+</tr>
+<tr>
+<td>S2MM channels</td>
+<td>2</td>
+<td>6</td>
+<td>2</td>
+</tr>
+<tr>
+<td>BDs</td>
+<td>16</td>
+<td>48</td>
+<td>16</td>
+</tr>
+<tr>
+<td>ND address dimensions</td>
+<td>3</td>
+<td>4</td>
+<td>3</td>
+</tr>
+<tr>
+<td>本地 lock objects</td>
+<td>16</td>
+<td>64</td>
+<td>16</td>
+</tr>
+<tr>
+<td>Runtime DMA lock-ID空間</td>
+<td>16</td>
+<td>192（鄰接視窗）</td>
+<td>16</td>
+</tr>
+<tr>
+<td>BD stride</td>
+<td>0x20 bytes</td>
+<td>0x20 bytes</td>
+<td>0x20 bytes</td>
+</tr>
+</tbody>
+</table></div>
+<p>對照 <a href="https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/global/xaie2pgbl_reginit.c#L1658-L1697">Mem DMA</a>、<a href="https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/global/xaie2pgbl_reginit.c#L1896-L1935">Core DMA</a>、<a href="https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/global/xaie2pgbl_reginit.c#L2149-L2188">Shim DMA</a>。Mem runtime的NumLocks=192不是192個本地lock：獨立<a href="https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/global/xaie2pgbl_reginit.c#L2393-L2460">LockMod</a>給64，compiler把west/self/east分到0/64/128基底，見 <a href="https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/lib/Dialect/AIE/IR/AIETargetModel.cpp#L1554-L1577">local index</a>。可達性仍受鄰居存在與tile邊界限制。</p>
+<h2 id="section-3">描述子位元欄位與單位</h2>
+<p><a href="https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/include/aie/Dialect/AIE/IR/AIETargetModel.h#L771-L816">Target model</a>列出：</p>
+<div aria-label="可橫向捲動的資料表" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Core bits</th>
+<th>Mem bits</th>
+<th>Shim bits</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Buffer_Length</td>
+<td>14</td>
+<td>17</td>
+<td>32</td>
+</tr>
+<tr>
+<td>Wrap</td>
+<td>8</td>
+<td>10</td>
+<td>10</td>
+</tr>
+<tr>
+<td>Step</td>
+<td>13</td>
+<td>17</td>
+<td>20</td>
+</tr>
+<tr>
+<td>Iteration_Wrap</td>
+<td>6</td>
+<td>6</td>
+<td>6</td>
+</tr>
+</tbody>
+</table></div>
+<p>模型address-generation granularity=32 bits，見 <a href="https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/include/aie/Dialect/AIE/IR/AIETargetModel.h#L718-L730">宣告</a>。但上層tensor用元素、byte offset和lowering後的word field並不是同一單位；有些field是編碼值，不能不看轉換就把最大bit pattern當成API最大bytes。Mem BD0–23供偶數channel，24–47供奇數channel，見 <a href="https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/include/aie/Dialect/AIE/IR/AIETargetModel.h#L808-L820">channel accessibility</a>。剩餘BD不一定對當前channel可用。</p>
+<h2 id="section-4">Burst units：兩份來源看起來不同</h2>
+<p><a href="https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/lib/Dialect/AIE/IR/AIETargetModel.cpp#L1609-L1615">BaseNPU2 burst encoding</a>列encoding0/1/2/3對應64/128/256/512；runtime <a href="https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/dma/xaie_dma_aie2p.c#L27-L50">_XAie2P_AxiBurstLenCheck</a>接受4/8/16/32。這裡分別保留<strong>compiler length表</strong>與<strong>runtime BurstLen參數集合</strong>；兩者相差16可作追查單位的線索，不能只靠比值就宣稱所有stream bus都是128-bit。未追到caller轉換、beat定義與同一IP介面前，不寫512 cycles或512 beats。</p>
+<h2 id="section-5">MMIO layout 與一般欄位解碼</h2>
+<p><a href="https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/lib/Dialect/AIE/IR/AIETargetModel.cpp#L826-L854">compiler BD address helper</a>在tile座標base上加core/shim <code>0x1D000 + bd*0x20</code>，mem <code>0xA0000 + bd*0x20</code>；原始碼本身保留core/shim共享base待hardware-team確認的註解，故這是helper現況，不是新硬體背書。column/row位移25/20亦是該模型值。</p>
+<p>一般欄位的<strong>純數學讀取</strong>是 <code>(register_value &amp; mask) &gt;&gt; lsb</code>，前提是取得的register值、位寬、讀取副作用與endianness已被正確處理。LSB/WIDTH/MASK資料可核對一致性，但不能由DEFVAL推論當前硬體狀態。MMIO offset不是使用者虛擬地址；本次不執行讀寫。</p>
+<h2 id="section-6">Lock 與 buffer 生命週期</h2>
+<p><a href="https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/global/xaie2pgbl_reginit.c#L2393-L2460">LockMod</a>的參數上下限是-64..63；這是API操作參數的model，不能只看到負數就推論buffer可用量真的變成負值。Acquire/release協定需追函式與channel；physical object count、可編碼operand範圍、目前counter value是不同東西。</p>
+<p>安全資料流先取得空buffer，DMA寫完才發佈ready，core消費完才歸還；反向傳輸亦須等最後讀取完成。Core stall、DMA lock stall、stream starvation、backpressure各有event，見 <a href="events-debug.html">events</a>。這些造成的等待不包含在單條算術指令的compiler operand latency內。</p></article><section id="references" class="references"><h2>來源與查核範圍</h2><ol><li><a href="https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/global/xaie2pgbl_params.h#L1-L55">xaie2pgbl_params.h</a><span>固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。</span><small>https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/global/xaie2pgbl_params.h#L1-L55</small></li><li><a href="https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/events/xaie_events_aie2p.h#L1-L65">events header</a><span>固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。</span><small>https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/events/xaie_events_aie2p.h#L1-L65</small></li><li><a href="https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/global/xaie2pgbl_reginit.c#L1658-L1697">Mem DMA</a><span>固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。</span><small>https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/global/xaie2pgbl_reginit.c#L1658-L1697</small></li><li><a href="https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/global/xaie2pgbl_reginit.c#L1896-L1935">Core DMA</a><span>固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。</span><small>https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/global/xaie2pgbl_reginit.c#L1896-L1935</small></li><li><a href="https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/global/xaie2pgbl_reginit.c#L2149-L2188">Shim DMA</a><span>固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。</span><small>https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/global/xaie2pgbl_reginit.c#L2149-L2188</small></li><li><a href="https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/global/xaie2pgbl_reginit.c#L2393-L2460">LockMod</a><span>固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。</span><small>https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/global/xaie2pgbl_reginit.c#L2393-L2460</small></li><li><a href="https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/lib/Dialect/AIE/IR/AIETargetModel.cpp#L1554-L1577">local index</a><span>固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。</span><small>https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/lib/Dialect/AIE/IR/AIETargetModel.cpp#L1554-L1577</small></li><li><a href="https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/include/aie/Dialect/AIE/IR/AIETargetModel.h#L771-L816">Target model</a><span>固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。</span><small>https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/include/aie/Dialect/AIE/IR/AIETargetModel.h#L771-L816</small></li><li><a href="https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/include/aie/Dialect/AIE/IR/AIETargetModel.h#L718-L730">宣告</a><span>固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。</span><small>https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/include/aie/Dialect/AIE/IR/AIETargetModel.h#L718-L730</small></li><li><a href="https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/include/aie/Dialect/AIE/IR/AIETargetModel.h#L808-L820">channel accessibility</a><span>固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。</span><small>https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/include/aie/Dialect/AIE/IR/AIETargetModel.h#L808-L820</small></li><li><a href="https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/lib/Dialect/AIE/IR/AIETargetModel.cpp#L1609-L1615">BaseNPU2 burst encoding</a><span>固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。</span><small>https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/lib/Dialect/AIE/IR/AIETargetModel.cpp#L1609-L1615</small></li><li><a href="https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/dma/xaie_dma_aie2p.c#L27-L50">_XAie2P_AxiBurstLenCheck</a><span>固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。</span><small>https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/dma/xaie_dma_aie2p.c#L27-L50</small></li><li><a href="https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/lib/Dialect/AIE/IR/AIETargetModel.cpp#L826-L854">compiler BD address helper</a><span>固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。</span><small>https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/lib/Dialect/AIE/IR/AIETargetModel.cpp#L826-L854</small></li></ol></section><div class="link-panels"><section><h2>接著閱讀</h2><div class="related-links"><a href="dma.html">DMA：描述子、通道與資料布局</a><a href="interconnect.html">Interconnect 規格：switch ports、packet routing 與 cascade</a><a href="tile-microarchitecture.html">Tile 微架構：SRAM、地址視窗、banks 與三種 tile</a><a href="events-debug.html">Events 與可觀測微架構：stall、bank conflict、counters 與 trace</a><a href="spec-gaps.html">規格缺口與衝突：哪些已知，哪些不能由 compiler 推成 silicon</a></div></section><section><h2>哪些條目連到這裡？</h2><div class="related-links"><a href="spec-index.html">XDNA2 規格總索引：ISA、cycles、VLIW、tile 與互連</a><a href="tile-microarchitecture.html">Tile 微架構：SRAM、地址視窗、banks 與三種 tile</a><a href="interconnect.html">Interconnect 規格：switch ports、packet routing 與 cascade</a><a href="events-debug.html">Events 與可觀測微架構：stall、bank conflict、counters 與 trace</a><a href="spec-gaps.html">規格缺口與衝突：哪些已知，哪些不能由 compiler 推成 silicon</a></div></section></div><a class="back-top" href="#main">回到本文頂端 ↑</a></main></div><footer class="footer">XDNA 2 / AIE2P · 繁體中文知識庫 · 來源快照 2026-09-12<br>公開文件與固定版本原始碼查核，不是完整保密 ISA 手冊；未執行 NPU 實驗。<a href="wiki-method.html">維護方法與證據界線</a> · <a href="guide/index.html">原始長篇指南</a></footer></body></html>

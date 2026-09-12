@@ -108,6 +108,12 @@ LLVM intrinsic → instruction pattern
 
 ## 反向連結
 - [compute](compute.md)
+- [isa-registers](isa-registers.md)
+- [vliw-pipeline](vliw-pipeline.md)
+- [instruction-cycles](instruction-cycles.md)
+- [software-pipelining](software-pipelining.md)
+- [isa-encoding](isa-encoding.md)
+- [isa-instructions](isa-instructions.md)
 - [datatypes](datatypes.md)
 - [mma](mma.md)
 - [glossary](glossary.md)

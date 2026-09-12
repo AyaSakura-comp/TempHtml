@@ -78,6 +78,7 @@ prefill 有較多 token 可併成矩陣工作，decode 常是較小的即時工�
 - [llm-graph](llm-graph.md)
 
 ## 反向連結
+- [tile-microarchitecture](tile-microarchitecture.md)
 - [compute](compute.md)
 - [memory](memory.md)
 - [dma](dma.md)

@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="從 composite 與 slot 的兩層編碼推導真實 bit 位置，列出變長 bundle、operand 限制、signed／scaled immediate 與 pseudo 的邊界。"><meta name="color-scheme" content="light"><title>AIE2P 編碼：16–128-bit VLIW、slot 欄位與立即數 — XDNA 2 LLM Wiki</title><link rel="icon" href="assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="assets/wiki.css"><script src="assets/model.js" defer></script><script src="assets/search-data.js?v=3af1ff7384b4" defer></script><script src="assets/app.js" defer></script></head>
+<body><a class="skip" href="#main">跳到正文</a><header class="topbar"><a class="wordmark" href="index.html"><span class="seal" aria-hidden="true">文</span><span>XDNA 2 <b>LLM WIKI</b></span></a><nav class="header-links" aria-label="常用連結"><a href="index.html#search">搜尋</a><a href="glossary.html">術語</a><a href="llms.txt">LLM 索引</a></nav></header><div class="layout"><aside class="sidebar" aria-label="知識庫導覽"><details id="nav-menu"><summary>全站目錄 <span>＋</span></summary><nav class="navtree"><div class="nav-group"><h3>架構</h3><a href="spec-index.html">XDNA2 規格總索引：ISA、cycles、VLIW、tile 與互連</a><a href="system.html">XDNA2 系統：空間資料流與 NPU2 分區</a><a href="tile-microarchitecture.html">Tile 微架構：SRAM、地址視窗、banks 與三種 tile</a><a href="compute.html">計算核心：scalar、SIMD、VLIW 與累加器</a><a href="isa-registers.html">AIE2P 暫存器：類別、寬度、編碼與重疊視圖</a><a href="vliw-pipeline.html">VLIW 與外露管線：bundle 格式、scoreboard 與 hazard</a><a href="instruction-cycles.html">指令週期：完整 itinerary、操作數時點與旁路</a><a href="isa-encoding.html" aria-current="page">AIE2P 編碼：16–128-bit VLIW、slot 欄位與立即數</a><a href="isa-instructions.html">AIE2P 指令族：純量、向量、搬移、控制、串流與矩陣</a><a href="memory.html">記憶體：program、data、banks 與局部地址</a><a href="interconnect.html">Interconnect 規格：switch ports、packet routing 與 cascade</a><a href="dma.html">DMA：描述子、通道與資料布局</a><a href="dma-registers.html">DMA / MMIO 規格：BD 欄位、locks、burst 與完整 register 索引</a><a href="synchronization.html">同步：鎖、背壓、停頓與死鎖</a><a href="events-debug.html">Events 與可觀測微架構：stall、bank conflict、counters 與 trace</a><a href="isa.html">ISA 閱讀：從 AIE2P header 追到後端原語</a><a href="spec-gaps.html">規格缺口與衝突：哪些已知，哪些不能由 compiler 推成 silicon</a></div><div class="nav-group"><h3>數值</h3><a href="datatypes.html">數值型別：INT4、BF16、BFP16 與 FP32 的分層支援</a><a href="mma.html">矩陣乘加：原語、API 包裝與 LLM microtile</a><a href="quantization.html">LLM 量化：格式、數學與 kernel 是三件事</a></div><div class="nav-group"><h3>程式設計</h3><a href="software-pipelining.html">軟體管線化：II、recurrence、resource 與迴圈總成本</a><a href="compiler.html">編譯器分工：從資料流到 XDNA2 產物</a><a href="iron.html">IRON：以 Worker 與 ObjectFifo 設計資料流</a><a href="triton.html">Triton-XDNA：算子、Transform 與支援證據</a><a href="runtime.html">執行期與共享緩衝：格式、ABI、可見性</a><a href="deployment.html">LLM 部署生態：研究 compiler 與成品 runtime</a><a href="debug.html">除錯與證據分級：不要把 fallback 當 NPU 成功</a></div><div class="nav-group"><h3>LLM推論</h3><a href="llm-graph.html">LLM 計算圖：算子、狀態與裝置邊界</a><a href="qwen-case.html">Qwen2.5 案例：CPU＋NPU、GPU 與異質路由</a><a href="gemm.html">GEMM：把矩陣切成可搬、可算的工作</a><a href="attention.html">Attention：算子可拆，不代表整體已能在 NPU 跑</a><a href="kv-cache.html">KV cache：容量、頻寬與生命週期</a><a href="prefill-decode.html">Prefill 與 decode：兩個不同的效能問題</a><a href="heterogeneous.html">CPU × GPU × NPU：分工與資料所有權</a></div><div class="nav-group"><h3>驗證與知識庫</h3><a href="performance.html">效能模型：容量、Roofline 與端到端下界</a><a href="validation.html">正確性與效能驗證：一套不把 fallback 當成功的流程</a><a href="glossary.html">術語辭典：同一個字，在不同層可能不同意思</a><a href="sources.html">來源地圖、證據等級與未解問題</a><a href="wiki-method.html">LLM Wiki 使用與維護：來源 → 條目 → 連結</a></div></nav></details></aside><main id="main" tabindex="-1"><div class="breadcrumbs"><a href="index.html">首頁</a> / 架構</div><div class="article-meta"><span>來源查核</span><span>來源快照 2026-09-12</span><a href="markdown/isa-encoding.md" download>Markdown ↓</a></div><h1>AIE2P 編碼：16–128-bit VLIW、slot 欄位與立即數</h1><p class="lede">從 composite 與 slot 的兩層編碼推導真實 bit 位置，列出變長 bundle、operand 限制、signed／scaled immediate 與 pseudo 的邊界。</p><div class="evidence-note">本文區分公開來源、原始碼查核與工程推導。未在本機執行 compiler 或 NPU；可用型別、可編譯、可派送、無 fallback、效能達標是不同證據。</div><nav class="toc" aria-label="本頁目錄"><strong>本頁導覽</strong><a href="#section-1">先分清 bundle、slot 與來源宣告</a><a href="#section-2">所有變長 bundle 寬度與尾端標記</a><a href="#section-3">Slot payload 寬度與可用組合</a><a href="#section-4">具體推導：add r1, r2, r3</a><a href="#section-5">Signedness、縮放與立即數例子</a><a href="#section-6">Pseudo、alias 與 compiler-only 不是同義詞</a><a href="#section-7">來源索引、重現與未完成驗證</a><a href="#references">來源與延伸</a></nav><article class="article-body"><h2 id="section-1">先分清 bundle、slot 與來源宣告</h2>
+<p>本頁只讀固定版本 AIE2P（<strong>arch 21</strong>；<a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/clang/lib/Headers/aie2p/aie2p_version.h#L14-L20">AIE2P 版本界線</a>），不使用 AIE2PS arch 22。公開 TableGen 提供可核對的格式定義，但「類別數」「指令定義數」「助記符數」是不同統計；本頁不聲稱完整矽晶解碼空間。</p>
+<p>編碼有兩層：slot instruction 定義 <code>alu</code>、<code>mv</code>、<code>vec</code> 等 payload，composite 再包入長度／格式選擇位元，形成完整 <code>Inst</code>。<a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PSlots.td#L13-L113">Slot payload 與 Size</a>為每種 slot 設獨立 <code>DecoderNamespace</code>，避免不同槽的相同位元互相衝突；<a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PCompositeFormats.td#L12-L78">Composite 格式長度標記</a>另以 <code>Formats</code> 解碼 namespace 表示 bundle。不能從單條 slot 的 <code>Size=4</code> 斷言它在所有組合中都獨占四 bytes。</p>
+<h2 id="section-2">所有變長 bundle 寬度與尾端標記</h2>
+<p>以下按來源 concatenation 的低位端列出；不是主機記憶體中的 byte dump。<a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PCompositeFormats.td#L12-L78">Composite 格式長度標記</a>與 <a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PCompositeFormatsInclude.td#L11-L29">16-bit NOP 格式</a></p>
+<div aria-label="可橫向捲動的資料表" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>完整 Inst 寬度</th>
+<th>Size（bytes）</th>
+<th>來源低位固定標記</th>
+<th>讀法</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>16</td>
+<td>2</td>
+<td>bits 3:0 = <code>0000</code></td>
+<td>NOP 專用，其他位元含 dontcare</td>
+</tr>
+<tr>
+<td>32</td>
+<td>4</td>
+<td>bits 3:0 = <code>1000</code></td>
+<td>28-bit instr32 再帶子格式</td>
+</tr>
+<tr>
+<td>48</td>
+<td>6</td>
+<td>bits 2:0 = <code>100</code></td>
+<td>45-bit instr48；不是固定四位標記</td>
+</tr>
+<tr>
+<td>64</td>
+<td>8</td>
+<td>bits 3:0 = <code>0010</code></td>
+<td>60-bit instr64</td>
+</tr>
+<tr>
+<td>80</td>
+<td>10</td>
+<td>bits 3:0 = <code>1010</code></td>
+<td>76-bit instr80</td>
+</tr>
+<tr>
+<td>96</td>
+<td>12</td>
+<td>bits 3:0 = <code>0110</code></td>
+<td>92-bit instr96</td>
+</tr>
+<tr>
+<td>112</td>
+<td>14</td>
+<td>bits 3:0 = <code>1110</code></td>
+<td>108-bit instr112</td>
+</tr>
+<tr>
+<td>128</td>
+<td>16</td>
+<td>bit 0 = <code>1</code></td>
+<td>127-bit instr128；不能把其低四位整組固定</td>
+</tr>
+</tbody>
+</table></div>
+<p>例如 <code>AIE2P_instr48_Composite</code> 的 <code>Inst={instr48,0b100}</code> 只先決定長度族，仍須內層格式識別究竟是 LNG，或 LDA+LDB 等。16-bit NOP 則為 <code>{instr16,dontcare{11-1},0b0000}</code> 且 <code>instr16</code> 只佔一位：本頁保留 don't-care，不替它們編造唯一 canonical 機器碼。</p>
+<h2 id="section-3">Slot payload 寬度與可用組合</h2>
+<div aria-label="可橫向捲動的資料表" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>Slot 名</th>
+<th>payload bits</th>
+<th>最小獨立格式</th>
+<th>不能從名字推論的事</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>LDB</td>
+<td>17</td>
+<td>32 bits</td>
+<td>名稱不是負載資料匯流排寬度</td>
+</tr>
+<tr>
+<td>ALU</td>
+<td>20</td>
+<td>32 bits</td>
+<td>不等於只能做純量加法</td>
+</tr>
+<tr>
+<td>LNG</td>
+<td>42</td>
+<td>48 bits</td>
+<td>長格式 slot，並非額外第七條可任意共發的 ALU</td>
+</tr>
+<tr>
+<td>LDA</td>
+<td>20</td>
+<td>32 bits</td>
+<td>可承載多種 load／地址／stream 形式</td>
+</tr>
+<tr>
+<td>MV</td>
+<td>22</td>
+<td>32 bits</td>
+<td>包含部分向量算術</td>
+</tr>
+<tr>
+<td>ST</td>
+<td>20</td>
+<td>32 bits</td>
+<td>store 之外也有 stream／地址操作</td>
+</tr>
+<tr>
+<td>VEC</td>
+<td>26</td>
+<td>32 bits</td>
+<td>不是所有 v-prefix 指令的唯一位置</td>
+</tr>
+<tr>
+<td>NOP</td>
+<td>1</td>
+<td>16 bits</td>
+<td>特殊空操作格式</td>
+</tr>
+</tbody>
+</table></div>
+<p>來源見 <a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PSlots.td#L13-L113">Slot payload 與 Size</a>與 <a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PInstrFormats.td#L14-L43">Pseudo 與 MultiSlot 屬性</a>。<a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PCompositeFormats.td#L1109-L1216">128-bit 組合與全部 Ixx 格式清單</a>列出 <code>I32_LDA/LDB/ALU/MV/ST/VEC</code>、<code>I48_LNG</code>、<code>I48_LDA_LDB</code>，一直到 <code>I128_LDA_LDB_ST_LNG_VEC</code> 與 <code>I128_LDA_LDB_ST_ALU_MV_VEC</code>。後兩者示範 LNG 與 ALU+MV 的格式替換關係，而不是把七種 payload 一次全塞進 128 bits。</p>
+<p>128-bit 六槽格式原文是 <code>instr128={lda,ldb,st,0b0,alu,mv,0b1,vec}</code>，再接低位 <code>1</code>。位元數核算為 20+17+20+1+20+22+1+26+1=128。五槽長格式則以 42-bit LNG 取代 20+22 的 ALU/MV 部分，並更換辨識位元。這只證明格式存在；資料相依、register bank 限制及資源衝突仍可能禁止某個實際組合，本文不接管 cycle／itinerary 時序分析。</p>
+<h2 id="section-4">具體推導：add r1, r2, r3</h2>
+<p><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L14-L359">純量算術與位元欄位</a>中 <code>ADD_alu_r_rr</code> 使用 <code>(outs eR:$d0)</code>、<code>(ins eR:$s0,eR:$s1)</code>，<code>alu={s0,d0,s1,0b0000,0b1}</code>。將 r2、r1、r3 的五位編號代入，得到 <strong>20-bit slot payload</strong>：</p>
+<button aria-label="複製程式碼" class="copy-code" type="button">複製</button><pre tabindex="0"><code class="language-text">s0      d0      s1      opcode
+00010 | 00001 | 00011 | 0000 | 1
+alu = (2&lt;&lt;15) | (1&lt;&lt;10) | (3&lt;&lt;5) | 1 = 0x10461
+</code></pre>
+<p>GPR 編號依 <a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PRegisterInfo.td#L82-L238">暫存器寬度與 GPR</a>。再由 <a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PCompositeFormats.td#L80-L204">32-bit 單槽與 48-bit 組合</a>的 <code>inst_alu={0b00010,alu,0b001}</code> 與 <code>Inst={instr32,0b1000}</code> 可推得獨立格式：</p>
+<div aria-label="可橫向捲動的資料表" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>Inst 位元</th>
+<th>內容</th>
+<th>此例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>31:27</td>
+<td>ALU 子格式前綴</td>
+<td><code>00010</code></td>
+</tr>
+<tr>
+<td>26:7</td>
+<td>alu payload</td>
+<td><code>0x10461</code></td>
+</tr>
+<tr>
+<td>6:4</td>
+<td>ALU 子格式尾綴</td>
+<td><code>001</code></td>
+</tr>
+<tr>
+<td>3:0</td>
+<td>32-bit 長度標記</td>
+<td><code>1000</code></td>
+</tr>
+</tbody>
+</table></div>
+<button aria-label="複製程式碼" class="copy-code" type="button">複製</button><pre tabindex="0"><code class="language-text">Inst = (2&lt;&lt;27) | (0x10461&lt;&lt;7) | (1&lt;&lt;4) | 8
+     = 0x10823098
+</code></pre>
+<p>這是逐欄拼接的<strong>靜態推導值</strong>，未經 assembler／disassembler 執行驗證，不宣稱 bytes 的檔案排列或 relocation 規則。若同一 ADD 被包進較寬 bundle，payload 仍可查同一來源，但在完整 Inst 的位元位置會改變。<code>ADC</code> 的額外 carry Uses／Defs 在宣告外層 let，不能只讀 raw def 就漏掉隱含狀態。</p>
+<h2 id="section-5">Signedness、縮放與立即數例子</h2>
+<p><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PImmOperands.td#L12-L70">AIE2P immediate 清單</a>把 <code>c7s</code> 寫成 <code>txxs&lt;7,i32&gt;</code>、<code>c6u</code> 寫成 <code>txxu&lt;6,i32&gt;</code>；<a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/AIEBaseInstrInfo.td#L34-L159">signed 與 scaled immediate 基底</a>分別以 <code>isInt&lt;n&gt;</code>／<code>isUInt&lt;n&gt;</code> 與 signed／unsigned decoder 解讀。<code>i32</code> 是 operand 的編譯器型別，不代表 machine encoding 一定有 32-bit immediate。</p>
+<div aria-label="可橫向捲動的資料表" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>Operand</th>
+<th>編碼意義</th>
+<th>可核對例子／邊界</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>c7s</code></td>
+<td>signed 7-bit</td>
+<td>−64…63；−1 的七位表示為 <code>1111111</code></td>
+</tr>
+<tr>
+<td><code>c6u</code></td>
+<td>unsigned 6-bit</td>
+<td>0…63；用於 ACQ immediate lock id 形式</td>
+</tr>
+<tr>
+<td><code>c8s</code></td>
+<td>signed 8-bit</td>
+<td>−128…127；ADD_NC 的 MV 形式</td>
+</tr>
+<tr>
+<td><code>c7s_negated</code></td>
+<td>取負後須符合 signed 7-bit</td>
+<td>predicate 檢查 −Imm；不可沿用一般 c7s 邊界</td>
+</tr>
+<tr>
+<td><code>c10s_step64</code></td>
+<td>4-bit signed 商數，低六位為零</td>
+<td>−512…448、步長64；128→商2，96不合法</td>
+</tr>
+<tr>
+<td><code>c6s_step4</code></td>
+<td>4-bit signed 商數，低兩位為零</td>
+<td>−32…28、步長4</td>
+</tr>
+<tr>
+<td><code>c19s_step64</code></td>
+<td>13-bit signed 商數，stack adjustment</td>
+<td>−262144…262080、步長64</td>
+</tr>
+<tr>
+<td><code>c12n_step4</code></td>
+<td>9-bit 負向 stack spill 縮放形式</td>
+<td>有固定負號語義，不能當成一般 signed 9-bit offset</td>
+</tr>
+</tbody>
+</table></div>
+<p>以上數值範圍為 predicate 與縮放參數的算術推導。<code>ADD_add_r_ri</code> 的 immediate 是 7 bits，slot 排列 <code>{s0,d0,imm,0b110}</code>；<code>ADD_NC_mv_add_ri</code> 則是 <code>{dst(7),s0(5),imm(8),0b00}</code>。<a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L14-L359">純量算術與位元欄位</a>同樣顯示「add-like」操作因 operand 類別、carry 行為及 slot 不同，不能只靠助記符前綴決定 encoding。</p>
+<h2 id="section-6">Pseudo、alias 與 compiler-only 不是同義詞</h2>
+<p><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PInstrFormats.td#L14-L43">Pseudo 與 MultiSlot 屬性</a>把 <code>MultiSlot_Pseudo</code> 標為 <code>isPseudo=1</code>、<code>isCodeGenOnly=1</code>，並給 <code>materializableInto</code>。<a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PMultiSlotPseudoInstrInfo.td#L11-L57">PADD／MOV 多槽 materialization</a>的 <code>PADD_imm_pseudo</code> 可選 PADDA、PADDB、PADDS 形式；一筆 pseudo 不應額外計為一條原生 opcode，也不保證一定只選第一個候選。</p>
+<p><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PInstrInfo.td#L26-L146">控制流、meta、MOV_OR 與 split pseudo</a>區分 <code>PseudoRET→RET</code>、<code>PseudoJL→JL_lng</code>、<code>PseudoJZ→JZ</code> 等 pre-scheduling expansion；<code>PseudoLoopEnd</code> 則是 meta，註解明說不自行發出。另一方面，<code>MOV_OR</code> 雖為 <code>isCodeGenOnly=1</code>，卻直接具有 ALU 位元式 <code>{s0,d0,s0,0b0101,0b1}</code>，實作 <code>or dst,src,src</code>。因此 compiler-only 不必然等於沒有編碼，pseudo 名稱也不等於組語 alias 全集。</p>
+<p><code>OP_</code> operand wrapper 還可能使用 class-specific encoder（<a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PRegOperandDef.td#L12-L69">Operand wrapper 定義</a>、<a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/AIEBaseRegisterInfo.td#L15-L39">共用 operand encoder 規則</a>），不能把 X 暫存器名字中的十進位數無條件塞到任意欄位。此頁的 ADD 範例刻意只用直接 GPR 編號，未替複合 operand 省略 encoder 驗證。</p>
+<h2 id="section-7">來源索引、重現與未完成驗證</h2>
+<p><a href="spec-data/isa-source-index.json">完整 JSON 來源目錄</a>保留 2,401 筆 lexical source records：class 167、def 2,163、defm 59、defset 6、multiclass 6。它們不是 fully instantiated TableGen opcodes、展開 aliases／multiclasses，亦不是 silicon complete ISA。檔案與每筆宣告都有 immutable URL；所有選定 <code>.td</code> 的 bytes 必須與 pinned Git blob 一致才可生成。</p>
+<p>命令為 <code>python3 wiki/extract_isa.py --output wiki/spec-data/isa-source-index.json</code>。工具唯讀來源樹，不執行 TableGen 或 toolchain 安裝；JSON 順序固定且無時間戳，方便 byte-for-byte 重現。regex 會略過註解、字串與 code literal，保留巢狀、匿名宣告，但不求值外層 let／foreach；完整語义仍須回到連結的檔案上下文。</p>
+<p>尚未驗證所有 emitter／decoder C++、relocation、bundle 合法性與 silicon reserved encoding。本文不提供可直接刷入核心的 binary、所有 don't-care 的標準填值、排程延遲或硬體時脈。請接著讀 <a href="isa-registers.html">暫存器</a>與 <a href="isa-instructions.html">指令族</a>，將來源結構、compiler lowering 與晶片行為分開。</p></article><section id="references" class="references"><h2>來源與查核範圍</h2><ol><li><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/clang/lib/Headers/aie2p/aie2p_version.h#L14-L20">AIE2P 版本界線</a><span>C 編譯目標巨集：arch 21；非指令語義。</span><small>https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/clang/lib/Headers/aie2p/aie2p_version.h#L14-L20</small></li><li><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PSlots.td#L13-L113">Slot payload 與 Size</a><span>固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。</span><small>https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PSlots.td#L13-L113</small></li><li><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PCompositeFormats.td#L12-L78">Composite 格式長度標記</a><span>固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。</span><small>https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PCompositeFormats.td#L12-L78</small></li><li><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PCompositeFormatsInclude.td#L11-L29">16-bit NOP 格式</a><span>固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。</span><small>https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PCompositeFormatsInclude.td#L11-L29</small></li><li><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PInstrFormats.td#L14-L43">Pseudo 與 MultiSlot 屬性</a><span>固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。</span><small>https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PInstrFormats.td#L14-L43</small></li><li><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PCompositeFormats.td#L1109-L1216">128-bit 組合與全部 Ixx 格式清單</a><span>固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。</span><small>https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PCompositeFormats.td#L1109-L1216</small></li><li><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L14-L359">純量算術與位元欄位</a><span>固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。</span><small>https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L14-L359</small></li><li><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PRegisterInfo.td#L82-L238">暫存器寬度與 GPR</a><span>固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。</span><small>https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PRegisterInfo.td#L82-L238</small></li><li><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PCompositeFormats.td#L80-L204">32-bit 單槽與 48-bit 組合</a><span>固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。</span><small>https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PCompositeFormats.td#L80-L204</small></li><li><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PImmOperands.td#L12-L70">AIE2P immediate 清單</a><span>固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。</span><small>https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PImmOperands.td#L12-L70</small></li><li><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/AIEBaseInstrInfo.td#L34-L159">signed 與 scaled immediate 基底</a><span>共用編碼／解碼 predicate；不是另一個架構的 ISA 清單。</span><small>https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/AIEBaseInstrInfo.td#L34-L159</small></li><li><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PMultiSlotPseudoInstrInfo.td#L11-L57">PADD／MOV 多槽 materialization</a><span>固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。</span><small>https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PMultiSlotPseudoInstrInfo.td#L11-L57</small></li><li><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PInstrInfo.td#L26-L146">控制流、meta、MOV_OR 與 split pseudo</a><span>固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。</span><small>https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PInstrInfo.td#L26-L146</small></li><li><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PRegOperandDef.td#L12-L69">Operand wrapper 定義</a><span>固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。</span><small>https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PRegOperandDef.td#L12-L69</small></li><li><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/AIEBaseRegisterInfo.td#L15-L39">共用 operand encoder 規則</a><span>共用 AIE 基底，只用於解讀 AIE2P 引用；不將其他 target 指令混入目錄。</span><small>https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/AIEBaseRegisterInfo.td#L15-L39</small></li></ol></section><div class="link-panels"><section><h2>接著閱讀</h2><div class="related-links"><a href="isa.html">ISA 閱讀：從 AIE2P header 追到後端原語</a><a href="compute.html">計算核心：scalar、SIMD、VLIW 與累加器</a><a href="isa-registers.html">AIE2P 暫存器：類別、寬度、編碼與重疊視圖</a><a href="isa-instructions.html">AIE2P 指令族：純量、向量、搬移、控制、串流與矩陣</a></div></section><section><h2>哪些條目連到這裡？</h2><div class="related-links"><a href="spec-index.html">XDNA2 規格總索引：ISA、cycles、VLIW、tile 與互連</a><a href="isa-registers.html">AIE2P 暫存器：類別、寬度、編碼與重疊視圖</a><a href="isa-instructions.html">AIE2P 指令族：純量、向量、搬移、控制、串流與矩陣</a></div></section></div><a class="back-top" href="#main">回到本文頂端 ↑</a></main></div><footer class="footer">XDNA 2 / AIE2P · 繁體中文知識庫 · 來源快照 2026-09-12<br>公開文件與固定版本原始碼查核，不是完整保密 ISA 手冊；未執行 NPU 實驗。<a href="wiki-method.html">維護方法與證據界線</a> · <a href="guide/index.html">原始長篇指南</a></footer></body></html>

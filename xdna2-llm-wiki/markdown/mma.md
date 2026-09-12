@@ -107,6 +107,10 @@ T 表示 B 的轉置消費慣例；直接 block_vector 路徑把 a、b 傳入 T 
 ## 反向連結
 - [system](system.md)
 - [compute](compute.md)
+- [vliw-pipeline](vliw-pipeline.md)
+- [instruction-cycles](instruction-cycles.md)
+- [software-pipelining](software-pipelining.md)
+- [isa-instructions](isa-instructions.md)
 - [isa](isa.md)
 - [datatypes](datatypes.md)
 - [gemm](gemm.md)

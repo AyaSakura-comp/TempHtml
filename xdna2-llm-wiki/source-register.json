@@ -1,15 +1,77 @@
 [
   {
     "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/clang/lib/Headers/aie2p/aie2p_version.h#L14-L20",
-    "label": "AIE2P 版本標頭",
+    "label": "版本定義",
     "retrieved": "2026-09-12",
     "articles": [
+      "spec-index",
       "system",
+      "isa-registers",
+      "isa-encoding",
+      "isa-instructions",
       "isa",
-      "datatypes"
+      "datatypes",
+      "spec-gaps"
     ],
     "notes": [
-      "arch 21 與 model 巨集；不可混用 arch 22。 僅靜態來源查核。"
+      "固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。",
+      "arch 21 與 model 巨集；不可混用 arch 22。 僅靜態來源查核。",
+      "C 編譯目標巨集：arch 21；非指令語義。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/include/aie/Dialect/AIE/IR/AIETargetModel.h#L1077-L1145",
+    "label": "完整 NPU2 模型",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "spec-index",
+      "system",
+      "tile-microarchitecture",
+      "memory",
+      "spec-gaps"
+    ],
+    "notes": [
+      "固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。",
+      "完整 Strix 八欄、六列角色、可變 cols 分區及 512-bit 對齊；不是所有 SKU 或 runtime 配額。 僅靜態來源查核。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/README.md#L29-L45",
+    "label": "Peano exposed-pipeline 契約",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "spec-index",
+      "events-debug",
+      "spec-gaps",
+      "glossary"
+    ],
+    "notes": [
+      "固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。",
+      "固定 SHA；編譯器安排指令相依與暫存器讀寫時點，不是 lock／stream 等資料流等待的說明。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/lib/Dialect/AIE/IR/AIETargetModel.cpp#L882-L1158",
+    "label": "AIETargetModel",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "spec-index"
+    ],
+    "notes": [
+      "固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/global/xaie2pgbl_params.h#L1-L55",
+    "label": "AIE2P regdb header",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "spec-index",
+      "dma-registers",
+      "spec-gaps"
+    ],
+    "notes": [
+      "固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。"
     ]
   },
   {
@@ -27,28 +89,19 @@
     ]
   },
   {
-    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/include/aie/Dialect/AIE/IR/AIETargetModel.h#L1077-L1145",
-    "label": "AIETargetModel：NPU2 拓撲與分區",
-    "retrieved": "2026-09-12",
-    "articles": [
-      "system",
-      "memory"
-    ],
-    "notes": [
-      "完整 Strix 八欄、六列角色、可變 cols 分區及 512-bit 對齊；不是所有 SKU 或 runtime 配額。 僅靜態來源查核。"
-    ]
-  },
-  {
     "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/lib/Dialect/AIE/IR/AIETargetModel.cpp#L755-L824",
     "label": "AIETargetModel：記憶體鄰接",
     "retrieved": "2026-09-12",
     "articles": [
       "system",
+      "tile-microarchitecture",
       "memory",
+      "interconnect",
       "dma"
     ],
     "notes": [
-      "East=self、方向與邊界／mem tile 例外；不可推成完整 DMA 路由限制。 僅靜態來源查核。"
+      "East=self、方向與邊界／mem tile 例外；不可推成完整 DMA 路由限制。 僅靜態來源查核。",
+      "固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。"
     ]
   },
   {
@@ -74,6 +127,179 @@
     ],
     "notes": [
       "用於導航與自然向量寬度；固定 clocks、latencies、BF16 MAC/cycle、路由絕對規則及 FIFO 深度不採作保證。 僅靜態來源查核。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/device/xaie_device_aie2p.c#L24-L66",
+    "label": "AIE2P tile 分類",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "tile-microarchitecture"
+    ],
+    "notes": [
+      "固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/global/xaie2pgbl_reginit.c#L180-L200",
+    "label": "core runtime 初始化",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "tile-microarchitecture"
+    ],
+    "notes": [
+      "固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/global/xaie2pgbl_reginit.c#L2194-L2210",
+    "label": "mem modules",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "tile-microarchitecture"
+    ],
+    "notes": [
+      "固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/include/aie/Dialect/AIE/IR/AIETargetModel.h#L749-L835",
+    "label": "模型資源",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "tile-microarchitecture"
+    ],
+    "notes": [
+      "固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/include/aie/Dialect/AIE/IR/AIETargetModel.h#L749-L757",
+    "label": "模型",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "tile-microarchitecture",
+      "interconnect"
+    ],
+    "notes": [
+      "固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/include/aie/Dialect/AIE/IR/AIETargetModel.h#L1083-L1088",
+    "label": "NPU2 override",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "tile-microarchitecture"
+    ],
+    "notes": [
+      "固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/include/aie/Dialect/AIE/IR/AIETargetModel.h#L743-L756",
+    "label": "地址基底",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "tile-microarchitecture"
+    ],
+    "notes": [
+      "固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/lib/Dialect/AIE/IR/AIETargetModel.cpp#L1579-L1603",
+    "label": "getMemLocalBaseAddress",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "tile-microarchitecture"
+    ],
+    "notes": [
+      "固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/include/aie/Dialect/AIE/IR/AIETargetModel.h#L830-L835",
+    "label": "模型 getNumBanks",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "tile-microarchitecture",
+      "events-debug",
+      "spec-gaps"
+    ],
+    "notes": [
+      "固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/lib/Dialect/AIE/Transforms/AIEAssignBuffers.cpp#L983-L1003",
+    "label": "allocator",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "tile-microarchitecture"
+    ],
+    "notes": [
+      "固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/events/xaie_events_aie2p.h#L235-L255",
+    "label": "core-memory conflict events",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "tile-microarchitecture",
+      "events-debug",
+      "spec-gaps"
+    ],
+    "notes": [
+      "固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/events/xaie_events_aie2p.h#L527-L543",
+    "label": "mem-tile events",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "tile-microarchitecture",
+      "events-debug",
+      "spec-gaps"
+    ],
+    "notes": [
+      "固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/global/xaie2pgbl_params.h#L36-L46",
+    "label": "host program window",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "tile-microarchitecture"
+    ],
+    "notes": [
+      "固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/lib/Dialect/AIE/IR/AIETargetModel.cpp#L826-L854",
+    "label": "位址組合",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "tile-microarchitecture",
+      "dma-registers"
+    ],
+    "notes": [
+      "固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/include/aie/Dialect/AIE/IR/AIETargetModel.h#L855-L860",
+    "label": "shift",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "tile-microarchitecture"
+    ],
+    "notes": [
+      "固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。"
     ]
   },
   {
@@ -188,6 +414,1015 @@
     ]
   },
   {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PRegisterInfo.td#L82-L238",
+    "label": "暫存器寬度與 GPR",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "isa-registers",
+      "isa-encoding"
+    ],
+    "notes": [
+      "固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PRegisterInfo.td#L471-L601",
+    "label": "地址、維度與 shift 暫存器",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "isa-registers"
+    ],
+    "notes": [
+      "固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PRegisterInfo.td#L140-L191",
+    "label": "固定用途與 GPR 配對",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "isa-registers"
+    ],
+    "notes": [
+      "固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PRegisterInfo.td#L603-L698",
+    "label": "W／X／Y 與 mask 別名",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "isa-registers"
+    ],
+    "notes": [
+      "固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PRegisterInfo.td#L18-L80",
+    "label": "子暫存器位元切片",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "isa-registers"
+    ],
+    "notes": [
+      "固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PRegisterInfo.td#L403-L469",
+    "label": "BM／CM／DM 累加器別名",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "isa-registers"
+    ],
+    "notes": [
+      "固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PRegisterInfo.td#L902-L977",
+    "label": "通用類別與 spill 輔助模型",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "isa-registers"
+    ],
+    "notes": [
+      "固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PRegisterInfo.td#L700-L763",
+    "label": "稀疏組合暫存器",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "isa-registers"
+    ],
+    "notes": [
+      "固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PRegisterInfo.td#L766-L900",
+    "label": "指數與 BFP 組合暫存器",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "isa-registers"
+    ],
+    "notes": [
+      "固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PRegisterInfo.td#L240-L400",
+    "label": "特殊、FIFO、控制與狀態暫存器",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "isa-registers"
+    ],
+    "notes": [
+      "固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PRegOperandDef.td#L12-L69",
+    "label": "Operand wrapper 定義",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "isa-registers",
+      "isa-encoding"
+    ],
+    "notes": [
+      "固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/AIEBaseRegisterInfo.td#L15-L39",
+    "label": "共用 operand encoder 規則",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "isa-registers",
+      "isa-encoding"
+    ],
+    "notes": [
+      "共用 AIE 基底，只用於解讀 AIE2P 引用；不將其他 target 指令混入目錄。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/README.md#L16-L65",
+    "label": "架構與 target 對應",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "vliw-pipeline",
+      "instruction-cycles",
+      "software-pipelining"
+    ],
+    "notes": [
+      "README 的示意 load cycle 8 不是 AIE2P 實測表。 固定 commit 靜態查核，非實測晶片保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PSchedule.td#L11-L32",
+    "label": "AIE2P 排程模型",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "vliw-pipeline",
+      "instruction-cycles",
+      "software-pipelining"
+    ],
+    "notes": [
+      "IssueWidth、MicroOpBufferSize 為軟體排程控制；三項 FIXME 且 CompleteModel=0。 固定 commit 靜態查核，非實測晶片保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/AIEHazardRecognizer.cpp#L224-L275",
+    "label": "hazard recognizer issue limit",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "vliw-pipeline"
+    ],
+    "notes": [
+      "命令列預設 6；pre-RA 深度與未知 slot 有不同處理。 固定 commit 靜態查核，非實測晶片保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PSlots.td#L13-L67",
+    "label": "AIE2P slot 宣告",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "vliw-pipeline"
+    ],
+    "notes": [
+      "七種有用 slot 類別，位數不是發射指令數。 固定 commit 靜態查核，非實測晶片保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PCompositeFormats.td#L24-L78",
+    "label": "Composite 寬度類別",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "vliw-pipeline"
+    ],
+    "notes": [
+      "32/48/64/80/96/112/128-bit 大小。 固定 commit 靜態查核，非實測晶片保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PCompositeFormats.td#L1141-L1216",
+    "label": "全部 composite def 列表",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "vliw-pipeline",
+      "software-pipelining"
+    ],
+    "notes": [
+      "76 筆 generated def；128-bit 六 slot 與 long 五 slot 形式。 固定 commit 靜態查核，非實測晶片保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PCompositeFormatsInclude.td#L11-L29",
+    "label": "16-bit NOP composite",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "vliw-pipeline",
+      "isa-encoding"
+    ],
+    "notes": [
+      "手寫第 77 種格式。 固定 commit 靜態查核，非實測晶片保證。",
+      "固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PSlotInclude.td#L11-L26",
+    "label": "人工 NOP slot",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "vliw-pipeline"
+    ],
+    "notes": [
+      "Artificial=true，可用以區分不同長度的格式；註解 XM 只作動機，不轉成 AIE2P slot 名稱。 固定 commit 靜態查核，非實測晶片保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/AIEHazardRecognizer.cpp#L133-L178",
+    "label": "資源與 format 衝突",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "vliw-pipeline",
+      "instruction-cycles"
+    ],
+    "notes": [
+      "Required/Reserved 非對稱強弱預約、slot union 可編碼性、stage 起點累進。 固定 commit 靜態查核，非實測晶片保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenSchedule.td#L12-L31",
+    "label": "資源階段 helper",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "vliw-pipeline",
+      "instruction-cycles",
+      "software-pipelining"
+    ],
+    "notes": [
+      "Empty/Prefix/Simple 與 part-word Required/Reserved 的確切定義。 固定 commit 靜態查核，非實測晶片保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/AIEHazardRecognizer.cpp#L575-L626",
+    "label": "分層 scoreboard 檢查",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "vliw-pipeline",
+      "software-pipelining"
+    ],
+    "notes": [
+      "issue cycle 檢查格式；MemoryAccessCycles 減 1；各 stage 另查資源。 固定 commit 靜態查核，非實測晶片保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/AIEBaseInstrInfo.cpp#L892-L1024",
+    "label": "AIE signed operand latency",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "vliw-pipeline",
+      "instruction-cycles",
+      "software-pipelining"
+    ],
+    "notes": [
+      "RAW/WAR/WAW 差值、register-class variant、負值與一週期 bypass 假設。 固定 commit 靜態查核，非實測晶片保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/AIEBaseInstrInfo.cpp#L1363-L1432",
+    "label": "排程類別動態選擇",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "vliw-pipeline",
+      "instruction-cycles"
+    ],
+    "notes": [
+      "依實體／虛擬 register class 選 variant，不僅看 mnemonic。 固定 commit 靜態查核，非實測晶片保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/ExtraItineraries.td#L10-L34",
+    "label": "eWH 無旁路特例",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "vliw-pipeline",
+      "instruction-cycles"
+    ],
+    "notes": [
+      "三個手寫 itinerary；保留預設 eWL bypass 與 eWH 特化差異。 固定 commit 靜態查核，非實測晶片保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenSchedule.td#L9024-L9064",
+    "label": "VMAC operand/bypass",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "vliw-pipeline",
+      "instruction-cycles",
+      "software-pipelining"
+    ],
+    "notes": [
+      "整數與浮點／不同路徑不可共用一個 latency；表內 dst、acc1、s1、s2 分開。 固定 commit 靜態查核，非實測晶片保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenSchedule.td#L4608-L4623",
+    "label": "scalar load 與 register variant",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "vliw-pipeline",
+      "instruction-cycles",
+      "software-pipelining"
+    ],
+    "notes": [
+      "dst=7、記憶體點 5；部分 variant 省去晚期 FU 但不改 dst 時點。 固定 commit 靜態查核，非實測晶片保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/AIEBaseInstrInfo.cpp#L1082-L1165",
+    "label": "鎖 stall/resume 與 memory edge",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "vliw-pipeline",
+      "instruction-cycles",
+      "software-pipelining"
+    ],
+    "notes": [
+      "2/8 是保守核心 stall/resume 模型，註明 ISA 未完整描述；非鎖等待固定耗時。 固定 commit 靜態查核，非實測晶片保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PInstrInfo.cpp#L1079-L1113",
+    "label": "AIE2P hazard 與 DONE",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "vliw-pipeline"
+    ],
+    "notes": [
+      "DONE=6 明載保守值；E4..E6 為來源用語，不延伸實體管線級名。 固定 commit 靜態查核，非實測晶片保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/AIEHazardRecognizer.cpp#L714-L778",
+    "label": "自我衝突與 horizon",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "vliw-pipeline",
+      "software-pipelining"
+    ],
+    "notes": [
+      "SelfMII 是最後衝突 II 加一的保守門檻；PipelineDepth 是軟體 horizon。 固定 commit 靜態查核，非實測晶片保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/include/llvm/Target/AIETarget.td#L22-L47",
+    "label": "MemInstrItinData 與 MemoryCycles",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "instruction-cycles"
+    ],
+    "notes": [
+      "MemCyclesList、First/LastMemCycle 是獨立欄位。 固定 commit 靜態查核，非實測晶片保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenSchedule.td#L4223-L4310",
+    "label": "ProcessorItineraries 容器",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "instruction-cycles"
+    ],
+    "notes": [
+      "FU、bypass 列表與 itinerary 容器起點；擷取器涵蓋整檔而非只此範例。 固定 commit 靜態查核，非實測晶片保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenSchedule.td#L33-L109",
+    "label": "全部資源與 bypass 宣告",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "instruction-cycles"
+    ],
+    "notes": [
+      "71 個一般符號加 EMPTY_FU、PART_WORD_STORE，共 73 個模型 FU；不是實體單元普查。 固定 commit 靜態查核，非實測晶片保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/include/llvm/Target/TargetItinerary.td#L41-L120",
+    "label": "LLVM itinerary 欄位語義",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "instruction-cycles"
+    ],
+    "notes": [
+      "時間增量、operand cycle、bypass 與 uops 預設。 固定 commit 靜態查核，非實測晶片保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/utils/TableGen/SubtargetEmitter.cpp#L355-L432",
+    "label": "TableGen 欄位正規化",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "instruction-cycles"
+    ],
+    "notes": [
+      "只讀程式碼：負 TimeInc 轉 Cycles，缺少的 bypass 補 0；未執行 TableGen。 固定 commit 靜態查核，非實測晶片保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/include/llvm/MC/MCInstrItineraries.h#L169-L262",
+    "label": "MC itinerary 查詢實作",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "instruction-cycles"
+    ],
+    "notes": [
+      "getStageLatency、operand timing 與 forwarding；空 stage 註解和實作不可混讀。 固定 commit 靜態查核，非實測晶片保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenSchedule.td#L4309-L4325",
+    "label": "ABS 與 lock itineraries",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "instruction-cycles"
+    ],
+    "notes": [
+      "空 FU list 和 operand cycle 1；LCKREQ 占用 4。 固定 commit 靜態查核，非實測晶片保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenSchedule.td#L4428-L4434",
+    "label": "scalar ADD itinerary",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "instruction-cycles"
+    ],
+    "notes": [
+      "ADD 的四個 operand 時點均為 1；不是四週期。 固定 commit 靜態查核，非實測晶片保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenSchedule.td#L8407-L8414",
+    "label": "向量 load itinerary",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "instruction-cycles"
+    ],
+    "notes": [
+      "VLDA_128：dst=7、address operands=1、MemoryCycles=[5]。 固定 commit 靜態查核，非實測晶片保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenSchedule.td#L9538-L9545",
+    "label": "向量 store itinerary",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "instruction-cycles"
+    ],
+    "notes": [
+      "VST_128 source read=1、MemoryCycles=[5]；不是輸出 data-ready=5。 固定 commit 靜態查核，非實測晶片保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenSchedule.td#L7858-L7863",
+    "label": "部分字 store 讀改寫",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "instruction-cycles",
+      "software-pipelining"
+    ],
+    "notes": [
+      "ST_s8 source read=7、兩個記憶體點 [5,11]。 固定 commit 靜態查核，非實測晶片保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenSchedule.td#L9355-L9395",
+    "label": "VMUL operand/bypass",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "instruction-cycles"
+    ],
+    "notes": [
+      "矩陣/向量原語的 itinerary，不是高階 mmul helper 總成本。 固定 commit 靜態查核，非實測晶片保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenSchedule.td#L8248-L8264",
+    "label": "轉換與非線性 itineraries",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "instruction-cycles"
+    ],
+    "notes": [
+      "VCONV 與 VEXP2 的同名 MV bypass 可連接；仍需合法 registers/slots。 固定 commit 靜態查核，非實測晶片保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenSchedule.td#L10039-L10072",
+    "label": "UNPACK 與 UPS",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "instruction-cycles"
+    ],
+    "notes": [
+      "UNPACK 所列 operand=7；UPS=3/1/2 混合點。 固定 commit 靜態查核，非實測晶片保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L6228-L6288",
+    "label": "轉換與 VEXP2 variant 綁定",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "instruction-cycles"
+    ],
+    "notes": [
+      "VCONV 的 operand 1、VEXP2 的 operand 0 在 eWH 時改用 NoBypass。 固定 commit 靜態查核，非實測晶片保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/AIEPostPipeliner.cpp#L466-L503",
+    "label": "post-RA recurrence 下界",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "software-pipelining"
+    ],
+    "notes": [
+      "兩次迭代展開、回邊與 signed latency 迴路長度。 固定 commit 靜態查核，非實測晶片保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/AIEPostPipeliner.cpp#L232-L251",
+    "label": "post-RA ResMII",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "software-pipelining"
+    ],
+    "notes": [
+      "primary slot counts 最大值與 computeInstrSelfMII 合併。 固定 commit 靜態查核，非實測晶片保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/AIEPostPipeliner.cpp#L1709-L1756",
+    "label": "prologue/kernel/epilogue 擷取",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "software-pipelining"
+    ],
+    "notes": [
+      "steady-state 之外仍有填入、排空與 trip count 調整。 固定 commit 靜態查核，非實測晶片保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/AIEPostPipeliner.cpp#L1602-L1686",
+    "label": "stage/trip count 與 peel",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "software-pipelining"
+    ],
+    "notes": [
+      "trip count 必須足以覆蓋軟體 stage；不是微架構級數。 固定 commit 靜態查核，非實測晶片保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/AIEPostPipeliner.cpp#L541-L566",
+    "label": "recurrence 與排程啟發式限制",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "software-pipelining"
+    ],
+    "notes": [
+      "RecMII 早期拒絕與負 latency 處理限制。 固定 commit 靜態查核，非實測晶片保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PSlots.td#L13-L113",
+    "label": "Slot payload 與 Size",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "isa-encoding"
+    ],
+    "notes": [
+      "固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PCompositeFormats.td#L12-L78",
+    "label": "Composite 格式長度標記",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "isa-encoding"
+    ],
+    "notes": [
+      "固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PInstrFormats.td#L14-L43",
+    "label": "Pseudo 與 MultiSlot 屬性",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "isa-encoding"
+    ],
+    "notes": [
+      "固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PCompositeFormats.td#L1109-L1216",
+    "label": "128-bit 組合與全部 Ixx 格式清單",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "isa-encoding"
+    ],
+    "notes": [
+      "固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L14-L359",
+    "label": "純量算術與位元欄位",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "isa-encoding",
+      "isa-instructions"
+    ],
+    "notes": [
+      "固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PCompositeFormats.td#L80-L204",
+    "label": "32-bit 單槽與 48-bit 組合",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "isa-encoding"
+    ],
+    "notes": [
+      "固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PImmOperands.td#L12-L70",
+    "label": "AIE2P immediate 清單",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "isa-encoding",
+      "isa-instructions"
+    ],
+    "notes": [
+      "固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/AIEBaseInstrInfo.td#L34-L159",
+    "label": "signed 與 scaled immediate 基底",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "isa-encoding"
+    ],
+    "notes": [
+      "共用編碼／解碼 predicate；不是另一個架構的 ISA 清單。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PMultiSlotPseudoInstrInfo.td#L11-L57",
+    "label": "PADD／MOV 多槽 materialization",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "isa-encoding",
+      "isa-instructions"
+    ],
+    "notes": [
+      "固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PInstrInfo.td#L26-L146",
+    "label": "控制流、meta、MOV_OR 與 split pseudo",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "isa-encoding",
+      "isa-instructions"
+    ],
+    "notes": [
+      "固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L4245-L4420",
+    "label": "地址更新、鎖與返回",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "isa-instructions"
+    ],
+    "notes": [
+      "固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L706-L1006",
+    "label": "scalar load 的 indexed／post-modify 形式",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "isa-instructions"
+    ],
+    "notes": [
+      "固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L4498-L4881",
+    "label": "scalar store 形式",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "isa-instructions"
+    ],
+    "notes": [
+      "固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L6769-L7425",
+    "label": "VLDA、UPS 與 FIFO pop",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "isa-instructions"
+    ],
+    "notes": [
+      "固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L8000-L8692",
+    "label": "VLDB unpack 與載入",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "isa-instructions"
+    ],
+    "notes": [
+      "固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L10246-L11049",
+    "label": "VST pack／SRS／FIFO 寫出",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "isa-instructions"
+    ],
+    "notes": [
+      "固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L493-L562",
+    "label": "2D load 與 signedness",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "isa-instructions"
+    ],
+    "notes": [
+      "固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L5899-L6022",
+    "label": "MV 向量加法與 VEC 累加器加法",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "isa-instructions"
+    ],
+    "notes": [
+      "固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L6034-L6436",
+    "label": "廣播、轉換與元素抽取",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "isa-instructions"
+    ],
+    "notes": [
+      "固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L6619-L6767",
+    "label": "比較與插入",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "isa-instructions"
+    ],
+    "notes": [
+      "固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L9962-L10244",
+    "label": "pack、選擇、shift、shuffle 與 SRS",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "isa-instructions"
+    ],
+    "notes": [
+      "固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L11835-L11964",
+    "label": "VTANH、unpack 與 UPS",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "isa-instructions"
+    ],
+    "notes": [
+      "固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L432-L491",
+    "label": "跳躍與呼叫形式",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "isa-instructions"
+    ],
+    "notes": [
+      "固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L4083-L4146",
+    "label": "非阻塞串流與 TLAST",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "isa-instructions"
+    ],
+    "notes": [
+      "固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L1220-L1338",
+    "label": "串流封包標頭形式",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "isa-instructions"
+    ],
+    "notes": [
+      "固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L9131-L9437",
+    "label": "VMOV cascade 形式",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "isa-instructions"
+    ],
+    "notes": [
+      "固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L4946-L5421",
+    "label": "VADDMAC 與 SCD 變體",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "isa-instructions"
+    ],
+    "notes": [
+      "固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L9606-L9758",
+    "label": "VMUL 整數、BF 與 BFP 編碼",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "isa-instructions"
+    ],
+    "notes": [
+      "固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L8763-L8930",
+    "label": "VMAC 輸入與結果",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "isa-instructions"
+    ],
+    "notes": [
+      "固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PInstrPatterns.td#L261-L329",
+    "label": "IR／intrinsic 到指令的選擇",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "isa-instructions"
+    ],
+    "notes": [
+      "固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PInstrPatterns.td#L30-L70",
+    "label": "VecConf 控制字與 BF16 設定",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "isa-instructions"
+    ],
+    "notes": [
+      "固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/clang/lib/Headers/aie2p/aie2p_vmult.h#L15-L37",
+    "label": "C helper：控制字與 8×8 wrapper",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "isa-instructions"
+    ],
+    "notes": [
+      "只證明 C helper 如何組控制字及呼叫 builtin；不以函式數量當 ISA 數量。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/clang/lib/Headers/aie2p/aie2p_vmult.h#L39416-L39447",
+    "label": "C helper：INT4 unpack 展開",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "isa-instructions"
+    ],
+    "notes": [
+      "特定 wrapper 的拆解反例；不推論所有 INT4 模式不存在，也不聲稱 native INT4 矩陣能力。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L1037-L1045",
+    "label": "MAC 純量乘加",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "isa-instructions"
+    ],
+    "notes": [
+      "直接的來源定義與 operand／位元式；不推論 timing。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L4147-L4165",
+    "label": "MSC／MUL 純量乘法",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "isa-instructions"
+    ],
+    "notes": [
+      "直接的來源定義與 operand／位元式；不推論 timing。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L4431-L4449",
+    "label": "純量條件選擇",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "isa-instructions"
+    ],
+    "notes": [
+      "直接的來源定義與 operand／位元式；不推論 timing。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L4882-L4890",
+    "label": "SUB 純量減法",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "isa-instructions"
+    ],
+    "notes": [
+      "直接的來源定義與 operand／位元式；不推論 timing。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L11965-L11973",
+    "label": "XOR 純量位元運算",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "isa-instructions"
+    ],
+    "notes": [
+      "直接的來源定義與 operand／位元式；不推論 timing。"
+    ]
+  },
+  {
     "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/include/aie/Dialect/AIE/IR/AIETargetModel.h#L830-L834",
     "label": "AIETargetModel：mem tile 容量與 banks",
     "retrieved": "2026-09-12",
@@ -243,6 +1478,117 @@
     ]
   },
   {
+    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/lib/Dialect/AIE/IR/AIETargetModel.cpp#L882-L1030",
+    "label": "路由模型",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "interconnect"
+    ],
+    "notes": [
+      "固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/lib/Dialect/AIE/IR/AIETargetModel.cpp#L881-L951",
+    "label": "destination",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "interconnect"
+    ],
+    "notes": [
+      "固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/lib/Dialect/AIE/IR/AIETargetModel.cpp#L952-L1030",
+    "label": "source",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "interconnect"
+    ],
+    "notes": [
+      "固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/global/xaie2pgbl_reginit.c#L214-L475",
+    "label": "AIE2P stream port tables",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "interconnect"
+    ],
+    "notes": [
+      "固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/global/xaie2pgbl_reginit.c#L346-L384",
+    "label": "346–384行",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "interconnect",
+      "spec-gaps"
+    ],
+    "notes": [
+      "固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/lib/Dialect/AIE/IR/AIETargetModel.cpp#L1071-L1158",
+    "label": "isLegalTileConnection",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "interconnect"
+    ],
+    "notes": [
+      "固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/lib/Dialect/AIE/IR/AIETargetModel.cpp#L1119-L1131",
+    "label": "分支規則",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "interconnect"
+    ],
+    "notes": [
+      "固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/lib/Dialect/AIE/IR/AIETargetModel.cpp#L1031-L1069",
+    "label": "Shim mux 模型",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "interconnect"
+    ],
+    "notes": [
+      "固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/include/aie/Dialect/AIE/IR/AIETargetModel.h#L714-L730",
+    "label": "模型",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "interconnect"
+    ],
+    "notes": [
+      "固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/global/xaie2pgbl_params.h#L4390-L4415",
+    "label": "AIE2P regdb",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "interconnect"
+    ],
+    "notes": [
+      "固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。"
+    ]
+  },
+  {
     "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/include/aie/Dialect/AIE/IR/AIEOps.td#L1291-L1347",
     "label": "AIE DMAStartOp：通道契約",
     "retrieved": "2026-09-12",
@@ -275,6 +1621,130 @@
     ],
     "notes": [
       "鎖、BD 數、ND 維度及 mem tile channel 對 BD 半區的可達性。 僅靜態來源查核。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/events/xaie_events_aie2p.h#L1-L65",
+    "label": "events header",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "dma-registers"
+    ],
+    "notes": [
+      "固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/global/xaie2pgbl_reginit.c#L1658-L1697",
+    "label": "Mem DMA",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "dma-registers"
+    ],
+    "notes": [
+      "固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/global/xaie2pgbl_reginit.c#L1896-L1935",
+    "label": "Core DMA",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "dma-registers"
+    ],
+    "notes": [
+      "固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/global/xaie2pgbl_reginit.c#L2149-L2188",
+    "label": "Shim DMA",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "dma-registers"
+    ],
+    "notes": [
+      "固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/global/xaie2pgbl_reginit.c#L2393-L2460",
+    "label": "LockMod",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "dma-registers"
+    ],
+    "notes": [
+      "固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/lib/Dialect/AIE/IR/AIETargetModel.cpp#L1554-L1577",
+    "label": "local index",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "dma-registers",
+      "spec-gaps"
+    ],
+    "notes": [
+      "固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/include/aie/Dialect/AIE/IR/AIETargetModel.h#L771-L816",
+    "label": "Target model",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "dma-registers"
+    ],
+    "notes": [
+      "固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/include/aie/Dialect/AIE/IR/AIETargetModel.h#L718-L730",
+    "label": "宣告",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "dma-registers"
+    ],
+    "notes": [
+      "固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/include/aie/Dialect/AIE/IR/AIETargetModel.h#L808-L820",
+    "label": "channel accessibility",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "dma-registers"
+    ],
+    "notes": [
+      "固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/lib/Dialect/AIE/IR/AIETargetModel.cpp#L1609-L1615",
+    "label": "BaseNPU2 burst encoding",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "dma-registers",
+      "spec-gaps"
+    ],
+    "notes": [
+      "固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/dma/xaie_dma_aie2p.c#L27-L50",
+    "label": "_XAie2P_AxiBurstLenCheck",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "dma-registers",
+      "spec-gaps"
+    ],
+    "notes": [
+      "固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。"
     ]
   },
   {
@@ -319,6 +1789,50 @@
     ],
     "notes": [
       "Memory、stream、lock stall 名稱；僅讀文件，未取得任何硬體 trace。 僅靜態來源查核。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/events/xaie_events_aie2p.h#L50-L76",
+    "label": "AIE2P event header",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "events-debug"
+    ],
+    "notes": [
+      "固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/events/xaie_events_aie2p.h#L187-L202",
+    "label": "Core memory module events",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "events-debug"
+    ],
+    "notes": [
+      "固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/global/xaie2pgbl_reginit.c#L2467-L2536",
+    "label": "Runtime PerfMod",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "events-debug"
+    ],
+    "notes": [
+      "固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/global/xaie2pgbl_reginit.c#L4116-L4197",
+    "label": "NumTraceSlotIds=8、NumEventsPerSlot=4",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "events-debug"
+    ],
+    "notes": [
+      "固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。"
     ]
   },
   {
@@ -1315,14 +2829,36 @@
     ]
   },
   {
-    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/README.md#L29-L45",
-    "label": "Peano README：外露管線 VLIW",
+    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/lib/Dialect/AIE/IR/AIETargetModel.cpp#L971-L994",
+    "label": "switch模型",
     "retrieved": "2026-09-12",
     "articles": [
-      "glossary"
+      "spec-gaps"
     ],
     "notes": [
-      "固定 SHA；編譯器安排指令相依與暫存器讀寫時點，不是 lock／stream 等資料流等待的說明。"
+      "固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。"
+    ]
+  },
+  {
+    "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Architecture",
+    "label": "AM027 portal",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "spec-gaps"
+    ],
+    "notes": [
+      "固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。"
+    ]
+  },
+  {
+    "url": "https://destevez.net/2026/05/getting-peak-tops-on-a-ryzen-ai-7-350-npu/",
+    "label": "Daniel Estévez的Ryzen AI 7 350案例",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "spec-gaps"
+    ],
+    "notes": [
+      "固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。"
     ]
   },
   {

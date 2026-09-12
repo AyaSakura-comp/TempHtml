@@ -89,6 +89,7 @@ Mem tile 較多 ND 維度與容量，使它適合作為某些 layout 轉換或�
 ## 反向連結
 - [system](system.md)
 - [memory](memory.md)
+- [dma-registers](dma-registers.md)
 - [synchronization](synchronization.md)
 - [iron](iron.md)
 - [gemm](gemm.md)

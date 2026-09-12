@@ -89,6 +89,7 @@ BD 可以附帶 acquire／release，見[DMA 描述子契約](https://github.com/
 ## 反向連結
 - [system](system.md)
 - [compute](compute.md)
+- [interconnect](interconnect.md)
 - [dma](dma.md)
 - [iron](iron.md)
 - [runtime](runtime.md)

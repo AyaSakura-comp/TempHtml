@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="用完整來源宣告目錄導航主要指令族，追蹤 operand、控制字與 pseudo lowering；以具體範例區分 C helper、編譯器選擇與可編碼形式。"><meta name="color-scheme" content="light"><title>AIE2P 指令族：純量、向量、搬移、控制、串流與矩陣 — XDNA 2 LLM Wiki</title><link rel="icon" href="assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="assets/wiki.css"><script src="assets/model.js" defer></script><script src="assets/search-data.js?v=3af1ff7384b4" defer></script><script src="assets/app.js" defer></script></head>
+<body><a class="skip" href="#main">跳到正文</a><header class="topbar"><a class="wordmark" href="index.html"><span class="seal" aria-hidden="true">文</span><span>XDNA 2 <b>LLM WIKI</b></span></a><nav class="header-links" aria-label="常用連結"><a href="index.html#search">搜尋</a><a href="glossary.html">術語</a><a href="llms.txt">LLM 索引</a></nav></header><div class="layout"><aside class="sidebar" aria-label="知識庫導覽"><details id="nav-menu"><summary>全站目錄 <span>＋</span></summary><nav class="navtree"><div class="nav-group"><h3>架構</h3><a href="spec-index.html">XDNA2 規格總索引：ISA、cycles、VLIW、tile 與互連</a><a href="system.html">XDNA2 系統：空間資料流與 NPU2 分區</a><a href="tile-microarchitecture.html">Tile 微架構：SRAM、地址視窗、banks 與三種 tile</a><a href="compute.html">計算核心：scalar、SIMD、VLIW 與累加器</a><a href="isa-registers.html">AIE2P 暫存器：類別、寬度、編碼與重疊視圖</a><a href="vliw-pipeline.html">VLIW 與外露管線：bundle 格式、scoreboard 與 hazard</a><a href="instruction-cycles.html">指令週期：完整 itinerary、操作數時點與旁路</a><a href="isa-encoding.html">AIE2P 編碼：16–128-bit VLIW、slot 欄位與立即數</a><a href="isa-instructions.html" aria-current="page">AIE2P 指令族：純量、向量、搬移、控制、串流與矩陣</a><a href="memory.html">記憶體：program、data、banks 與局部地址</a><a href="interconnect.html">Interconnect 規格：switch ports、packet routing 與 cascade</a><a href="dma.html">DMA：描述子、通道與資料布局</a><a href="dma-registers.html">DMA / MMIO 規格：BD 欄位、locks、burst 與完整 register 索引</a><a href="synchronization.html">同步：鎖、背壓、停頓與死鎖</a><a href="events-debug.html">Events 與可觀測微架構：stall、bank conflict、counters 與 trace</a><a href="isa.html">ISA 閱讀：從 AIE2P header 追到後端原語</a><a href="spec-gaps.html">規格缺口與衝突：哪些已知，哪些不能由 compiler 推成 silicon</a></div><div class="nav-group"><h3>數值</h3><a href="datatypes.html">數值型別：INT4、BF16、BFP16 與 FP32 的分層支援</a><a href="mma.html">矩陣乘加：原語、API 包裝與 LLM microtile</a><a href="quantization.html">LLM 量化：格式、數學與 kernel 是三件事</a></div><div class="nav-group"><h3>程式設計</h3><a href="software-pipelining.html">軟體管線化：II、recurrence、resource 與迴圈總成本</a><a href="compiler.html">編譯器分工：從資料流到 XDNA2 產物</a><a href="iron.html">IRON：以 Worker 與 ObjectFifo 設計資料流</a><a href="triton.html">Triton-XDNA：算子、Transform 與支援證據</a><a href="runtime.html">執行期與共享緩衝：格式、ABI、可見性</a><a href="deployment.html">LLM 部署生態：研究 compiler 與成品 runtime</a><a href="debug.html">除錯與證據分級：不要把 fallback 當 NPU 成功</a></div><div class="nav-group"><h3>LLM推論</h3><a href="llm-graph.html">LLM 計算圖：算子、狀態與裝置邊界</a><a href="qwen-case.html">Qwen2.5 案例：CPU＋NPU、GPU 與異質路由</a><a href="gemm.html">GEMM：把矩陣切成可搬、可算的工作</a><a href="attention.html">Attention：算子可拆，不代表整體已能在 NPU 跑</a><a href="kv-cache.html">KV cache：容量、頻寬與生命週期</a><a href="prefill-decode.html">Prefill 與 decode：兩個不同的效能問題</a><a href="heterogeneous.html">CPU × GPU × NPU：分工與資料所有權</a></div><div class="nav-group"><h3>驗證與知識庫</h3><a href="performance.html">效能模型：容量、Roofline 與端到端下界</a><a href="validation.html">正確性與效能驗證：一套不把 fallback 當成功的流程</a><a href="glossary.html">術語辭典：同一個字，在不同層可能不同意思</a><a href="sources.html">來源地圖、證據等級與未解問題</a><a href="wiki-method.html">LLM Wiki 使用與維護：來源 → 條目 → 連結</a></div></nav></details></aside><main id="main" tabindex="-1"><div class="breadcrumbs"><a href="index.html">首頁</a> / 架構</div><div class="article-meta"><span>來源查核</span><span>來源快照 2026-09-12</span><a href="markdown/isa-instructions.md" download>Markdown ↓</a></div><h1>AIE2P 指令族：純量、向量、搬移、控制、串流與矩陣</h1><p class="lede">用完整來源宣告目錄導航主要指令族，追蹤 operand、控制字與 pseudo lowering；以具體範例區分 C helper、編譯器選擇與可編碼形式。</p><div class="evidence-note">本文區分公開來源、原始碼查核與工程推導。未在本機執行 compiler 或 NPU；可用型別、可編譯、可派送、無 fallback、效能達標是不同證據。</div><nav class="toc" aria-label="本頁目錄"><strong>本頁導覽</strong><a href="#section-1">範圍：ISA 來源參考，不是函式名稱大全</a><a href="#section-2">純量算術、邏輯、比較與位元操作</a><a href="#section-3">Load／store 與地址更新：不只是一個指標</a><a href="#section-4">向量算術、重排、轉換與非線性</a><a href="#section-5">控制流、同步、stream 與 cascade</a><a href="#section-6">矩陣／乘加族：operand 形狀不等於 API 形狀</a><a href="#section-7">32-bit 控制字：signedness 是資料，不只是名稱</a><a href="#section-8">Pseudo、模式展開與目錄使用方式</a><a href="#references">來源與延伸</a></nav><article class="article-body"><h2 id="section-1">範圍：ISA 來源參考，不是函式名稱大全</h2>
+<p>本頁固定 llvm-aie commit <code>386ca5c6634a84bb224b7248e79df8edabf0722f</code>，<a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/clang/lib/Headers/aie2p/aie2p_version.h#L14-L20">AIE2P 版本界線</a>確認 <strong>arch 21 AIE2P</strong>；不引入 AIE2PS arch 22。以下「來源事實」指 TableGen 中明列的 operand、欄位與 pattern；「工程推論」指它們對 LLM kernel 的可能用途。沒有編譯、NPU 執行、cycle timing 或硬體頻率量測。</p>
+<p><a href="spec-data/isa-source-index.json">完整 SOURCE DEFINITION JSON</a>涵蓋 16 個相關 <code>.td</code> 的全部 2,401 筆詞法宣告，而非只收本文範例。單是 <code>AIE2PGenInstrInfo.td</code> 有 879 筆 def；它們是該檔來源宣告，不是整個 silicon 的指令總數。目錄另收 manual pseudo、patterns、register、formats、immediate、calling convention 與 copy materialization；不得把不同層級的筆數相加當 opcode 數。</p>
+<h2 id="section-2">純量算術、邏輯、比較與位元操作</h2>
+<div aria-label="可橫向捲動的資料表" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>族</th>
+<th>來源可見助記符／形式</th>
+<th>operand／狀態要點</th>
+<th>LLM 工程用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>加減與 carry</td>
+<td><code>add</code>、<code>add.nc</code>、<code>adc</code>、<code>sub</code>、<code>sbc</code></td>
+<td>ADD／ADC 的 eR 與 ADD_NC 的混合目的類別不同；carry 是隱含狀態</td>
+<td>索引、迴圈及寬算術拆解</td>
+</tr>
+<tr>
+<td>乘加</td>
+<td><code>mul</code>、<code>mac</code>、<code>msc</code></td>
+<td>scalar operand，不能等同向量矩陣原語</td>
+<td>控制或地址計算周邊工作</td>
+</tr>
+<tr>
+<td>邏輯／移位</td>
+<td><code>and</code>、<code>or</code>、<code>xor</code>、<code>ashl</code>、<code>lshl</code></td>
+<td>讀實際 eR 與固定欄位</td>
+<td>mask、位元處理</td>
+</tr>
+<tr>
+<td>比較／選擇</td>
+<td><code>eq</code>、<code>eqz</code>、<code>ne</code>、<code>nez</code>、<code>ge</code>、<code>geu</code>、<code>lt</code>、<code>ltu</code>、<code>sel.eqz</code></td>
+<td>signed 與 unsigned 是不同形式</td>
+<td>尾塊邊界、條件化</td>
+</tr>
+<tr>
+<td>位元與延伸</td>
+<td><code>clb</code>、<code>clz</code>、<code>popcount</code>、<code>extend.s8/u8/s16/u16</code></td>
+<td>窄型別延伸不能靠 host dtype 推斷</td>
+<td>封裝資料、控制 mask</td>
+</tr>
+</tbody>
+</table></div>
+<p>主要定義見 <a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L14-L359">純量算術與位元欄位</a>，其餘 scalar 乘法與 subtract 可在目錄按 <code>MUL</code>／<code>MAC</code>／<code>MSC</code>／<code>SUB</code>／<code>XOR</code> 查找；select／popcount 的鄰近來源見 <a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L4245-L4420">地址更新、鎖與返回</a>。例如 <code>add r1,r2,#-1</code> 對應 <code>ADD_add_r_ri</code>，三個 operand 類別依序為 eR、eR、c7s；7-bit −1 與 32-bit r 值不是同一位寬概念。<a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PImmOperands.td#L12-L70">AIE2P immediate 清單</a>和 <a href="isa-encoding.html">編碼頁</a>提供欄位推導。</p>
+<p>補充直接定義：<a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L1037-L1045">MAC 純量乘加</a>、<a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L4147-L4165">MSC／MUL 純量乘法</a>、<a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L4431-L4449">純量條件選擇</a>、<a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L4882-L4890">SUB 純量減法</a>、<a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L11965-L11973">XOR 純量位元運算</a>。</p>
+<h2 id="section-3">Load／store 與地址更新：不只是一個指標</h2>
+<p><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L706-L1006">scalar load 的 indexed／post-modify 形式</a>中 scalar <code>lda</code>、<code>lda.s8</code>、<code>lda.u8</code>、<code>lda.s16</code>、<code>lda.u16</code> 有 indexed 與 post-modify 形式；<a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L4498-L4881">scalar store 形式</a>對應 <code>st</code>、<code>st.s8</code>、<code>st.s16</code> 及 2D／3D。名稱中的 signedness 應與載入延伸一起讀，不能把窄 store 的 <code>.s8</code> 名稱解釋成一次有號乘法。</p>
+<div aria-label="可橫向捲動的資料表" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>搬移族</th>
+<th>來源名稱例</th>
+<th>應追蹤的額外狀態</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scalar 2D</td>
+<td><code>LDA_2D_s8</code>、<code>LDA_2D_u8</code></td>
+<td>dst、ptr_out、dc；輸入 ptr、mod</td>
+</tr>
+<tr>
+<td>Scalar 3D</td>
+<td><code>lda.3d</code>／<code>st.3d</code></td>
+<td>兩組 dimension counter 及配對 descriptor</td>
+</tr>
+<tr>
+<td>Vector load A</td>
+<td><code>vlda.128</code>、<code>vlda</code>、<code>vlda.2d</code>、<code>vlda.3d</code></td>
+<td>視形式選 W／X／BM／FIFO 等目的類別</td>
+</tr>
+<tr>
+<td>Load 加轉換</td>
+<td><code>vlda.conv.fp32.bf16</code>、<code>vlda.ups.2x/4x</code></td>
+<td>與控制／shift／accumulator 類別共同閱讀</td>
+</tr>
+<tr>
+<td>Vector load B</td>
+<td><code>vldb</code>、<code>vldb.unpack</code>、2D／3D 變體</td>
+<td>unpack sign 類別，不是假設輸入皆有號</td>
+</tr>
+<tr>
+<td>Vector store</td>
+<td><code>vst</code>、<code>vst.pack</code>、<code>vst.srs.2x/4x</code></td>
+<td>pack／SRS 控制與來源容器</td>
+</tr>
+<tr>
+<td>FIFO</td>
+<td><code>vlda.fill.512</code>、<code>vlda.pop.512/544/576/640/704</code>、<code>vst.push</code>、<code>vst.flush</code></td>
+<td>FIFO 與 metadata／指標狀態，不是一般矩陣 lane 數</td>
+</tr>
+</tbody>
+</table></div>
+<p>向量載入來源見 <a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L6769-L7425">VLDA、UPS 與 FIFO pop</a>、<a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L8000-L8692">VLDB unpack 與載入</a>，向量寫出見 <a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L10246-L11049">VST pack／SRS／FIFO 寫出</a>。這些形式提供寬廣導航，並非把所有命名後綴做任意笛卡兒積；只有來源實際列出的組合才有本次證據。</p>
+<p>具體例子 <code>lda.2d.s8 r0,[p0],d0</code> 的來源 outs 是 <code>eR:$dst,eP:$ptr_out,eDC:$dc</code>、ins 是 <code>eP:$ptr,eD:$mod</code>，外層約束 <code>$ptr_out=$ptr</code>。所以組語表面只有三個參數，編譯器資料相依卻不只寫 r0。<a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L493-L562">2D load 與 signedness</a>的 s8 與 u8 分別以 <code>00</code>／<code>01</code> 兩位作區分；20-bit LDA slot 公式為 <code>{ptr(3),mod(3),100,dst(5),00/01,0101}</code>。這裡描述的是編碼與資料相依，沒有宣稱地址更新遞迴公式、所有邊界行為或固定讀取延遲。</p>
+<h2 id="section-4">向量算術、重排、轉換與非線性</h2>
+<div aria-label="可橫向捲動的資料表" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>類型</th>
+<th>可查來源形式</th>
+<th>解讀重點</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>元素加減</td>
+<td><code>vadd.8/.16/.32</code>、<code>vsub.8/.16/.32</code>、<code>vaddsub</code></td>
+<td>512-bit X 類別；與 DM accumulator 的 <code>vadd</code> 不同</td>
+</tr>
+<tr>
+<td>比較／選擇</td>
+<td><code>vge</code>、<code>vlt</code>、<code>vmax_lt</code>、<code>vmin_ge</code>、<code>vsel</code></td>
+<td>產生比較結果與選擇所需狀態；BF16 形式另列</td>
+</tr>
+<tr>
+<td>邏輯／廣播</td>
+<td><code>vband</code>、<code>vbor</code>、<code>vbcst</code>、<code>vbcstshfl</code></td>
+<td>元素寬度、來源類別與模式是必要條件</td>
+</tr>
+<tr>
+<td>元素抽取／插入</td>
+<td><code>vextract</code>、<code>vextbcst</code>、<code>vinsert</code></td>
+<td>immediate index 與 register index 形式不可混為一筆</td>
+</tr>
+<tr>
+<td>重排</td>
+<td><code>vshift</code>、<code>vshift.align</code>、<code>vshuffle</code>、<code>vpush.hi/lo</code></td>
+<td>服務 layout，但不自動證明特定矩陣資料順序</td>
+</tr>
+<tr>
+<td>轉換</td>
+<td><code>vconv</code>、<code>vpack</code>、<code>vunpack</code>、<code>vups</code>、<code>vsrs</code></td>
+<td>sign、round、saturation／shift 控制需另讀</td>
+</tr>
+<tr>
+<td>非線性</td>
+<td><code>vexp2</code>、<code>vtanh</code>；scalar <code>sqrt</code>、<code>inv</code>、<code>invsqrt</code></td>
+<td>有宣告不等於完整 softmax／activation 或精度誤差保證</td>
+</tr>
+</tbody>
+</table></div>
+<p>加法見 <a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L5899-L6022">MV 向量加法與 VEC 累加器加法</a>，broadcast／轉換／VEXP2 見 <a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L6034-L6436">廣播、轉換與元素抽取</a>，比較與插入見 <a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L6619-L6767">比較與插入</a>，重排與 SRS 見 <a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L9962-L10244">pack、選擇、shift、shuffle 與 SRS</a>，VTANH／unpack／UPS 見 <a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L11835-L11964">VTANH、unpack 與 UPS</a>。其餘精確拼字及全 operand 原文可由 JSON 查詢，不能只照表名生成組語。</p>
+<p>一個反直覺的具體例子：<code>VADD_8</code> 是 <code>AIE2P_inst_mv_instr32</code>，payload 為 <code>{d(4),s1(4),s2(4),0,00,1101011}</code>；<code>VADD_16</code> 將其中尺寸兩位改為 <code>01</code>，<code>VADD_32</code> 改為 <code>10</code>。也就是 v-prefix 並不保證 VEC slot。另一方面不帶 <code>.8/.16/.32</code> 的 DM <code>VADD_vmac_cm2_add_reg</code> 才是 VEC 形式，且額外讀 eR 控制字。<a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L5899-L6022">MV 向量加法與 VEC 累加器加法</a></p>
+<h2 id="section-5">控制流、同步、stream 與 cascade</h2>
+<p><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L432-L491">跳躍與呼叫形式</a>列直接地址的 LNG <code>J_lng</code>／<code>JL_lng</code>／<code>JZ</code>／<code>JNZ</code>，以及 eP 間接目標的 ALU <code>J_alumv_or</code>／<code>JL_alumv_or</code>；<code>JNZD</code> 還有 eR 輸出。<a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L4245-L4420">地址更新、鎖與返回</a>列 <code>RET</code>（組語使用 lr）、<code>padda/paddb/padds</code> 地址更新與 <code>rel/rel.cond</code>；<a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L14-L359">純量算術與位元欄位</a>則列 <code>acq/acq.cond</code>、<code>done</code>、<code>event</code>。這些是核心指令層，不等於主機 API 的 dispatch、DMA 路由或整機同步。</p>
+<div aria-label="可橫向捲動的資料表" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>通道／控制</th>
+<th>明列形式</th>
+<th>具體注意事項</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scalar input stream</td>
+<td><code>MOV_nb_lda</code> → <code>mov.nb dst,ss</code></td>
+<td>來源 Defs 包含 srSS0，hasSideEffects=true</td>
+</tr>
+<tr>
+<td>Scalar output stream</td>
+<td><code>mov.nb ms,src</code>、<code>mov.nb.tlast ms,src</code></td>
+<td>ST slot，srMS0 狀態；r28 形式另讀固定 operand</td>
+</tr>
+<tr>
+<td>Packet header</td>
+<td><code>mov.ph</code>、<code>mov.cph</code> 與 nb／tlast 變體</td>
+<td>不把 header 形成操作當 payload 矩陣計算</td>
+</tr>
+<tr>
+<td>Cascade</td>
+<td><code>vmov.0/.1/.2/.3</code>、部分 <code>vmov</code>；<code>vaddmac … scd[r31]</code></td>
+<td>accumulator／cascade 路徑，與 ss／ms 分開</td>
+</tr>
+<tr>
+<td>Lock</td>
+<td><code>acq #id,rN</code>、<code>acq.cond #id,rN,r26</code>、<code>rel</code></td>
+<td>c6u 或 GPR id 形式；r26 singleton 約束</td>
+</tr>
+</tbody>
+</table></div>
+<p>stream 狀態見 <a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L4083-L4146">非阻塞串流與 TLAST</a>，packet 見 <a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L1220-L1338">串流封包標頭形式</a>，cascade 搬移見 <a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L9131-L9437">VMOV cascade 形式</a>，SCD 算術變體見 <a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L4946-L5421">VADDMAC 與 SCD 變體</a>。<code>nb</code>、TLAST、條件鎖與一般算術的阻塞／狀態契約不同；本文只確認來源欄位，不提供串流有效吞吐量、阻塞等待時間或 DMA 布線保證。</p>
+<h2 id="section-6">矩陣／乘加族：operand 形狀不等於 API 形狀</h2>
+<p><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L9606-L9758">VMUL 整數、BF 與 BFP 編碼</a>列整數 <code>VMUL_vmul_cm_core_X_X/X_Y/Y_X/Y_Y</code> 與帶 QX/QY 的稀疏輸入；BF 類型有 X_X、Y_Y，BFP 類型使用 EX_EX、EX_EY、EX_QEY、EY_QEX。<a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L8763-L8930">VMAC 輸入與結果</a>同樣將 VMAC 的舊 accumulator <code>acc1</code> 明列為 eDM，而目的 <code>dst</code> 也是 eDM；不是從名字推定所有形式都必須與來源同一個暫存器。VADDMAC 還可有兩個 DM 累加輸入或 SCD 來源。<a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L4946-L5421">VADDMAC 與 SCD 變體</a></p>
+<button aria-label="複製程式碼" class="copy-code" type="button">複製</button><pre tabindex="0"><code class="language-text">vmul   dm0, x0, x1, r0       ; X_X 來源形式的 operand 示例
+vmac   dm1, dm0, x0, x1, r0  ; dst 與 acc1 在定義中分列
+vmul.f dm0, y0, y1, r0       ; BF Y_Y 形式，須先準備相容控制字
+</code></pre>
+<p>這三行只示範<strong>來源容許的 operand 結構</strong>，未編譯執行；r0 內容、輸入 layout、模式及可用暫存器仍須正確設定。<code>VMUL_X_X</code> 的 VEC 公式是 <code>{acc(5),dst(3),111,s1(4),s2(4),000,0,1,dontcare(1),0}</code>；VMAC 將固定 <code>111</code> 換成三位 <code>acc1</code>。BF X_X 末位改為 1，BFP EX_EX 又有不同固定模式位。這說明模式、容器與 mnemonic 必須一同查核，不能只看 <code>vmul.f</code> 字串就等同 FP32 或 FP16 輸入乘法。<a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L9606-L9758">VMUL 整數、BF 與 BFP 編碼</a> <a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L8763-L8930">VMAC 輸入與結果</a></p>
+<p><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PInstrPatterns.td#L261-L329">IR／intrinsic 到指令的選擇</a>把 <code>int_aie2p_I1024_I1024_ACC2048_bf_mul_conf</code> 選到 <code>VMUL_f_vmul_bf_vmul_bf_core_Y_Y</code>，這是 <strong>compiler selection 證據</strong>；C++ <code>mmul</code> 的任意 M×K×N 則未在此獲得單指令保證。對 LLM GEMM，應另外計入 pack、broadcast、shuffle、轉換和累加結果抽取，詳見 <a href="mma.html">矩陣原語</a>。</p>
+<h2 id="section-7">32-bit 控制字：signedness 是資料，不只是名稱</h2>
+<p><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PInstrPatterns.td#L30-L70">VecConf 控制字與 BF16 設定</a>的 <code>VecConf.all</code> 與 <a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/clang/lib/Headers/aie2p/aie2p_vmult.h#L15-L37">C helper：控制字與 8×8 wrapper</a>的 C helper 位移互相對照，控制字欄位如下。此表是已命名欄位的來源映射，不宣稱任意 amode／bmode／cmode 組合皆合法。</p>
+<div aria-label="可橫向捲動的資料表" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>位元</th>
+<th>名稱</th>
+<th>來源含義</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>dynZeroAccum</td>
+<td>是否用零取代第一 accumulator 輸入</td>
+</tr>
+<tr>
+<td>2:1</td>
+<td>amode</td>
+<td>I32=0、I64=1、FP32=2 的 accumulator mode</td>
+</tr>
+<tr>
+<td>4:3</td>
+<td>bmode</td>
+<td>精度模式；代碼會依組合重用，不能單欄決定 dtype</td>
+</tr>
+<tr>
+<td>7:5</td>
+<td>cmode／variant</td>
+<td>乘法模式</td>
+</tr>
+<tr>
+<td>8、9</td>
+<td>signY、signX</td>
+<td>0 unsigned、1 signed</td>
+</tr>
+<tr>
+<td>10</td>
+<td>accShift</td>
+<td>accumulator 左移16位</td>
+</tr>
+<tr>
+<td>11、12、13</td>
+<td>dynMulNeg、dynAcc0Neg、dynAcc1Neg</td>
+<td>對乘積及累加輸入的動態符號控制</td>
+</tr>
+<tr>
+<td>15:14</td>
+<td>reserved1</td>
+<td>預設零，本文不指派新語義</td>
+</tr>
+<tr>
+<td>23:16</td>
+<td>dynTermNeg</td>
+<td>複數乘法 term 的 negation mask</td>
+</tr>
+<tr>
+<td>31:24</td>
+<td>reserved2</td>
+<td>預設零</td>
+</tr>
+</tbody>
+</table></div>
+<p>例如來源 <code>mulbf16_vecconf</code> 設 amode=2、bmode=3、cmode=1，其餘預設零，故控制字為 <code>(2&lt;&lt;1)|(3&lt;&lt;3)|(1&lt;&lt;5)=0x3c</code>。這裡的 FP32 指 accumulator mode；BF16 輸入則由 BF 原語與 pattern 決定。C helper 的 <code>mul_8x8_8x8(v64uint8,v64uint8)</code> 設 unsigned／amode0／bmode1／variant0 後呼叫 builtin，展示 API shape 如何先變成控制字再進 compiler；不可把每個 overload 當成不同原生指令。<a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PInstrPatterns.td#L30-L70">VecConf 控制字與 BF16 設定</a> <a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/clang/lib/Headers/aie2p/aie2p_vmult.h#L15-L37">C helper：控制字與 8×8 wrapper</a></p>
+<p>即使來源常數叫 <code>BMODE_8x4</code>，單一名字也不足以宣稱任意 native INT4 矩陣 ISA。<a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/clang/lib/Headers/aie2p/aie2p_vmult.h#L39416-L39447">C helper：INT4 unpack 展開</a>的特定 <code>mul_4x16_16x16(v64int8,v256int4)</code> 明確先 shuffle、extract、兩次 unpack，再以整數 mul/mac 合成。這個反例只限制該 wrapper 的解讀，不證明所有低位寬模式皆不存在；本頁不虛構原生 FP8、IEEE FP16 或 INT4 能力。</p>
+<h2 id="section-8">Pseudo、模式展開與目錄使用方式</h2>
+<p><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PInstrInfo.td#L26-L146">控制流、meta、MOV_OR 與 split pseudo</a>明列 <code>PseudoRET</code>、branch pseudo、<code>ADJCALLSTACKUP/DOWN</code>、<code>SCHED_BARRIER</code>、<code>PseudoLoopEnd</code>、<code>MOV_OR</code> 與 split 類別；<a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PMultiSlotPseudoInstrInfo.td#L11-L57">PADD／MOV 多槽 materialization</a>則列多槽 PADD／MOV materialization。<code>PseudoLoopEnd</code> 是不自行發出的 meta；<code>MOV_OR</code> 卻是 compiler-only 但有實際 OR 編碼。<code>defm</code>、匿名 <code>def : Pat</code> 和 <code>defset</code> 都是來源宣告，不能當成獨立執行的 machine instruction。</p>
+<p>JSON 每筆提供 <code>source_path,line_start,line_end,kind,name,raw_text,source_url</code>，另有 offset 與唯一 id；檔案列 SHA-256、Git blob SHA-1、行數、include 與 record_count。<code>name=null</code> 表示匿名宣告，<code>NAME # ...</code> 是未求值名字。可先搜尋 <code>VMUL</code>、<code>LDA_2D</code>、<code>VST</code> 或 <code>RegisterClass</code>，再依 kind 和檔名判別層級。raw_text <strong>不包含外層 let／foreach 的完整上下文</strong>，請開 immutable URL 查看其上方約束與 Uses／Defs；不可由缺少欄位推定無副作用。</p>
+<p>這是 regex-source inventory，<strong>不是 fully instantiated TableGen opcodes、展開 aliases／multiclasses 或 silicon complete ISA</strong>。本次 deliberate omissions 包括四個 schedule／itinerary 檔、其他架構、共用基底的遞迴目錄、完整 C/API 函式目錄、實機語義與 timing。來源檔 include 仍保留便於後續追蹤。下一步應以 <a href="isa-registers.html">暫存器</a>、<a href="isa-encoding.html">編碼</a>、<a href="datatypes.html">資料型別</a>交叉查核，再以實際編譯結果驗證 lowering；不可用本次靜態目錄替代硬體測試。</p></article><section id="references" class="references"><h2>來源與查核範圍</h2><ol><li><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/clang/lib/Headers/aie2p/aie2p_version.h#L14-L20">AIE2P 版本界線</a><span>C 編譯目標巨集：arch 21；非指令語義。</span><small>https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/clang/lib/Headers/aie2p/aie2p_version.h#L14-L20</small></li><li><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L14-L359">純量算術與位元欄位</a><span>固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。</span><small>https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L14-L359</small></li><li><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L4245-L4420">地址更新、鎖與返回</a><span>固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。</span><small>https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L4245-L4420</small></li><li><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PImmOperands.td#L12-L70">AIE2P immediate 清單</a><span>固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。</span><small>https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PImmOperands.td#L12-L70</small></li><li><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L706-L1006">scalar load 的 indexed／post-modify 形式</a><span>固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。</span><small>https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L706-L1006</small></li><li><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L4498-L4881">scalar store 形式</a><span>固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。</span><small>https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L4498-L4881</small></li><li><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L6769-L7425">VLDA、UPS 與 FIFO pop</a><span>固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。</span><small>https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L6769-L7425</small></li><li><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L8000-L8692">VLDB unpack 與載入</a><span>固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。</span><small>https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L8000-L8692</small></li><li><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L10246-L11049">VST pack／SRS／FIFO 寫出</a><span>固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。</span><small>https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L10246-L11049</small></li><li><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L493-L562">2D load 與 signedness</a><span>固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。</span><small>https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L493-L562</small></li><li><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L5899-L6022">MV 向量加法與 VEC 累加器加法</a><span>固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。</span><small>https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L5899-L6022</small></li><li><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L6034-L6436">廣播、轉換與元素抽取</a><span>固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。</span><small>https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L6034-L6436</small></li><li><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L6619-L6767">比較與插入</a><span>固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。</span><small>https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L6619-L6767</small></li><li><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L9962-L10244">pack、選擇、shift、shuffle 與 SRS</a><span>固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。</span><small>https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L9962-L10244</small></li><li><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L11835-L11964">VTANH、unpack 與 UPS</a><span>固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。</span><small>https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L11835-L11964</small></li><li><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L432-L491">跳躍與呼叫形式</a><span>固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。</span><small>https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L432-L491</small></li><li><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L4083-L4146">非阻塞串流與 TLAST</a><span>固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。</span><small>https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L4083-L4146</small></li><li><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L1220-L1338">串流封包標頭形式</a><span>固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。</span><small>https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L1220-L1338</small></li><li><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L9131-L9437">VMOV cascade 形式</a><span>固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。</span><small>https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L9131-L9437</small></li><li><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L4946-L5421">VADDMAC 與 SCD 變體</a><span>固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。</span><small>https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L4946-L5421</small></li><li><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L9606-L9758">VMUL 整數、BF 與 BFP 編碼</a><span>固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。</span><small>https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L9606-L9758</small></li><li><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L8763-L8930">VMAC 輸入與結果</a><span>固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。</span><small>https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L8763-L8930</small></li><li><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PInstrPatterns.td#L261-L329">IR／intrinsic 到指令的選擇</a><span>固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。</span><small>https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PInstrPatterns.td#L261-L329</small></li><li><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PInstrPatterns.td#L30-L70">VecConf 控制字與 BF16 設定</a><span>固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。</span><small>https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PInstrPatterns.td#L30-L70</small></li><li><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/clang/lib/Headers/aie2p/aie2p_vmult.h#L15-L37">C helper：控制字與 8×8 wrapper</a><span>只證明 C helper 如何組控制字及呼叫 builtin；不以函式數量當 ISA 數量。</span><small>https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/clang/lib/Headers/aie2p/aie2p_vmult.h#L15-L37</small></li><li><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/clang/lib/Headers/aie2p/aie2p_vmult.h#L39416-L39447">C helper：INT4 unpack 展開</a><span>特定 wrapper 的拆解反例；不推論所有 INT4 模式不存在，也不聲稱 native INT4 矩陣能力。</span><small>https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/clang/lib/Headers/aie2p/aie2p_vmult.h#L39416-L39447</small></li><li><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PInstrInfo.td#L26-L146">控制流、meta、MOV_OR 與 split pseudo</a><span>固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。</span><small>https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PInstrInfo.td#L26-L146</small></li><li><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PMultiSlotPseudoInstrInfo.td#L11-L57">PADD／MOV 多槽 materialization</a><span>固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。</span><small>https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PMultiSlotPseudoInstrInfo.td#L11-L57</small></li><li><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L1037-L1045">MAC 純量乘加</a><span>直接的來源定義與 operand／位元式；不推論 timing。</span><small>https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L1037-L1045</small></li><li><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L4147-L4165">MSC／MUL 純量乘法</a><span>直接的來源定義與 operand／位元式；不推論 timing。</span><small>https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L4147-L4165</small></li><li><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L4431-L4449">純量條件選擇</a><span>直接的來源定義與 operand／位元式；不推論 timing。</span><small>https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L4431-L4449</small></li><li><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L4882-L4890">SUB 純量減法</a><span>直接的來源定義與 operand／位元式；不推論 timing。</span><small>https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L4882-L4890</small></li><li><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L11965-L11973">XOR 純量位元運算</a><span>直接的來源定義與 operand／位元式；不推論 timing。</span><small>https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenInstrInfo.td#L11965-L11973</small></li></ol></section><div class="link-panels"><section><h2>接著閱讀</h2><div class="related-links"><a href="isa.html">ISA 閱讀：從 AIE2P header 追到後端原語</a><a href="compute.html">計算核心：scalar、SIMD、VLIW 與累加器</a><a href="datatypes.html">數值型別：INT4、BF16、BFP16 與 FP32 的分層支援</a><a href="mma.html">矩陣乘加：原語、API 包裝與 LLM microtile</a><a href="isa-registers.html">AIE2P 暫存器：類別、寬度、編碼與重疊視圖</a><a href="isa-encoding.html">AIE2P 編碼：16–128-bit VLIW、slot 欄位與立即數</a></div></section><section><h2>哪些條目連到這裡？</h2><div class="related-links"><a href="spec-index.html">XDNA2 規格總索引：ISA、cycles、VLIW、tile 與互連</a><a href="isa-registers.html">AIE2P 暫存器：類別、寬度、編碼與重疊視圖</a><a href="isa-encoding.html">AIE2P 編碼：16–128-bit VLIW、slot 欄位與立即數</a></div></section></div><a class="back-top" href="#main">回到本文頂端 ↑</a></main></div><footer class="footer">XDNA 2 / AIE2P · 繁體中文知識庫 · 來源快照 2026-09-12<br>公開文件與固定版本原始碼查核，不是完整保密 ISA 手冊；未執行 NPU 實驗。<a href="wiki-method.html">維護方法與證據界線</a> · <a href="guide/index.html">原始長篇指南</a></footer></body></html>

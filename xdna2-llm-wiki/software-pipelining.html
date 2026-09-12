@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="以 pinned AIE2P post-RA pipeliner 理解 RecMII、ResMII、非單調 self-conflict、prologue/epilogue 與多累加器的條件式數值推導。"><meta name="color-scheme" content="light"><title>軟體管線化：II、recurrence、resource 與迴圈總成本 — XDNA 2 LLM Wiki</title><link rel="icon" href="assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="assets/wiki.css"><script src="assets/model.js" defer></script><script src="assets/search-data.js?v=3af1ff7384b4" defer></script><script src="assets/app.js" defer></script></head>
+<body><a class="skip" href="#main">跳到正文</a><header class="topbar"><a class="wordmark" href="index.html"><span class="seal" aria-hidden="true">文</span><span>XDNA 2 <b>LLM WIKI</b></span></a><nav class="header-links" aria-label="常用連結"><a href="index.html#search">搜尋</a><a href="glossary.html">術語</a><a href="llms.txt">LLM 索引</a></nav></header><div class="layout"><aside class="sidebar" aria-label="知識庫導覽"><details id="nav-menu"><summary>全站目錄 <span>＋</span></summary><nav class="navtree"><div class="nav-group"><h3>架構</h3><a href="spec-index.html">XDNA2 規格總索引：ISA、cycles、VLIW、tile 與互連</a><a href="system.html">XDNA2 系統：空間資料流與 NPU2 分區</a><a href="tile-microarchitecture.html">Tile 微架構：SRAM、地址視窗、banks 與三種 tile</a><a href="compute.html">計算核心：scalar、SIMD、VLIW 與累加器</a><a href="isa-registers.html">AIE2P 暫存器：類別、寬度、編碼與重疊視圖</a><a href="vliw-pipeline.html">VLIW 與外露管線：bundle 格式、scoreboard 與 hazard</a><a href="instruction-cycles.html">指令週期：完整 itinerary、操作數時點與旁路</a><a href="isa-encoding.html">AIE2P 編碼：16–128-bit VLIW、slot 欄位與立即數</a><a href="isa-instructions.html">AIE2P 指令族：純量、向量、搬移、控制、串流與矩陣</a><a href="memory.html">記憶體：program、data、banks 與局部地址</a><a href="interconnect.html">Interconnect 規格：switch ports、packet routing 與 cascade</a><a href="dma.html">DMA：描述子、通道與資料布局</a><a href="dma-registers.html">DMA / MMIO 規格：BD 欄位、locks、burst 與完整 register 索引</a><a href="synchronization.html">同步：鎖、背壓、停頓與死鎖</a><a href="events-debug.html">Events 與可觀測微架構：stall、bank conflict、counters 與 trace</a><a href="isa.html">ISA 閱讀：從 AIE2P header 追到後端原語</a><a href="spec-gaps.html">規格缺口與衝突：哪些已知，哪些不能由 compiler 推成 silicon</a></div><div class="nav-group"><h3>數值</h3><a href="datatypes.html">數值型別：INT4、BF16、BFP16 與 FP32 的分層支援</a><a href="mma.html">矩陣乘加：原語、API 包裝與 LLM microtile</a><a href="quantization.html">LLM 量化：格式、數學與 kernel 是三件事</a></div><div class="nav-group"><h3>程式設計</h3><a href="software-pipelining.html" aria-current="page">軟體管線化：II、recurrence、resource 與迴圈總成本</a><a href="compiler.html">編譯器分工：從資料流到 XDNA2 產物</a><a href="iron.html">IRON：以 Worker 與 ObjectFifo 設計資料流</a><a href="triton.html">Triton-XDNA：算子、Transform 與支援證據</a><a href="runtime.html">執行期與共享緩衝：格式、ABI、可見性</a><a href="deployment.html">LLM 部署生態：研究 compiler 與成品 runtime</a><a href="debug.html">除錯與證據分級：不要把 fallback 當 NPU 成功</a></div><div class="nav-group"><h3>LLM推論</h3><a href="llm-graph.html">LLM 計算圖：算子、狀態與裝置邊界</a><a href="qwen-case.html">Qwen2.5 案例：CPU＋NPU、GPU 與異質路由</a><a href="gemm.html">GEMM：把矩陣切成可搬、可算的工作</a><a href="attention.html">Attention：算子可拆，不代表整體已能在 NPU 跑</a><a href="kv-cache.html">KV cache：容量、頻寬與生命週期</a><a href="prefill-decode.html">Prefill 與 decode：兩個不同的效能問題</a><a href="heterogeneous.html">CPU × GPU × NPU：分工與資料所有權</a></div><div class="nav-group"><h3>驗證與知識庫</h3><a href="performance.html">效能模型：容量、Roofline 與端到端下界</a><a href="validation.html">正確性與效能驗證：一套不把 fallback 當成功的流程</a><a href="glossary.html">術語辭典：同一個字，在不同層可能不同意思</a><a href="sources.html">來源地圖、證據等級與未解問題</a><a href="wiki-method.html">LLM Wiki 使用與維護：來源 → 條目 → 連結</a></div></nav></details></aside><main id="main" tabindex="-1"><div class="breadcrumbs"><a href="index.html">首頁</a> / 程式設計</div><div class="article-meta"><span>來源查核／模型推導</span><span>來源快照 2026-09-12</span><a href="markdown/software-pipelining.md" download>Markdown ↓</a></div><h1>軟體管線化：II、recurrence、resource 與迴圈總成本</h1><p class="lede">以 pinned AIE2P post-RA pipeliner 理解 RecMII、ResMII、非單調 self-conflict、prologue/epilogue 與多累加器的條件式數值推導。</p><div class="evidence-note">本文區分公開來源、原始碼查核與工程推導。未在本機執行 compiler 或 NPU；可用型別、可編譯、可派送、無 fallback、效能達標是不同證據。</div><nav class="toc" aria-label="本頁目錄"><strong>本頁導覽</strong><a href="#section-1">從一條指令的延遲轉向多次迭代的重疊</a><a href="#section-2">RecMII：一圈資料必須走完多少相依距離</a><a href="#section-3">ResMII：資源容量、格式與非單調自我衝突</a><a href="#section-4">三張時間表：load-use、穩態 II、整個迴圈</a><a href="#section-5">register 壓力、trip count 與程式碼大小的代價</a><a href="#section-6">不能以 II 模型消去的 memory、lock 與 stream 等待</a><a href="#references">來源與延伸</a></nav><article class="article-body"><h2 id="section-1">從一條指令的延遲轉向多次迭代的重疊</h2>
+<p>軟體管線化把不同 iteration 的操作排進同一穩態時段；<strong>II（initiation interval）是相鄰邏輯迭代啟動的距離，不是每條指令的 latency</strong>。<a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/README.md#L16-L65">架構與 target 對應</a>所述外露管線與<a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/AIEBaseInstrInfo.cpp#L892-L1024">AIE signed operand latency</a>的 signed operand 邊，使單純依程式文字順序逐條相加尤其不可靠。只有先建立資料／反相依／輸出相依、memory ordering 與 slot/resource 限制，才能討論重疊。</p>
+<p>本頁查核的是 <code>aie2p</code>，固定 commit <code>386ca5c6634a84bb224b7248e79df8edabf0722f</code>；使用共用 AIEPostPipeliner 在此 target 可見的規則，不把它說成所有編譯流程必然啟用或達成最佳 II。本次不編譯、不跑 NPU。讀者可用<a href="spec-data/scheduling-model.json">完整 scheduling-model.json</a>核對 4,013 筆 itinerary（620 筆 memory、3 筆手寫變體包含在內），再到 <a href="compiler.html">compiler</a> 核對實際 lowering；排程類別數不等於指令總數。</p>
+<h2 id="section-2">RecMII：一圈資料必須走完多少相依距離</h2>
+<p>一般 modulo scheduling 的依賴式是 <code>t(v)−t(u) ≥ latency(u,v)−distance(u,v)×II</code>。沿一個閉環相加，得到 <code>II ≥ ceil(Σlatency / Σdistance)</code>，這是<strong>數學推導</strong>；distance 是迭代距離，不是 tile 距離。<a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/AIEPostPipeliner.cpp#L466-L503">post-RA recurrence 下界</a>的此版 post-RA 實作把前後兩次 iteration 展開，找回邊與祖先路徑，將 signed latency 加入 circuit 長度，取最大 RecMII。不要聲稱原始碼在此函式實作任意多距離公式；公式是通用理解，兩次展開才是此處可查核做法。</p>
+<p><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenSchedule.td#L9024-L9064">VMAC operand/bypass</a>的 integer <code>VMAC_vmul_cm_core_X_QX</code> 提供一個可算的例子：dst write=6、acc1 read=4、兩端 VEC_Bypass。依<a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/AIEBaseInstrInfo.cpp#L892-L1024">AIE signed operand latency</a>的一週期匹配 bypass，<code>6−4+1−1=2</code>。若每次迭代只更新同一 accumulator、資料型別與 operand 選擇確實合法，單條 loop-carried edge 的 RecMII 下界為 2；不是 write point 6 就令 II≥6。</p>
+<div aria-label="可橫向捲動的資料表" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>明確假設的迴圈</th>
+<th>recurrence 推導</th>
+<th>尚未證明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>每迭代一個相依 integer VMAC，同 accumulator</td>
+<td>latency=2，distance=1，因此 II≥2</td>
+<td>load、slot、memory 也可行</td>
+</tr>
+<tr>
+<td>同型工作輪流使用兩個獨立 accumulator，以每次更新作邏輯迭代</td>
+<td>同一 accumulator 每兩次才更新，2/2，因此 II≥1</td>
+<td>register 足夠且拆分符合數值語義</td>
+</tr>
+<tr>
+<td>實體程式展開兩次為一個 super-iteration</td>
+<td>有兩個 vec 操作，vec slot 的 II 下界至少 2／super-iteration</td>
+<td>不等於每個 super-iteration 一 cycle</td>
+</tr>
+</tbody>
+</table></div>
+<p>最後兩列不矛盾：分母不同。兩次原始工作每 2 cycle 相當於一份每 1 cycle，但不表示兩個 vec operation 可以塞同一個 vec_slot。浮點歸約重排還可能改變捨入結果；多 accumulator 是有條件的工程策略，不是任意精度下完全等價的免費最佳化。</p>
+<h2 id="section-3">ResMII：資源容量、格式與非單調自我衝突</h2>
+<p>一般資源下界可寫 <code>ceil(每迭代需求 / 每 cycle 可供容量)</code>，但必須說清需求是 issue slot、跨週期 FU 還是 memory point。<a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/AIEPostPipeliner.cpp#L232-L251">post-RA ResMII</a>在此版本先加總 primary slot counts、取最大值，再與每條指令的 computeInstrSelfMII 合併；它刻意不以 conflict sets 作初始 slot 計數，以免 multi-slot 指令重複計算。這是一個後端啟發式門檻，不是完整最優排程求解器。</p>
+<p><strong>容量例：</strong>若一迭代有 3 個固定 vec_slot 操作，而每 bundle 只能占一次 vec_slot，則至少需要 3 個發射 cycle，故此項 II≥3；若另有 2 個可各占 Lda、Ldb 的獨立 loads，不可武斷再加 2。它們可能重疊，卻仍受 memory points、bank 和 format 限制。<a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PCompositeFormats.td#L1141-L1216">全部 composite def 列表</a>的六 slot 128-bit 格式只容納一個 Vec；<a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/AIEHazardRecognizer.cpp#L575-L626">分層 scoreboard 檢查</a>在真正排程時還逐 cycle 查 memory／FU。</p>
+<p>更微妙的是<a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/AIEHazardRecognizer.cpp#L714-L778">自我衝突與 horizon</a>明說 <strong>self-conflict 不單調</strong>。用來源示例中的同資源 offset <code>{0,3,7}</code> 做 modulo：</p>
+<div aria-label="可橫向捲動的資料表" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th style="text-align: right;">候選 II</th>
+<th>offsets mod II</th>
+<th>同資源自撞？</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">3</td>
+<td>0,0,1</td>
+<td>是</td>
+</tr>
+<tr>
+<td style="text-align: right;">5</td>
+<td>0,3,2</td>
+<td>否</td>
+</tr>
+<tr>
+<td style="text-align: right;">7</td>
+<td>0,3,0</td>
+<td>是</td>
+</tr>
+<tr>
+<td style="text-align: right;">8</td>
+<td>0,3,7</td>
+<td>否</td>
+</tr>
+</tbody>
+</table></div>
+<p>因此此函式不是回傳「第一個可行 II=5」，而掃至 PipelineDepth，記住<strong>最後會自撞的 II 再加 1</strong>；在這個單資源示意下是 8。這個保守策略可能跳過較小可行間隔，所以不應把返回值當數學上精確最小 II。表格為 modulo 算術例，不宣稱存在某條 AIE2P 指令剛好使用這三個 offset。</p>
+<h2 id="section-4">三張時間表：load-use、穩態 II、整個迴圈</h2>
+<p><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenSchedule.td#L4608-L4623">scalar load 與 register variant</a>的 scalar LDA dst=7、address read=1、MemoryCycles=[5]；接無 bypass、read=1 的合法 consumer，RAW edge 為 <code>7−1+1=7</code>。<strong>這是 load-use 間距</strong>；若操作能流水化且沒有新的循環相依，仍可以在前一個 load 結果未用到前先發射另一迭代的 load。反過來，MemoryCycles=[5] 不等於 II=5，亦不代表資料寫回=5。</p>
+<p>以下是<strong>理想化排程推導，非編譯輸出</strong>：假設每個 iteration 在 <code>2i</code> 發射一個 load，獨立 scalar consumer 在 <code>2i+7</code> 發射；兩者 slot 合法且沒有其他資源、register 或 memory 衝突。</p>
+<div aria-label="可橫向捲動的資料表" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th style="text-align: right;">迭代 i</th>
+<th style="text-align: right;">load 發射</th>
+<th style="text-align: right;">consumer 發射</th>
+<th style="text-align: right;">同一 iteration 間距</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">7</td>
+</tr>
+<tr>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">7</td>
+</tr>
+<tr>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">11</td>
+<td style="text-align: right;">7</td>
+</tr>
+<tr>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">13</td>
+<td style="text-align: right;">7</td>
+</tr>
+</tbody>
+</table></div>
+<p>load-use latency 是 7，<strong>穩態 II 是 2</strong>。若 consumer 視為占一個可觀察時間單位、尾端在發射後 1 完成，N=4 的最後完成點是 <code>2×(4−1)+7+1=14</code>；平均 14/4=3.5 cycle/iteration，而非 2。這個 1 是例題假設，不是任何未指定 consumer 的硬體時序保證。</p>
+<p>一般同樣假設下可寫 <code>T≈D+(N−1)×II</code>，D 是第一份工作從開始到尾端的排程跨度，必須含相應尾端定義；branch/control、等待、資料搬移仍另計。<a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/AIEPostPipeliner.cpp#L1709-L1756">prologue/kernel/epilogue 擷取</a>實際分出 prologue、kernel、epilogue 並調整 trip count，正是不能只拿穩態 II 乘 N 就當完整 loop 時間的原因。</p>
+<h2 id="section-5">register 壓力、trip count 與程式碼大小的代價</h2>
+<p>為了提前 load 並保存尚未消費的值，須延長 live range。上例以使用前距離 7、II=2 粗估，<code>ceil(7/2)=4</code> 份跨迭代值可能同時在途；這是保守的生命週期規劃例，實際 register reuse 仍須依讀寫點、同 cycle 規則與配置結果，不能硬說一定分配四個實體 register。增加 accumulator 也會增加狀態；spill 會把問題轉成更多 load/store 與 memory 資源需求。</p>
+<p><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/AIEPostPipeliner.cpp#L1602-L1686">stage/trip count 與 peel</a>要求 <code>MinTripCount−(NStages−1)&gt;0</code>，不夠時可嘗試 side-effect-free peeling，而非任意短迴圈都能攤平多 stage 開銷。此處 <strong>NStages 是軟體排程的 iteration overlap stage 數</strong>，不等於 silicon 的物理管線級數。<a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/AIEPostPipeliner.cpp#L541-L566">recurrence 與排程啟發式限制</a>也指出當前結構不易直接以 RecMII 當搜尋起始 II，且部分調整沒有完整考慮負 latency；不能拿理論下界保證此編譯器會達成。</p>
+<p><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PSchedule.td#L11-L32">AIE2P 排程模型</a>的 MicroOpBufferSize=1000 是讓排程器接受這類操作安排的控制值，不是保證硬體替我們儲存一千份值。展開還增加 prologue/epilogue 和 text 大小；對 LLM decode 的短工作，啟動與搬移可能壓過穩態收益。要比較 kernel，須固定有效工作量、精度／歸約順序與尾端處理，而非只比較生成組語有多少個 vec mnemonic。</p>
+<h2 id="section-6">不能以 II 模型消去的 memory、lock 與 stream 等待</h2>
+<p><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenSchedule.td#L7858-L7863">部分字 store 讀改寫</a>的 ST_s8 有 MemoryCycles=[5,11] 兩次接觸，source read 在 7，<a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenSchedule.td#L12-L31">資源階段 helper</a>又以 7-cycle PART_WORD_STORE 強預約保護其他 memory ops。若只保留第一個點，就既低估讀改寫的排序跨度，也丟失後續 store 對 lock 的約束。<a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/AIEBaseInstrInfo.cpp#L1082-L1165">鎖 stall/resume 與 memory edge</a>另針對 acquire/release 的 stall/resume、load-only writeback、TM 例外與 stream move 非 memory 的情況處理；不是拿一個通用 load latency 全包。</p>
+<p>鎖的等待條件可能由另一個 worker 或 DMA 生命週期決定，stream 背壓取決於接收側是否準備好。這些系統等待不同於外露 pipeline 的依賴合法性：排程器證明「資料會在讀點前依模型產生」，不等於證明輸入永遠到齊。<a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/AIEHazardRecognizer.cpp#L575-L626">分層 scoreboard 檢查</a>的靜態 bank/object 檢查亦不能提供實測 stall 機率、外部 memory latency 或跨 tile hop 數。</p>
+<p>建議 handoff 同時留下：實際 target、lowered opcodes 與 register class；RAW/WAR/WAW／memory 邊；理論 RecMII 與 slot/resource 門檻；選中的 II、候選拒絕原因、prologue/epilogue；暫存器與 spill；最後才是執行量測。本頁只交付前述公開模型、可重現擷取與明列假設的數字推導。所有實際 II、時脈、耗電、有效吞吐與 undocumented 內部級名仍未知，請與 <a href="performance.html">performance</a>、<a href="mma.html">MMA</a> 和 <a href="vliw-pipeline.html">VLIW</a> 一起閱讀。</p></article><section id="references" class="references"><h2>來源與查核範圍</h2><ol><li><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/README.md#L16-L65">架構與 target 對應</a><span>README 的示意 load cycle 8 不是 AIE2P 實測表。 固定 commit 靜態查核，非實測晶片保證。</span><small>https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/README.md#L16-L65</small></li><li><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/AIEBaseInstrInfo.cpp#L892-L1024">AIE signed operand latency</a><span>RAW/WAR/WAW 差值、register-class variant、負值與一週期 bypass 假設。 固定 commit 靜態查核，非實測晶片保證。</span><small>https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/AIEBaseInstrInfo.cpp#L892-L1024</small></li><li><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/AIEPostPipeliner.cpp#L466-L503">post-RA recurrence 下界</a><span>兩次迭代展開、回邊與 signed latency 迴路長度。 固定 commit 靜態查核，非實測晶片保證。</span><small>https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/AIEPostPipeliner.cpp#L466-L503</small></li><li><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenSchedule.td#L9024-L9064">VMAC operand/bypass</a><span>整數與浮點／不同路徑不可共用一個 latency；表內 dst、acc1、s1、s2 分開。 固定 commit 靜態查核，非實測晶片保證。</span><small>https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenSchedule.td#L9024-L9064</small></li><li><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/AIEPostPipeliner.cpp#L232-L251">post-RA ResMII</a><span>primary slot counts 最大值與 computeInstrSelfMII 合併。 固定 commit 靜態查核，非實測晶片保證。</span><small>https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/AIEPostPipeliner.cpp#L232-L251</small></li><li><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PCompositeFormats.td#L1141-L1216">全部 composite def 列表</a><span>76 筆 generated def；128-bit 六 slot 與 long 五 slot 形式。 固定 commit 靜態查核，非實測晶片保證。</span><small>https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PCompositeFormats.td#L1141-L1216</small></li><li><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/AIEHazardRecognizer.cpp#L575-L626">分層 scoreboard 檢查</a><span>issue cycle 檢查格式；MemoryAccessCycles 減 1；各 stage 另查資源。 固定 commit 靜態查核，非實測晶片保證。</span><small>https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/AIEHazardRecognizer.cpp#L575-L626</small></li><li><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/AIEHazardRecognizer.cpp#L714-L778">自我衝突與 horizon</a><span>SelfMII 是最後衝突 II 加一的保守門檻；PipelineDepth 是軟體 horizon。 固定 commit 靜態查核，非實測晶片保證。</span><small>https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/AIEHazardRecognizer.cpp#L714-L778</small></li><li><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenSchedule.td#L4608-L4623">scalar load 與 register variant</a><span>dst=7、記憶體點 5；部分 variant 省去晚期 FU 但不改 dst 時點。 固定 commit 靜態查核，非實測晶片保證。</span><small>https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenSchedule.td#L4608-L4623</small></li><li><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/AIEPostPipeliner.cpp#L1709-L1756">prologue/kernel/epilogue 擷取</a><span>steady-state 之外仍有填入、排空與 trip count 調整。 固定 commit 靜態查核，非實測晶片保證。</span><small>https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/AIEPostPipeliner.cpp#L1709-L1756</small></li><li><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/AIEPostPipeliner.cpp#L1602-L1686">stage/trip count 與 peel</a><span>trip count 必須足以覆蓋軟體 stage；不是微架構級數。 固定 commit 靜態查核，非實測晶片保證。</span><small>https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/AIEPostPipeliner.cpp#L1602-L1686</small></li><li><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/AIEPostPipeliner.cpp#L541-L566">recurrence 與排程啟發式限制</a><span>RecMII 早期拒絕與負 latency 處理限制。 固定 commit 靜態查核，非實測晶片保證。</span><small>https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/AIEPostPipeliner.cpp#L541-L566</small></li><li><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PSchedule.td#L11-L32">AIE2P 排程模型</a><span>IssueWidth、MicroOpBufferSize 為軟體排程控制；三項 FIXME 且 CompleteModel=0。 固定 commit 靜態查核，非實測晶片保證。</span><small>https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PSchedule.td#L11-L32</small></li><li><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenSchedule.td#L7858-L7863">部分字 store 讀改寫</a><span>ST_s8 source read=7、兩個記憶體點 [5,11]。 固定 commit 靜態查核，非實測晶片保證。</span><small>https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenSchedule.td#L7858-L7863</small></li><li><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenSchedule.td#L12-L31">資源階段 helper</a><span>Empty/Prefix/Simple 與 part-word Required/Reserved 的確切定義。 固定 commit 靜態查核，非實測晶片保證。</span><small>https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenSchedule.td#L12-L31</small></li><li><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/AIEBaseInstrInfo.cpp#L1082-L1165">鎖 stall/resume 與 memory edge</a><span>2/8 是保守核心 stall/resume 模型，註明 ISA 未完整描述；非鎖等待固定耗時。 固定 commit 靜態查核，非實測晶片保證。</span><small>https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/AIEBaseInstrInfo.cpp#L1082-L1165</small></li></ol></section><div class="link-panels"><section><h2>接著閱讀</h2><div class="related-links"><a href="isa.html">ISA 閱讀：從 AIE2P header 追到後端原語</a><a href="compute.html">計算核心：scalar、SIMD、VLIW 與累加器</a><a href="mma.html">矩陣乘加：原語、API 包裝與 LLM microtile</a><a href="performance.html">效能模型：容量、Roofline 與端到端下界</a><a href="compiler.html">編譯器分工：從資料流到 XDNA2 產物</a><a href="instruction-cycles.html">指令週期：完整 itinerary、操作數時點與旁路</a><a href="vliw-pipeline.html">VLIW 與外露管線：bundle 格式、scoreboard 與 hazard</a></div></section><section><h2>哪些條目連到這裡？</h2><div class="related-links"><a href="spec-index.html">XDNA2 規格總索引：ISA、cycles、VLIW、tile 與互連</a><a href="vliw-pipeline.html">VLIW 與外露管線：bundle 格式、scoreboard 與 hazard</a><a href="instruction-cycles.html">指令週期：完整 itinerary、操作數時點與旁路</a></div></section></div><a class="back-top" href="#main">回到本文頂端 ↑</a></main></div><footer class="footer">XDNA 2 / AIE2P · 繁體中文知識庫 · 來源快照 2026-09-12<br>公開文件與固定版本原始碼查核，不是完整保密 ISA 手冊；未執行 NPU 實驗。<a href="wiki-method.html">維護方法與證據界線</a> · <a href="guide/index.html">原始長篇指南</a></footer></body></html>

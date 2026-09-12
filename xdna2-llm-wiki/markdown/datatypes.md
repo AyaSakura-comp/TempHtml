@@ -104,6 +104,8 @@ BF16 是[獨立的 `__bf16` 型別](https://github.com/Xilinx/llvm-aie/blob/386c
 - [memory](memory.md)
 
 ## 反向連結
+- [isa-registers](isa-registers.md)
+- [isa-instructions](isa-instructions.md)
 - [isa](isa.md)
 - [mma](mma.md)
 - [compiler](compiler.md)

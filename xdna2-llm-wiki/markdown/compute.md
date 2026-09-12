@@ -82,6 +82,12 @@
 
 ## 反向連結
 - [system](system.md)
+- [isa-registers](isa-registers.md)
+- [vliw-pipeline](vliw-pipeline.md)
+- [instruction-cycles](instruction-cycles.md)
+- [software-pipelining](software-pipelining.md)
+- [isa-encoding](isa-encoding.md)
+- [isa-instructions](isa-instructions.md)
 - [memory](memory.md)
 - [synchronization](synchronization.md)
 - [isa](isa.md)
