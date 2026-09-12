@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>Pixal3D｜GLB 互動預覽</title>
+  <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.1.0/model-viewer.min.js"></script>
+  <style>
+    :root { color-scheme: dark; --ink:#eef7ff; --muted:#9eb0c2; --cyan:#66e3ff; }
+    * { box-sizing:border-box }
+    body { margin:0; min-height:100svh; overflow:hidden; color:var(--ink); font:14px/1.45 system-ui,sans-serif; background:radial-gradient(circle at 50% 18%,#243648 0,#101923 38%,#080c12 100%); }
+    model-viewer { width:100vw; height:100svh; --poster-color:transparent; }
+    .bar { position:fixed; z-index:2; top:max(14px,env(safe-area-inset-top)); left:14px; right:14px; display:flex; justify-content:space-between; align-items:flex-start; gap:12px; pointer-events:none; }
+    .panel { padding:12px 14px; border:1px solid #ffffff1d; border-radius:14px; background:#071019c9; backdrop-filter:blur(14px); box-shadow:0 12px 40px #0007; }
+    h1 { margin:0; font-size:16px; letter-spacing:.04em } p { margin:4px 0 0; color:var(--muted); font-size:12px }
+    .tag { color:var(--cyan); white-space:nowrap }
+    .help { position:fixed; z-index:2; bottom:max(14px,env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%); color:#d4e5f5; white-space:nowrap; }
+    button { pointer-events:auto; appearance:none; border:1px solid #ffffff28; border-radius:10px; background:#10202e; color:var(--ink); padding:9px 12px; cursor:pointer }
+    @media(max-width:560px){ .tag{display:none}.help{font-size:11px}.panel{padding:10px 12px} }
+  </style>
+</head>
+<body>
+  <div class="bar"><div class="panel"><h1>Pixal3D · GLB 預覽</h1><p>最新一個完整輸出的模型</p></div><div class="panel tag">拖曳旋轉 · 滾輪縮放</div></div>
+  <model-viewer id="viewer" src="model.glb" alt="Pixal3D 生成的 3D 模型" camera-controls touch-action="pan-y" auto-rotate rotation-per-second="18deg" shadow-intensity="1.25" shadow-softness=".75" exposure="1.05" environment-image="neutral" interaction-prompt="auto">
+    <div slot="progress-bar" style="position:absolute;left:15%;right:15%;top:50%;height:3px;background:#ffffff24;border-radius:9px;overflow:hidden"><div id="progress" style="height:100%;width:0;background:#66e3ff"></div></div>
+  </model-viewer>
+  <div class="help panel"><button id="toggle">暫停自動旋轉</button>　滑鼠／單指旋轉 · 滾輪／雙指縮放</div>
+  <script>
+    const viewer=document.querySelector('#viewer'), progress=document.querySelector('#progress'), toggle=document.querySelector('#toggle');
+    viewer.addEventListener('progress',e=>progress.style.width=(e.detail.totalProgress*100)+'%');
+    viewer.addEventListener('load',()=>progress.parentElement.remove());
+    viewer.addEventListener('error',()=>{ document.querySelector('.help').textContent='模型載入失敗，請重新整理頁面'; });
+    toggle.onclick=()=>{ viewer.autoRotate=!viewer.autoRotate; toggle.textContent=viewer.autoRotate?'暫停自動旋轉':'開始自動旋轉'; };
+  </script>
+</body>
+</html>
