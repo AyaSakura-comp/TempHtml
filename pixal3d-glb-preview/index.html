@@ -14,9 +14,11 @@
     .panel { padding:12px 14px; border:1px solid #ffffff1d; border-radius:14px; background:#071019c9; backdrop-filter:blur(14px); box-shadow:0 12px 40px #0007; }
     h1 { margin:0; font-size:16px; letter-spacing:.04em } p { margin:4px 0 0; color:var(--muted); font-size:12px }
     .tag { color:var(--cyan); white-space:nowrap }
-    .help { position:fixed; z-index:2; bottom:max(14px,env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%); color:#d4e5f5; white-space:nowrap; }
+    .help { position:fixed; z-index:2; bottom:max(14px,env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%); display:flex; align-items:center; gap:8px; color:#d4e5f5; white-space:nowrap; }
     button { pointer-events:auto; appearance:none; border:1px solid #ffffff28; border-radius:10px; background:#10202e; color:var(--ink); padding:9px 12px; cursor:pointer }
-    @media(max-width:560px){ .tag{display:none}.help{font-size:11px}.panel{padding:10px 12px} }
+    button[aria-pressed="true"] { border-color:var(--cyan); color:var(--cyan); background:#102a38 }
+    button:disabled { opacity:.5; cursor:wait }
+    @media(max-width:560px){ .tag{display:none}.help{font-size:11px;left:10px;right:10px;transform:none;justify-content:center;flex-wrap:wrap;white-space:normal}.panel{padding:10px 12px} }
   </style>
 </head>
 <body>
@@ -24,13 +26,34 @@
   <model-viewer id="viewer" src="model.glb" alt="Pixal3D 生成的 3D 模型" camera-controls touch-action="pan-y" auto-rotate rotation-per-second="18deg" shadow-intensity="1.25" shadow-softness=".75" exposure="1.05" environment-image="neutral" interaction-prompt="auto">
     <div slot="progress-bar" style="position:absolute;left:15%;right:15%;top:50%;height:3px;background:#ffffff24;border-radius:9px;overflow:hidden"><div id="progress" style="height:100%;width:0;background:#66e3ff"></div></div>
   </model-viewer>
-  <div class="help panel"><button id="toggle">暫停自動旋轉</button>　滑鼠／單指旋轉 · 滾輪／雙指縮放</div>
+  <div class="help panel"><button id="toggle">暫停自動旋轉</button><button id="texture" disabled aria-pressed="false">關閉 Texture</button><span>滑鼠／單指旋轉 · 滾輪／雙指縮放</span></div>
   <script>
-    const viewer=document.querySelector('#viewer'), progress=document.querySelector('#progress'), toggle=document.querySelector('#toggle');
+    const viewer=document.querySelector('#viewer'), progress=document.querySelector('#progress');
+    const toggle=document.querySelector('#toggle'), textureButton=document.querySelector('#texture');
+    let textureOff=false, savedMaterials=[];
     viewer.addEventListener('progress',e=>progress.style.width=(e.detail.totalProgress*100)+'%');
-    viewer.addEventListener('load',()=>progress.parentElement.remove());
+    viewer.addEventListener('load',()=>{
+      progress.parentElement.remove();
+      savedMaterials=viewer.model.materials.map(material=>{
+        const pbr=material.pbrMetallicRoughness;
+        return {material, baseColorFactor:[...pbr.baseColorFactor], channels:[
+          pbr.baseColorTexture, pbr.metallicRoughnessTexture, material.normalTexture,
+          material.occlusionTexture, material.emissiveTexture
+        ].filter(Boolean).map(info=>({info,texture:info.texture}))};
+      });
+      textureButton.disabled=false;
+    });
     viewer.addEventListener('error',()=>{ document.querySelector('.help').textContent='模型載入失敗，請重新整理頁面'; });
     toggle.onclick=()=>{ viewer.autoRotate=!viewer.autoRotate; toggle.textContent=viewer.autoRotate?'暫停自動旋轉':'開始自動旋轉'; };
+    textureButton.onclick=()=>{
+      textureOff=!textureOff;
+      for(const saved of savedMaterials){
+        for(const channel of saved.channels) channel.info.setTexture(textureOff?null:channel.texture);
+        saved.material.pbrMetallicRoughness.setBaseColorFactor(textureOff?'#b9c2c9':saved.baseColorFactor);
+      }
+      textureButton.textContent=textureOff?'開啟 Texture':'關閉 Texture';
+      textureButton.setAttribute('aria-pressed',String(textureOff));
+    };
   </script>
 </body>
 </html>
