@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>Pixal3D｜GLB 互動預覽</title>
+  <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.1.0/model-viewer.min.js"></script>
+  <style>
+    :root { color-scheme:light; --ink:#34302f; --muted:#8c8582; --sakura:#d98796; --line:#e9e3df; --paper:#fffdfb; }
+    * { box-sizing:border-box; -webkit-tap-highlight-color:transparent }
+    body { margin:0; min-height:100svh; overflow:hidden; color:var(--ink); font:14px/1.5 "Noto Sans TC","Hiragino Sans","Yu Gothic",system-ui,sans-serif; background:radial-gradient(circle at 50% 25%,#fff 0,#faf7f3 56%,#f3ece8 100%); }
+    body::before { content:""; position:fixed; inset:0; pointer-events:none; opacity:.36; background-image:linear-gradient(90deg,transparent 49.8%,#e9cfd2 50%,transparent 50.2%); background-size:84px 84px; }
+    model-viewer { width:100vw; height:100svh; --poster-color:transparent; }
+    .bar { position:fixed; z-index:2; top:max(12px,env(safe-area-inset-top)); left:12px; right:12px; display:flex; justify-content:space-between; align-items:flex-start; gap:12px; pointer-events:none; }
+    .panel { padding:12px 15px; border:1px solid #e9e3df; border-radius:18px; background:#fffdfbe8; backdrop-filter:blur(14px); box-shadow:0 8px 28px #806e6617; }
+    h1 { margin:0; font-size:16px; font-weight:650; letter-spacing:.06em } h1::before { content:"✿"; color:var(--sakura); margin-right:7px }
+    p { margin:3px 0 0; color:var(--muted); font-size:12px }
+    .tag { color:var(--sakura); white-space:nowrap }
+    .help { position:fixed; z-index:2; bottom:max(12px,env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%); display:grid; grid-template-columns:1fr 1fr; align-items:center; gap:9px; min-width:330px; color:var(--muted); white-space:nowrap; }
+    .help span { grid-column:1/-1; text-align:center; font-size:11px }
+    button { min-height:46px; pointer-events:auto; touch-action:manipulation; appearance:none; border:1px solid var(--line); border-radius:14px; background:#fff; color:var(--ink); padding:10px 15px; font:600 13px/1 inherit; cursor:pointer; box-shadow:0 2px 8px #806e6612; }
+    button:active { transform:scale(.98); background:#fff6f7 }
+    button[aria-pressed="true"] { border-color:#dfa0aa; color:#ad5364; background:#fff0f2 }
+    button:disabled { opacity:.42; cursor:wait }
+    @media(max-width:560px){
+      model-viewer { height:calc(100svh - 2px) }
+      .tag{display:none}.panel{padding:11px 13px}.bar{top:max(10px,env(safe-area-inset-top));left:10px;right:10px}
+      .help{left:10px;right:10px;bottom:max(10px,env(safe-area-inset-bottom));transform:none;min-width:0;width:auto;padding:10px;gap:8px;border-radius:20px}
+      button{min-height:48px;padding:10px 8px;font-size:13px}.help span{font-size:10px;padding-bottom:1px}
+    }
+  </style>
+</head>
+<body>
+  <div class="bar"><div class="panel"><h1>Pixal3D · GLB 預覽</h1><p>城堡模型 · 互動預覽</p></div><div class="panel tag">拖曳旋轉 · 滾輪縮放</div></div>
+  <model-viewer id="viewer" src="model.glb" alt="Pixal3D 生成的 3D 模型" camera-controls touch-action="pan-y" auto-rotate rotation-per-second="18deg" shadow-intensity="1.25" shadow-softness=".75" exposure="1.05" environment-image="neutral" interaction-prompt="auto">
+    <div slot="progress-bar" style="position:absolute;left:15%;right:15%;top:50%;height:3px;background:#eadfda;border-radius:9px;overflow:hidden"><div id="progress" style="height:100%;width:0;background:#d98796"></div></div>
+  </model-viewer>
+  <div class="help panel"><button id="toggle">暫停自動旋轉</button><button id="texture" disabled aria-pressed="false">關閉 Texture</button><span>滑鼠／單指旋轉 · 滾輪／雙指縮放</span></div>
+  <script>
+    const viewer=document.querySelector('#viewer'), progress=document.querySelector('#progress');
+    const toggle=document.querySelector('#toggle'), textureButton=document.querySelector('#texture');
+    let textureOff=false, savedMaterials=[];
+    viewer.addEventListener('progress',e=>progress.style.width=(e.detail.totalProgress*100)+'%');
+    viewer.addEventListener('load',()=>{
+      progress.parentElement.remove();
+      savedMaterials=viewer.model.materials.map(material=>{
+        const pbr=material.pbrMetallicRoughness;
+        return {material, baseColorFactor:[...pbr.baseColorFactor], channels:[
+          pbr.baseColorTexture, pbr.metallicRoughnessTexture, material.normalTexture,
+          material.occlusionTexture, material.emissiveTexture
+        ].filter(Boolean).map(info=>({info,texture:info.texture}))};
+      });
+      textureButton.disabled=false;
+    });
+    viewer.addEventListener('error',()=>{ document.querySelector('.help').textContent='模型載入失敗，請重新整理頁面'; });
+    toggle.onclick=()=>{ viewer.autoRotate=!viewer.autoRotate; toggle.textContent=viewer.autoRotate?'暫停自動旋轉':'開始自動旋轉'; };
+    textureButton.onclick=()=>{
+      textureOff=!textureOff;
+      for(const saved of savedMaterials){
+        for(const channel of saved.channels) channel.info.setTexture(textureOff?null:channel.texture);
+        saved.material.pbrMetallicRoughness.setBaseColorFactor(textureOff?'#b9c2c9':saved.baseColorFactor);
+      }
+      textureButton.textContent=textureOff?'開啟 Texture':'關閉 Texture';
+      textureButton.setAttribute('aria-pressed',String(textureOff));
+    };
+  </script>
+</body>
+</html>
