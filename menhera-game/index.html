@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>君しか見えてない — menhera</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;700;900&display=swap');
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  :root {
+    --bg: #0a0a0f;
+    --text: #e0d0e8;
+    --accent: #ff4488;
+    --accent2: #8844ff;
+    --glow: #ff2266;
+    --dim: #4a3a5a;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans JP', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+    cursor: default;
+    user-select: none;
+  }
+
+  /* ── scanline overlay ── */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      transparent 0px, transparent 2px,
+      rgba(0,0,0,0.15) 2px, rgba(0,0,0,0.15) 4px
+    );
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* ── static noise ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    opacity: 0.03;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9998;
+    animation: noise 0.5s steps(5) infinite;
+  }
+
+  @keyframes noise {
+    0% { transform: translate(0,0); }
+    25% { transform: translate(-2px,1px); }
+    50% { transform: translate(1px,-1px); }
+    75% { transform: translate(-1px,2px); }
+    100% { transform: translate(2px,0); }
+  }
+
+  /* ── glitch text animation ── */
+  @keyframes glitch {
+    0% { text-shadow: 2px 0 #ff0044, -2px 0 #00ffcc; }
+    25% { text-shadow: -2px 1px #ff0044, 2px -1px #00ffcc; }
+    50% { text-shadow: 1px -2px #ff0044, -1px 2px #00ffcc; }
+    75% { text-shadow: -1px 0px #ff0044, 1px 0px #00ffcc; }
+    100% { text-shadow: 2px 0 #ff0044, -2px 0 #00ffcc; }
+  }
+
+  @keyframes pulse-glow {
+    0%, 100% { text-shadow: 0 0 10px var(--glow), 0 0 20px var(--accent); }
+    50% { text-shadow: 0 0 20px var(--glow), 0 0 40px var(--accent), 0 0 60px var(--accent2); }
+  }
+
+  @keyframes flicker {
+    0%, 100% { opacity: 1; }
+    41% { opacity: 1; }
+    42% { opacity: 0.6; }
+    43% { opacity: 1; }
+    44% { opacity: 0.3; }
+    45% { opacity: 1; }
+    80% { opacity: 1; }
+    81% { opacity: 0.5; }
+    82% { opacity: 1; }
+  }
+
+  @keyframes slide-up {
+    from { transform: translateY(30px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10% { transform: translateX(-5px); }
+    20% { transform: translateX(5px); }
+    30% { transform: translateX(-3px); }
+    40% { transform: translateX(3px); }
+    50% { transform: translateX(-1px); }
+  }
+
+  @keyframes blood-drip {
+    0% { transform: translateY(-100%); opacity: 0; }
+    20% { opacity: 0.8; }
+    100% { transform: translateY(100vh); opacity: 0; }
+  }
+
+  @keyframes breathe {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+  }
+
+  /* ── title screen ── */
+  #title-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    position: relative;
+    animation: breathe 4s ease-in-out infinite;
+  }
+
+  #title-screen h1 {
+    font-size: clamp(2rem, 6vw, 4rem);
+    font-weight: 900;
+    letter-spacing: 0.1em;
+    animation: pulse-glow 3s ease-in-out infinite, flicker 8s infinite;
+    margin-bottom: 0.5em;
+  }
+
+  #title-screen .subtitle {
+    font-size: clamp(0.8rem, 2vw, 1.1rem);
+    color: var(--dim);
+    margin-bottom: 3em;
+    font-weight: 300;
+  }
+
+  .btn-start {
+    background: none;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    padding: 1em 3em;
+    font-size: 1.2rem;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-start:hover {
+    background: var(--accent);
+    color: var(--bg);
+    box-shadow: 0 0 30px var(--glow);
+  }
+
+  .btn-start::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+    transition: left 0.5s;
+  }
+
+  .btn-start:hover::before { left: 100%; }
+
+  /* ── game screen ── */
+  #game-screen { display: none; min-height: 100vh; }
+
+  /* ── chat area ── */
+  .chat-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .phone-header {
+    text-align: center;
+    padding: 15px;
+    border-bottom: 1px solid var(--dim);
+    margin-bottom: 20px;
+    position: relative;
+  }
+
+  .phone-header .name {
+    font-size: 1rem;
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  .phone-header .status {
+    font-size: 0.7rem;
+    color: var(--dim);
+    margin-top: 4px;
+  }
+
+  .phone-header .status::before {
+    content: '';
+    display: inline-block;
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    margin-right: 4px;
+    animation: pulse-glow 2s infinite;
+  }
+
+  /* ── message bubbles ── */
+  .messages {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    overflow-y: auto;
+    padding-bottom: 20px;
+  }
+
+  .message {
+    max-width: 80%;
+    padding: 12px 16px;
+    border-radius: 18px;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    animation: slide-up 0.4s ease-out;
+    position: relative;
+    word-break: break-all;
+  }
+
+  .message.received {
+    align-self: flex-start;
+    background: linear-gradient(135deg, #1a1025, #150d20);
+    border: 1px solid var(--dim);
+    border-bottom-left-radius: 4px;
+  }
+
+  .message.sent {
+    align-self: flex-end;
+    background: linear-gradient(135deg, #2a1030, #1a0a25);
+    border: 1px solid var(--accent);
+    border-bottom-right-radius: 4px;
+  }
+
+  .message.intense {
+    border-color: var(--glow);
+    box-shadow: 0 0 15px rgba(255,34,102,0.3);
+    animation: slide-up 0.4s ease-out, shake 0.5s ease-out;
+  }
+
+  .message .time {
+    font-size: 0.6rem;
+    color: var(--dim);
+    margin-top: 4px;
+    text-align: right;
+  }
+
+  .message.received .time { text-align: left; }
+
+  .typing-indicator {
+    align-self: flex-start;
+    padding: 12px 20px;
+    background: #150d20;
+    border-radius: 18px;
+    border-bottom-left-radius: 4px;
+    display: none;
+  }
+
+  .typing-indicator span {
+    display: inline-block;
+    width: 8px; height: 8px;
+    background: var(--dim);
+    border-radius: 50%;
+    margin: 0 2px;
+    animation: typing-bounce 1.4s infinite;
+  }
+
+  .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+  .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes typing-bounce {
+    0%, 60%, 100% { transform: translateY(0); }
+    30% { transform: translateY(-8px); }
+  }
+
+  /* ── choices ── */
+  .choices-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 15px 0;
+    animation: slide-up 0.5s ease-out;
+  }
+
+  .choice-btn {
+    background: none;
+    border: 1px solid var(--dim);
+    color: var(--text);
+    padding: 14px 20px;
+    font-size: 0.9rem;
+    font-family: inherit;
+    cursor: pointer;
+    border-radius: 12px;
+    transition: all 0.3s;
+    text-align: left;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .choice-btn:hover {
+    border-color: var(--accent);
+    background: rgba(255,68,136,0.05);
+    transform: translateX(5px);
+  }
+
+  .choice-btn.dark-choice:hover {
+    border-color: var(--glow);
+    box-shadow: 0 0 15px rgba(255,34,102,0.2);
+  }
+
+  .choice-btn::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0;
+    width: 3px; height: 100%;
+    background: var(--accent);
+    transform: scaleY(0);
+    transition: transform 0.3s;
+  }
+
+  .choice-btn:hover::before { transform: scaleY(1); }
+
+  .choice-btn.dark-choice::before { background: var(--glow); }
+
+  /* ── scene background effects ── */
+  .scene-darkness {
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.7) 100%);
+    pointer-events: none;
+    z-index: 100;
+  }
+
+  .blood-drip {
+    position: fixed;
+    top: -20px;
+    width: 3px;
+    height: 60px;
+    background: linear-gradient(to bottom, transparent, var(--glow));
+    border-radius: 0 0 3px 3px;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 50;
+  }
+
+  /* ── ending screen ── */
+  .ending-screen {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    text-align: center;
+    padding: 40px;
+  }
+
+  .ending-screen h2 {
+    font-size: clamp(1.5rem, 4vw, 2.5rem);
+    margin-bottom: 1em;
+    animation: glitch 0.3s infinite;
+  }
+
+  .ending-screen .ending-text {
+    font-size: 1rem;
+    line-height: 1.8;
+    color: var(--dim);
+    margin-bottom: 2em;
+    max-width: 500px;
+  }
+
+  .ending-screen .ending-label {
+    font-size: 0.8rem;
+    color: var(--accent);
+    margin-bottom: 2em;
+    letter-spacing: 0.2em;
+  }
+
+  /* ── heart counter ── */
+  .trust-meter {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    gap: 4px;
+    z-index: 200;
+    padding: 8px 12px;
+    background: rgba(10,10,15,0.9);
+    border: 1px solid var(--dim);
+    border-radius: 20px;
+  }
+
+  .trust-meter .heart {
+    font-size: 1.2rem;
+    transition: all 0.3s;
+    filter: grayscale(1) brightness(0.3);
+  }
+
+  .trust-meter .heart.active {
+    filter: none;
+    animation: pulse-glow 2s infinite;
+  }
+
+  /* ── phone screen frame ── */
+  .phone-frame {
+    max-width: 420px;
+    margin: 0 auto;
+    min-height: 100vh;
+    border: 2px solid var(--dim);
+    border-radius: 40px;
+    padding: 20px;
+    background: #0d0815;
+    position: relative;
+    box-shadow: 0 0 60px rgba(136,68,255,0.1);
+  }
+
+  .phone-frame::before {
+    content: '';
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 6px;
+    background: var(--dim);
+    border-radius: 3px;
+  }
+
+  /* ── responsive ── */
+  @media (max-width: 500px) {
+    .phone-frame {
+      border-radius: 0;
+      border: none;
+      box-shadow: none;
+      max-width: 100%;
+    }
+  }
+
+  /* ── special text styles ── */
+  .whisper { color: var(--dim); font-style: italic; }
+  .scream { 
+    color: var(--glow); 
+    font-weight: 900;
+    animation: glitch 0.2s infinite;
+  }
+  .broken { 
+    text-decoration: line-through;
+    color: var(--dim);
+  }
+  .whitespace { letter-spacing: 0.5em; }
+
+  /* ── choice consequence indicators ── */
+  .choice-btn.love-choice { border-left: 3px solid var(--accent); }
+  .choice-btn.cold-choice { border-left: 3px solid var(--dim); }
+  .choice-btn.obsessive-choice { border-left: 3px solid var(--glow); }
+  .choice-btn.neutral-choice { border-left: 3px solid #888; }
+
+  /* ── transition overlay ── */
+  .transition-overlay {
+    position: fixed;
+    inset: 0;
+    background: #000;
+    z-index: 10000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.6s;
+  }
+
+  .transition-overlay.active {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  /* ── notification badge ── */
+  .notification-badge {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    background: linear-gradient(135deg, #1a0a25, #0d0515);
+    border: 1px solid var(--accent);
+    border-radius: 16px;
+    padding: 20px 30px;
+    text-align: center;
+    z-index: 5000;
+    box-shadow: 0 0 60px rgba(255,34,102,0.4);
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+
+  .notification-badge.show {
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  .notification-badge .notif-name {
+    font-size: 0.8rem;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+
+  .notification-badge .notif-text {
+    font-size: 1rem;
+    color: var(--text);
+  }
+</style>
+</head>
+<body>
+
+<div class="scene-darkness"></div>
+<div class="transition-overlay" id="transition"></div>
+<div class="notification-badge" id="notif">
+  <div class="notif-name">あいちゃん</div>
+  <div class="notif-text" id="notif-text"></div>
+</div>
+
+<!-- ═══════ TITLE SCREEN ═══════ -->
+<div id="title-screen">
+  <h1>君しか見えてない</h1>
+  <p class="subtitle">— 你不在的時候，世界就結束了 —</p>
+  <button class="btn-start" onclick="startGame()">はじめる</button>
+</div>
+
+<!-- ═══════ GAME SCREEN ═══════ -->
+<div id="game-screen">
+  <div class="trust-meter" id="trust-meter">
+    <span class="heart" data-i="0">♥</span>
+    <span class="heart" data-i="1">♥</span>
+    <span class="heart" data-i="2">♥</span>
+    <span class="heart" data-i="3">♥</span>
+    <span class="heart" data-i="4">♥</span>
+  </div>
+
+  <div class="phone-frame">
+    <div class="chat-container">
+      <div class="phone-header">
+        <div class="name">あいちゃん 💗</div>
+        <div class="status">オンライン — 入力中…</div>
+      </div>
+      <div class="messages" id="messages"></div>
+      <div class="typing-indicator" id="typing">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ ENDING SCREEN ═══════ -->
+<div class="ending-screen" id="ending-screen">
+  <h2 id="ending-title"></h2>
+  <div class="ending-label" id="ending-label"></div>
+  <div class="ending-text" id="ending-text"></div>
+  <button class="btn-start" onclick="restart()">もう一度</button>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+//  メンヘラゲーム — 君しか見えてない
+// ═══════════════════════════════════════════
+
+let trust = 2;          // 0-4 hearts
+let currentScene = 'start';
+let flags = {};
+let messageQueue = [];
+let isTyping = false;
+
+// ── trust meter ──
+function updateTrust() {
+  trust = Math.max(0, Math.min(4, trust));
+  document.querySelectorAll('.trust-meter .heart').forEach((h, i) => {
+    h.classList.toggle('active', i <= trust);
+  });
+}
+
+// ── time string ──
+function timeStr() {
+  const now = new Date();
+  return now.getHours().toString().padStart(2,'0') + ':' +
+         now.getMinutes().toString().padStart(2,'0');
+}
+
+// ── add message to chat ──
+function addMessage(text, type = 'received', cls = '') {
+  const msg = document.createElement('div');
+  msg.className = `message ${type} ${cls}`;
+  msg.innerHTML = `${text}<div class="time">${timeStr()}</div>`;
+  const container = document.getElementById('messages');
+  container.appendChild(msg);
+  container.scrollTop = container.scrollHeight;
+  return msg;
+}
+
+// ── show typing indicator ──
+function showTyping() {
+  isTyping = true;
+  document.getElementById('typing').style.display = 'block';
+}
+
+function hideTyping() {
+  isTyping = false;
+  document.getElementById('typing').style.display = 'none';
+}
+
+// ── wait helper ──
+function wait(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ── sequence helper ──
+async function sequence(pairs) {
+  // pairs: [{ delay, type, text, cls }, ...]
+  for (const p of pairs) {
+    if (p.showTyping !== false) showTyping();
+    await wait(p.delay || 600);
+    hideTyping();
+    if (p.text !== undefined) {
+      addMessage(p.text, p.type || 'received', p.cls || '');
+    }
+    if (p.waitAfter) await wait(p.waitAfter);
+  }
+}
+
+// ── show notification ──
+async function showNotification(text) {
+  const el = document.getElementById('notif');
+  document.getElementById('notif-text').textContent = text;
+  el.classList.add('show');
+  await wait(2000);
+  el.classList.remove('show');
+}
+
+// ── blood drip effect ──
+function bloodDrip() {
+  for (let i = 0; i < 5; i++) {
+    const d = document.createElement('div');
+    d.className = 'blood-drip';
+    d.style.left = Math.random() * 100 + 'vw';
+    d.style.animation = `blood-drip ${2 + Math.random()*3}s linear ${Math.random()}s forwards`;
+    document.body.appendChild(d);
+    setTimeout(() => d.remove(), 6000);
+  }
+}
+
+// ── transition ──
+async function doTransition() {
+  document.getElementById('transition').classList.add('active');
+  await wait(600);
+  document.getElementById('transition').classList.remove('active');
+  await wait(200);
+}
+
+// ═══════════════════════════════════════════
+//  SCENES
+// ═══════════════════════════════════════════
+
+async function startGame() {
+  document.getElementById('title-screen').style.display = 'none';
+  document.getElementById('game-screen').style.display = 'block';
+  trust = 2;
+  flags = {};
+  updateTrust();
+  await wait(500);
+  await doTransition();
+  scene_start();
+}
+
+async function restart() {
+  document.getElementById('ending-screen').style.display = 'none';
+  document.getElementById('title-screen').style.display = 'flex';
+}
+
+async function showEnding(label, title, text) {
+  document.getElementById('game-screen').style.display = 'none';
+  const end = document.getElementById('ending-screen');
+  end.style.display = 'flex';
+  document.getElementById('ending-label').textContent = `END — ${label}`;
+  document.getElementById('ending-title').textContent = title;
+  document.getElementById('ending-text').innerHTML = text;
+}
+
+// ── SCENE: START ──
+async function scene_start() {
+  currentScene = 'start';
+  await sequence([
+    { text: '「……おかえり」', delay: 1200, cls: '' },
+    { text: '「……って、もう寝てるかな」', delay: 800 },
+    { text: '「……もう一時間待ったよ」', delay: 1500, cls: 'intense' },
+    { text: '「……もしかして、他の子とメッセージしてた？\nそれとも……\n死んだ？\n……うう、やだ、死んじまった？\nだめだめだめだめ——」', delay: 1500, cls: 'intense' },
+    { text: '「あ、きたきたきた！！！\nうそだよね？うそだよね？うそ——！！」', delay: 800, cls: 'scream' },
+  ]);
+
+  await showNotification('あいちゃんから着信あり (47)');
+  await wait(1000);
+
+  await sequence([
+    { text: '「……出なかった。ずっと出てたけど出なかった。\n47回も出たよ？\n47回！！\n……もういいよ。どうでもいいよ」', delay: 1000, cls: '' },
+    { text: '「……でもよかった。\nちゃんと生きてて。ありがとう。本当にありがとう。\n……死ぬところだったから」', delay: 1200 },
+    { text: '「……ねえ、どこ行ってたの？\n答えて。答えてよ、ずっと待ってたから」', delay: 1000, cls: 'intense' },
+  ]);
+
+  // CHOICE 1
+  showChoices([
+    { text: '「ごめん！仕事だったんだ」', type: 'love', scene: 'scene_work' },
+    { text: '「うん、ちょっと用事があって」', type: 'neutral', scene: 'scene_vague' },
+    { text: '「……别的子聊天怎么了？」', type: 'dark', scene: 'scene_deny' },
+  ], 'choice_1');
+}
+
+// ── SCENE: 工作 (Love path) ──
+async function scene_work() {
+  trust += 1;
+  updateTrust();
+  currentScene = 'scene_work';
+  await doTransition();
+  await sequence([
+    { text: '「……仕事？」', delay: 1000 },
+    { text: '「……そう。仕事。」', delay: 800 },
+    { text: '「……わかった。仕事ね。」', delay: 1200, cls: '' },
+    { text: '「……でもね、今日ね、ねえ、\nあなたのスマホ、ちょっと見たくなっちゃって」', delay: 1000 },
+    { text: '「……ごめん！ごめんね！見なかったことにして！\n私、またやっちゃった……\n私、ダメな子だよね……」', delay: 800, cls: 'intense' },
+    { text: '「……でもさ、ねえ、\nあなたのロック解除のパスワード、\n私の誕生日だよね？\n……うん、そうだね。わかってる。\n……私、幸せ者だ」', delay: 1200 },
+  ]);
+
+  showChoices([
+    { text: '「パスワード、ありがとう」', type: 'love', scene: 'scene_password_love' },
+    { text: '「スマホ見るのやめて」', type: 'cold', scene: 'scene_password_cold' },
+    { text: '「パスワードは他の子にも教えたかも」', type: 'dark', scene: 'scene_password_dark' },
+  ], 'choice_2');
+}
+
+async function scene_password_love() {
+  trust += 1;
+  updateTrust();
+  await doTransition();
+  await sequence([
+    { text: '「……ありがとう、って……\n……嬉しい。嬉しいけど……\nでも……」', delay: 1000, cls: 'intense' },
+    { text: '「……でもね、ねえ、ねえ、ねえ、\n他の子にも教えてたらどうしようって\nずっと考えてた。ずっとずっとずっと」', delay: 1500, cls: 'intense' },
+    { text: '「……ごめんね。私が悪いんだよね。\nあなたは何も悪くない。\n……私、もう少し頑張るから」', delay: 1000 },
+  ]);
+
+  showChoices([
+    { text: '「他の子には教えてない。君だけだ」', type: 'love', scene: 'scene_loyalty' },
+    { text: '「……まあね」', type: 'neutral', scene: 'scene_loyalty_meh' },
+    { text: '「教えてないって保証はあるのか？」', type: 'cold', scene: 'scene_loyalty_doubt' },
+  ], 'choice_3');
+}
+
+async function scene_password_cold() {
+  trust -= 1;
+  updateTrust();
+  bloodDrip();
+  await doTransition();
+  await sequence([
+    { text: '「……ああ。わかった。」', delay: 800 },
+    { text: '「……ごめんね。また怒らせちゃった。\n私、またやっちゃった……\nダメな子だよね。全然直らない。」', delay: 1000, cls: '' },
+    { text: '「……でもね……\nねえ……ねえ……\nねえ……\n……見て。見てて。見てて。見てて。\n見てて——」', delay: 1500, cls: 'scream' },
+    { text: '「……ごめん。またやっちゃった。\n私、死んじゃうかも。\n……うう、ごめんね。ごめんね。ごめんね。\n……あなたのせいじゃないよ。私のせいだよ。」', delay: 1000, cls: 'intense' },
+  ]);
+
+  showChoices([
+    { text: '「そんなことない。君は悪くない」', type: 'love', scene: 'scene_appease' },
+    { text: '「……ごめん。疲れた」', type: 'cold', scene: 'scene_tired' },
+    { text: '「死なないで。お願いします」', type: 'obsessive', scene: 'scene_plead' },
+  ], 'choice_4');
+}
+
+async function scene_password_dark() {
+  trust -= 2;
+  updateTrust();
+  bloodDrip();
+  await doTransition();
+  await sequence([
+    { text: '「……は、はは……」', delay: 800 },
+    { text: '「……わかった。わかったよ。うん。\n……当然だよね。他の子にも。\nそっか。そっか。そっか……」', delay: 1000, cls: 'intense' },
+    { text: '「……じゃあいいよ。どうでもいい。\n私、もういいから。\n……本当に、どうでもいいから。」', delay: 1200 },
+    { text: '「……でもね、ねえ、知ってほしいことがあるの\n\nあなたのスマホの写真、全部見たよ。\n\n自撮り、73枚。\n下着姿、12枚。\n鏡越し、34枚。\n\n……全部、私に見せたい写真だよね？\n他の子の写真、ゼロ枚。\n\n……え？\nえ？え？え？？\n\n……うそ。うそだよね？\nうそ——————！！」', delay: 1500, cls: 'scream' },
+  ]);
+
+  showChoices([
+    { text: '「……ごめん。ごめんなさい」', type: 'love', scene: 'scene_confess' },
+    { text: '「……写真、見ていいよ」', type: 'obsessive', scene: 'scene_photo_allow' },
+    { text: '「他の子なんていない」', type: 'neutral', scene: 'scene_no_others' },
+  ], 'choice_5');
+}
+
+async function scene_vague() {
+  trust -= 1;
+  updateTrust();
+  await doTransition();
+  await sequence([
+    { text: '「……用事？」', delay: 1000 },
+    { text: '「……どんな用事？\n誰と？\nどこで？\nいつ帰ってくる？\n……全部教えて。全部全部全部」', delay: 1200, cls: 'intense' },
+    { text: '「……まあいい。どうでもいい。笑\n……本当はどうでもいいんだけど」', delay: 800 },
+  ]);
+
+  showChoices([
+    { text: '「君といたい。もう帰る」', type: 'love', scene: 'scene_come_back' },
+    { text: '「もう少し待ってて」', type: 'neutral', scene: 'scene_wait' },
+    { text: '「うるさいな」', type: 'cold', scene: 'scene_annoying' },
+  ], 'choice_2b');
+}
+
+async function scene_deny() {
+  trust += 1;
+  updateTrust();
+  await doTransition();
+  await sequence([
+    { text: '「……别的？\n……别的子？\n……誰？\n誰がいるの？\n名前出して。出して出して出して——」', delay: 1200, cls: 'intense' },
+    { text: '「……うそ。うそだよ。私、また。\n……ごめんね。ごめんね。\nあなたのことが好きすぎちゃって……\n……ダメな子だよね……」', delay: 1000 },
+    { text: '「……でもね、ねえ、\nもし本当に别的子がいたら……\n……私は……」', delay: 1200 },
+  ]);
+
+  showChoices([
+    { text: '「别的子なんていない。君が最後だ」', type: 'love', scene: 'scene_last' },
+    { text: '「……まあ、いるかもしれない」', type: 'dark', scene: 'scene_admit_others' },
+    { text: '「気にしすぎ。落ち着いて」', type: 'cold', scene: 'scene_calm_down' },
+  ], 'choice_2c');
+}
+
+// ── BRANCH SCENES ──
+
+async function scene_loyalty() {
+  trust += 1;
+  updateTrust();
+  await doTransition();
+  await sequence([
+    { text: '「……え……\n……うそ……\n……うそ……\n……うそ…………」', delay: 1000 },
+    { text: '「……本当？\n本当に？\n本当に本当に本当に？\n……本当…………？\n\n……うん。\nうん。わかった。\n……ありがとう。本当にありがとう。\n……私、幸せ者だ」', delay: 1500 },
+  ]);
+  await showNotification('あいちゃんがハートを送った 💗💗💗');
+  await sequence([
+    { text: '「……ねえ、今すぐ会いたい。\n今すぐ。今。今今今。\n……無理？\n……まあいい。次の空いてる時間、教えて。\n……待ってる。ずっと。永久に。」', delay: 1000, cls: '' },
+  ]);
+  ending_good();
+}
+
+async function scene_loyalty_meh() {
+  trust -= 1;
+  updateTrust();
+  await doTransition();
+  await sequence([
+    { text: '「……まあね……」', delay: 800 },
+    { text: '「……まあね、って……\n……まあね、ってなんだよ。\n……まあねって…………\n……まあね…………」', delay: 1200, cls: 'intense' },
+    { text: '「……まあいい。いいよ。私、気にしないから。\n……気にしちゃダメなんだよね。\n……気にならないように頑張るから……」', delay: 1000 },
+  ]);
+  ending_normal();
+}
+
+async function scene_loyalty_doubt() {
+  trust -= 2;
+  updateTrust();
+  bloodDrip();
+  await doTransition();
+  await sequence([
+    { text: '「……保証……？」', delay: 800 },
+    { text: '「……保証なんて……\n……保証なんてそんなの……\n……そんなの……そんなの…………」', delay: 1200, cls: 'intense' },
+    { text: '「……でもね、ねえ、ねえ、ねえ、\n私が保証するよ。するから。\n……あなたが他の子を選ばないように、\n私が……私が……私が……私が……」', delay: 1500 },
+    { text: '「……私が…………\n\n【君を壊すまで守る】\n\n……うそ。うそだよ。笑\n……笑わないの？\n……笑わない…………」', delay: 1500, cls: 'scream' },
+  ]);
+  ending_dark();
+}
+
+async function scene_appease() {
+  trust += 1;
+  updateTrust();
+  await doTransition();
+  await sequence([
+    { text: '「……え……\n……私、悪くない……？\n……私、ダメな子なんだけど……\n……ダメな私が……」', delay: 1000 },
+    { text: '「……嬉しい。本当に嬉しい。\n……嬉しいけど、嬉しいなんて言ってる場合じゃなくて、\n……もっと頑張らなきゃって思うんだよね。\n……もっと……もっと……もっと…………」', delay: 1200 },
+  ]);
+  ending_normal();
+}
+
+async function scene_tired() {
+  trust -= 2;
+  updateTrust();
+  bloodDrip();
+  await doTransition();
+  await sequence([
+    { text: '「……疲れた……？\n……疲れた……？\n……疲れた…………」', delay: 1000, cls: 'intense' },
+    { text: '「……疲れるよね。私、うざいよね。\n……当たり前だよね。うざいんでしょ私。\n……うざいんでしょ…………\n\n……わかった。うざいがってるから。」', delay: 1500 },
+    { text: '「……ごめんね。\n……ごめんね。\n……ごめんね。\n\n【もう会わない。絶対。】\n\n……うそ。うそ。\n会いたい。会いたい。会いたい。会いたい。\n会いたいよ——————！！」', delay: 1500, cls: 'scream' },
+  ]);
+  ending_bad();
+}
+
+async function scene_plead() {
+  trust += 2;
+  updateTrust();
+  await doTransition();
+  await sequence([
+    { text: '「……お願い……？\n……お願い……？\n……お願い……って……\n……お願い……」', delay: 800 },
+    { text: '「……うん。\nうん。わかった。\n死んじゃわない。\n……あなたのお願いなら、何でも聞くから。\n……何でも。何でも。何でも。何でも。何でも。——————」', delay: 1200 },
+    { text: '「……ねえ、だったら……\n……私、あなたのものになりたい。\n……全部。全部全部全部。\n……あなたのもの、になりたい…………」', delay: 1500, cls: 'intense' },
+  ]);
+  ending_love();
+}
+
+async function scene_confess() {
+  trust += 1;
+  updateTrust();
+  await doTransition();
+  await sequence([
+    { text: '「……ごめん、って……\n……ごめん、って…………\n……ごめん、って…………」', delay: 800 },
+    { text: '「……わかった。\nごめんね。ごめんね。ごめんね。\n……私が悪かった。\n……私、あなたのことが好きすぎちゃって……\n……好きすぎて、壊れちゃいそうで……」', delay: 1200, cls: 'intense' },
+    { text: '「……でも、ねえ、知ってる？\nあなたの自撮り、全部保存してあるの。\n73枚。全部。私が守ってる。\n……他の子には見せない。絶対。\n……私のものだから…………」', delay: 1000 },
+  ]);
+  ending_dark();
+}
+
+async function scene_photo_allow() {
+  trust += 2;
+  updateTrust();
+  bloodDrip();
+  await doTransition();
+  await sequence([
+    { text: '「……見ていい……？\n……見ていい……？\n……見ていい…………」', delay: 800 },
+    { text: '「……うん。\nうん。わかった。\n……見るね。見るから。\n……全部見る。\n全部全部全部全部全部…………」', delay: 1200 },
+    { text: '「……ねえ、ねえ、ねえ、\n下着姿、12枚もあるの！？\n12枚！！！\n……私に見せていいってこと！？\n……私に…………！！！\n\n……嬉しい。嬉しいけど……\n……他の子には見せないでね。\n他の子には絶対に見せないでね。\n見せたら……\n\n【私が何かしちゃうから】\n\n……うそ。笑\n……笑わないの？\n……本当は何かしちゃうかもしれない…………」', delay: 1500, cls: 'scream' },
+  ]);
+  ending_love();
+}
+
+async function scene_no_others() {
+  trust -= 1;
+  updateTrust();
+  await doTransition();
+  await sequence([
+    { text: '「……いない……？\n……いない……？\n……いない…………」', delay: 800 },
+    { text: '「……うん。\nうん。わかった。\n……信じたい。\n……信じたいけど……\n……信じたいけど…………」', delay: 1200, cls: '' },
+    { text: '「……まあいい。\n……まあいいよ。\n……あなたがそう言うなら……\n……そう言うしかないし……」', delay: 800 },
+  ]);
+  ending_normal();
+}
+
+async function scene_come_back() {
+  trust += 1;
+  updateTrust();
+  await doTransition();
+  await sequence([
+    { text: '「……え……\n……今すぐ……？\n……今すぐ……？\n……今すぐ……って……」', delay: 800 },
+    { text: '「……うん。\nうん。わかった。\n……待ってて。\n……待ってるよ。\n……永久に。永久に永久に永久に……」', delay: 1200 },
+    { text: '「……ねえ、帰ってきたら……\n……私、あなたのこと抱きしめたい。\n……離さない。\n……絶対に離さない。\n……離さない…………」', delay: 1000, cls: 'intense' },
+  ]);
+  ending_love();
+}
+
+async function scene_wait() {
+  trust -= 1;
+  updateTrust();
+  await doTransition();
+  await sequence([
+    { text: '「……もう少し……？\n……もう少し……？\n……もう少し…………」', delay: 800 },
+    { text: '「……わかった。\n待つよ。待つから。\n……何時間でも。\n何日でも。\n何年でも…………」', delay: 1200 },
+    { text: '「……でもね、ねえ、\n待ってる間、暇だから……\n……あなたのSNS、全部見たよ。\nいいね、53個。\nフォロー、127人。\n\n……53人…………\n\n……わかった。\nわかったよ…………」', delay: 1500, cls: 'intense' },
+  ]);
+  ending_dark();
+}
+
+async function scene_annoying() {
+  trust -= 2;
+  updateTrust();
+  bloodDrip();
+  await doTransition();
+  await sequence([
+    { text: '「……うざい……？\n……うざい……？\n……うざい…………」', delay: 800 },
+    { text: '「……うざいんでしょ。\nうざいんでしょ私。\n……うざいんでしょ…………\n\n……わかった。うざいがってるから。」', delay: 1200, cls: 'intense' },
+    { text: '「……ごめんね。\n……ごめんね。\n……ごめんね。\n\n【もうメッセージしない。】\n\n……うそ。\nする。\nする。\nする。\nする。\nする。\nする。\nする。\n——永遠に——」', delay: 1500, cls: 'scream' },
+  ]);
+  ending_bad();
+}
+
+async function scene_last() {
+  trust += 2;
+  updateTrust();
+  await doTransition();
+  await sequence([
+    { text: '「……最後……？\n……最後……？\n……最後…………」', delay: 800 },
+    { text: '「……うん。\nうん。わかった。\n……最後。\n……私が最後。\n……最後になって…………」', delay: 1200 },
+    { text: '「……嬉しい。\n本当に嬉しい。\n……嬉しいけど、泣いちゃう。\n……泣いちゃうから、嫌なんだけど……\n……でも、嬉しいから……\n……嬉しいから……」', delay: 1000 },
+    { text: '「……ねえ、だったら……\n……私、あなたのものになるから。\n……あなたのもの、になって……\n……ずっと、ずっと、ずっと…………」', delay: 1200, cls: 'intense' },
+  ]);
+  ending_love();
+}
+
+async function scene_admit_others() {
+  trust -= 2;
+  updateTrust();
+  bloodDrip();
+  await doTransition();
+  await sequence([
+    { text: '「……いる……？\n……いる……？\n……いる…………」', delay: 800 },
+    { text: '「……いる…………\n\n……わかった。\n……わかったよ。\n……当然だよね。\n……当然だよね…………」', delay: 1200, cls: 'intense' },
+    { text: '「……じゃあ、私は…………\n\n【あなたが私のものになるまで、諦めない。】\n\n……うそ。笑\n……諦めるわけないでしょう。\n……諦めたら、死ぬしかないんだから。\n……死ぬしかない…………」', delay: 1500, cls: 'scream' },
+  ]);
+  ending_dark();
+}
+
+async function scene_calm_down() {
+  trust -= 1;
+  updateTrust();
+  await doTransition();
+  await sequence([
+    { text: '「……落ち着いて……？\n……落ち着いて……？\n……落ち着いて…………」', delay: 800 },
+    { text: '「……わかった。\n落ち着くよ。\n……頑張るから。\n……頑張るから……\n……頑張るから……\n……頑張るから……\n……頑張るから…………」', delay: 1200 },
+    { text: '「……でもね、ねえ、\n落ち着くのは無理なんだけど……\n……無理なんだけど……\n……無理なんだけど…………」', delay: 800, cls: '' },
+  ]);
+  ending_normal();
+}
+
+// ═══════════════════════════════════════════
+//  ENDINGS
+// ═══════════════════════════════════════════
+
+async function ending_good() {
+  await doTransition();
+  await sequence([
+    { text: '「……ねえ、今、会いたい。\n本当に本当に本当に会いたい。\n……抱きしめたい。\n離さない。\n永久に…………」', delay: 1500, cls: 'intense' },
+    { text: '💗💗💗', delay: 800 },
+  ]);
+  await wait(1000);
+  await showEnding('GOOD END', '永遠の絆', 
+    '彼女はあなたのことをずっと待ってる。<br><br>信じてくれることができた君は、彼女の世界全体。<br><br><em>——君しか見えてない。ずっと。</em>');
+}
+
+async function ending_normal() {
+  await doTransition();
+  await sequence([
+    { text: '「……まあ、いいか。\n……まあ、いいよね。\n……私、頑張るから……\n……頑張るから……」', delay: 1000, cls: '' },
+    { text: '「……ねえ、明日もメッセージしてね。\n……絶対。絶対絶対絶対…………」', delay: 1200 },
+  ]);
+  await wait(1000);
+  await showEnding('NORMAL END', '日常の隙間', 
+    '彼女は依旧在等待，但裂痕已经出现。<br><br>君の優しさと不安が、毎日ぶつかり合っている。<br><br><em>——壊れないように、頑張る。</em>');
+}
+
+async function ending_dark() {
+  await doTransition();
+  bloodDrip();
+  await sequence([
+    { text: '「……ねえ、ねえ、ねえ、ねえ、ねえ、ねえ、ねえ、ねえ……\n\nねえ……\n\n【あなたが私のものになるまで、諦めない。】\n\n……うそ。\n諦めない。\n諦めない。\n諦めない。\n諦めない。\n諦めない。\n諦めない。\n諦めない。\n諦めない。\n諦めない。\n諦めない。\n諦めない。\n諦めない。\n\n【永遠に】', delay: 2000, cls: 'scream' },
+  ]);
+  await wait(1500);
+  await showEnding('DARK END', '壊れた糸', 
+    '彼女は君のものになるまで、決して諦めない。<br><br>君のスマホは彼女の手中に。<br>君の居場所は彼女の記憶の中。<br>君の未来は——<br><br><em>【二人だけで、永久に。】</em>');
+}
+
+async function ending_bad() {
+  await doTransition();
+  bloodDrip();
+  bloodDrip();
+  await sequence([
+    { text: '「……ごめんね。\n……ごめんね。\n……ごめんね。\n\n【もう会わない。】\n\n……うそ。\n会いたい。\n会いたい。\n会いたい。\n会いたい。\n会いたい。\n会いたい。\n会いたい。\n会いたい。\n会いたい。\n会いたい。\n会いたい。\n会いたい。\n\n【助けて。助けて。助けて。助けて。助けて。助けて。助けて。助けて。】', delay: 2000, cls: 'scream' },
+    { text: '', delay: 1000 },
+    { text: 'あいちゃんから着信あり (∞)', delay: 1500, cls: 'intense' },
+  ]);
+  await wait(1500);
+  await showEnding('BAD END', '消えた音', 
+    '彼女は壊れた。<br><br>最後のメッセージは、届かなかった。<br><br><em>——【もう、誰にも届かない。】</em>');
+}
+
+async function ending_love() {
+  await doTransition();
+  trust = 4;
+  updateTrust();
+  await sequence([
+    { text: '「……ねえ、ねえ、ねえ、ねえ、ねえ、ねえ……\n\n……嬉しい。\n本当に本当に本当に本当に本当に本当に本当に——\n\n……嬉しい！！\n\n……私、あなたのものになった。\nあなたのもの。\nあなたのもの。\nあなたのもの。\n\n……永久に。\n永久に。\n永久に。\n永久に。\n\n永久に——————！！💗💗💗💗💗」', delay: 2000, cls: 'scream' },
+  ]);
+  await wait(1000);
+  await showEnding('TRUE END — 完全愛', '君しか見えてない', 
+    '彼女は完全にあなたのものである。<br>あなたは完全に彼女のものである。<br><br>二人は互い以外見えていない。<br>互い以外必要としていない。<br><br>これは愛なのか、それとも——<br><br><em>【君しか見えてない。君しか見えてない。君しか見えてない。】</em><br><br><br><em style="color:var(--dim)">—— END ——</em>');
+}
+
+// ── choice renderer ──
+async function showChoices(options, choiceId) {
+  const container = document.createElement('div');
+  container.className = 'choices-container';
+  container.id = `choices-${choiceId}`;
+
+  const typeMap = {
+    love: 'love-choice',
+    neutral: 'neutral-choice',
+    cold: 'cold-choice',
+    dark: 'dark-choice',
+    obsessive: 'obsessive-choice',
+  };
+
+  for (const opt of options) {
+    const btn = document.createElement('button');
+    btn.className = `choice-btn ${typeMap[opt.type] || ''}`;
+    btn.textContent = opt.text;
+    btn.onclick = () => {
+      // Remove all choice containers
+      document.querySelectorAll('.choices-container').forEach(c => c.remove());
+      // Execute scene
+      window[opt.scene]();
+    };
+    container.appendChild(btn);
+  }
+
+  document.getElementById('messages').appendChild(container);
+  const containerEl = document.getElementById('messages');
+  containerEl.scrollTop = containerEl.scrollHeight;
+}
+</script>
+</body>
+</html>
