@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3D Merge Sort Visualization</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0a0a1a;
+    color: #e0e0e0;
+    font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif;
+    overflow-x: hidden;
+    min-height: 100vh;
+  }
+  #header {
+    text-align: center;
+    padding: 20px;
+    background: linear-gradient(135deg, #1a1a3e 0%, #0d0d2b 100%);
+    border-bottom: 2px solid #333;
+  }
+  #header h1 {
+    font-size: 2em;
+    background: linear-gradient(90deg, #00d2ff, #7b68ee, #ff6ec7);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 5px;
+  }
+  #header p { color: #888; font-size: 0.9em; }
+  #controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    background: #111;
+    flex-wrap: wrap;
+  }
+  button {
+    padding: 10px 25px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1em;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-weight: bold;
+  }
+  #startBtn {
+    background: linear-gradient(135deg, #00c853, #00e676);
+    color: #000;
+  }
+  #startBtn:hover { box-shadow: 0 0 20px rgba(0,200,83,0.5); }
+  #startBtn:disabled { background: #555; color: #888; cursor: not-allowed; }
+  #resetBtn {
+    background: linear-gradient(135deg, #ff6ec7, #ff4081);
+    color: #fff;
+  }
+  #resetBtn:hover { box-shadow: 0 0 20px rgba(255,110,199,0.5); }
+  .slider-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .slider-group label { font-size: 0.85em; color: #aaa; }
+  input[type="range"] {
+    -webkit-appearance: none;
+    width: 120px;
+    height: 6px;
+    border-radius: 3px;
+    background: #333;
+    outline: none;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #7b68ee;
+    cursor: pointer;
+  }
+  #canvas-container {
+    width: 100%;
+    height: 60vh;
+    position: relative;
+  }
+  #canvas-container canvas { display: block; }
+  #info {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    padding: 10px;
+    background: #111;
+    flex-wrap: wrap;
+  }
+  .stat {
+    text-align: center;
+  }
+  .stat .label { font-size: 0.75em; color: #666; text-transform: uppercase; }
+  .stat .value { font-size: 1.4em; font-weight: bold; color: #00d2ff; }
+  #legend {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    padding: 10px;
+    flex-wrap: wrap;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8em;
+  }
+  .legend-color {
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+  }
+  #status {
+    text-align: center;
+    padding: 8px;
+    font-size: 0.9em;
+    color: #7b68ee;
+    min-height: 30px;
+  }
+</style>
+</head>
+<body>
+
+<div id="header">
+  <h1>🧊 3D Merge Sort Visualization</h1>
+  <p>Interactive 3D animation of the Merge Sort algorithm</p>
+</div>
+
+<div id="controls">
+  <button id="startBtn" onclick="startSort()">▶ Start Sort</button>
+  <button id="resetBtn" onclick="resetArray()">🔄 Reset</button>
+  <div class="slider-group">
+    <label>Array Size:</label>
+    <input type="range" id="sizeSlider" min="5" max="30" value="15" oninput="updateSize(this.value)">
+    <span id="sizeVal">15</span>
+  </div>
+  <div class="slider-group">
+    <label>Speed:</label>
+    <input type="range" id="speedSlider" min="1" max="10" value="5">
+    <span id="speedVal">5</span>
+  </div>
+</div>
+
+<div id="status">Click "Start Sort" to begin the 3D merge sort visualization</div>
+
+<div id="canvas-container"></div>
+
+<div id="info">
+  <div class="stat">
+    <div class="label">Comparisons</div>
+    <div class="value" id="compareCount">0</div>
+  </div>
+  <div class="stat">
+    <div class="label">Swaps</div>
+    <div class="value" id="swapCount">0</div>
+  </div>
+  <div class="stat">
+    <div class="label">Recursion Depth</div>
+    <div class="value" id="depthCount">0</div>
+  </div>
+  <div class="stat">
+    <div class="label">Time</div>
+    <div class="value" id="timeCount">0.0s</div>
+  </div>
+</div>
+
+<div id="legend">
+  <div class="legend-item"><div class="legend-color" style="background:#4fc3f7;"></div> Unsorted</div>
+  <div class="legend-item"><div class="legend-color" style="background:#ffeb3b;"></div> Comparing</div>
+  <div class="legend-item"><div class="legend-color" style="background:#69f0ae;"></div> Sorted</div>
+  <div class="legend-item"><div class="legend-color" style="background:#ff5252;"></div> Pivot/Sub-array</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ============ GLOBALS ============
+let scene, camera, renderer;
+let bars = [];
+let array = [];
+let comparisons = 0;
+let swaps = 0;
+let maxDepth = 0;
+let isSorting = false;
+let animSpeed = 50;
+let startTime;
+
+// ============ THREE.JS SETUP ============
+function initThreeJS() {
+  const container = document.getElementById('canvas-container');
+  
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0a0a1a);
+  scene.fog = new THREE.FogExp2(0x0a0a1a, 0.015);
+
+  camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000);
+  camera.position.set(0, 15, 30);
+  camera.lookAt(0, 5, 0);
+
+  renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setSize(container.clientWidth, container.clientHeight);
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  container.appendChild(renderer.domElement);
+
+  // Lights
+  const ambientLight = new THREE.AmbientLight(0x404060, 0.6);
+  scene.add(ambientLight);
+
+  const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+  dirLight.position.set(10, 20, 10);
+  dirLight.castShadow = true;
+  scene.add(dirLight);
+
+  const pointLight1 = new THREE.PointLight(0x00d2ff, 0.5, 50);
+  pointLight1.position.set(-15, 10, 5);
+  scene.add(pointLight1);
+
+  const pointLight2 = new THREE.PointLight(0x7b68ee, 0.5, 50);
+  pointLight2.position.set(15, 10, -5);
+  scene.add(pointLight2);
+
+  // Grid
+  const gridHelper = new THREE.GridHelper(60, 30, 0x222244, 0x111133);
+  scene.add(gridHelper);
+
+  // Ground plane
+  const groundGeo = new THREE.PlaneGeometry(60, 60);
+  const groundMat = new THREE.MeshStandardMaterial({ 
+    color: 0x0d0d2b, 
+    transparent: true, 
+    opacity: 0.8 
+  });
+  const ground = new THREE.Mesh(groundGeo, groundMat);
+  ground.rotation.x = -Math.PI / 2;
+  ground.position.y = -0.1;
+  ground.receiveShadow = true;
+  scene.add(ground);
+
+  window.addEventListener('resize', onWindowResize);
+}
+
+function onWindowResize() {
+  const container = document.getElementById('canvas-container');
+  camera.aspect = container.clientWidth / container.clientHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(container.clientWidth, container.clientHeight);
+}
+
+// ============ ARRAY MANAGEMENT ============
+function generateRandomArray(size) {
+  array = [];
+  for (let i = 0; i < size; i++) {
+    array.push(Math.floor(Math.random() * 95) + 5);
+  }
+}
+
+function createBars() {
+  // Clear existing bars
+  bars.forEach(bar => scene.remove(bar));
+  bars = [];
+
+  const spacing = 1.8;
+  const totalWidth = array.length * spacing;
+  const startX = -totalWidth / 2 + spacing / 2;
+
+  array.forEach((value, index) => {
+    const height = value * 0.15;
+    const geo = new THREE.BoxGeometry(1.2, height, 1.2);
+    
+    // Color based on value
+    const hue = (value / 100) * 0.7;
+    const color = new THREE.Color().setHSL(hue, 0.8, 0.5);
+    
+    const mat = new THREE.MeshStandardMaterial({ 
+      color: color,
+      emissive: color,
+      emissiveIntensity: 0.1,
+      metalness: 0.3,
+      roughness: 0.4
+    });
+    
+    const bar = new THREE.Mesh(geo, mat);
+    bar.position.set(startX + index * spacing, height / 2, 0);
+    bar.castShadow = true;
+    bar.receiveShadow = true;
+    bar.userData = { 
+      value: value, 
+      index: index,
+      originalColor: color.clone(),
+      targetY: height / 2,
+      targetHeight: height
+    };
+    
+    scene.add(bar);
+    bars.push(bar);
+  });
+}
+
+function updateBarColor(index, colorHex) {
+  if (bars[index]) {
+    const color = new THREE.Color(colorHex);
+    bars[index].material.color = color;
+    bars[index].material.emissive = color;
+    bars[index].material.emissiveIntensity = 0.3;
+  }
+}
+
+function updateBarHeight(index, value) {
+  if (!bars[index]) return;
+  
+  const bar = bars[index];
+  const height = value * 0.15;
+  
+  // Animate to new height
+  const startY = bar.geometry.parameters.height / 2;
+  const targetY = height / 2;
+  const startH = bar.geometry.parameters.height;
+  const targetH = height;
+  
+  const duration = animSpeed * 2;
+  const startTime = Date.now();
+  
+  function animateHeight() {
+    const elapsed = Date.now() - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    const ease = 1 - Math.pow(1 - progress, 3);
+    
+    const currentH = startH + (targetH - startH) * ease;
+    const currentY = startY + (targetY - startY) * ease;
+    
+    bar.geometry.dispose();
+    bar.geometry = new THREE.BoxGeometry(1.2, currentH, 1.2);
+    bar.position.y = currentY;
+    
+    if (progress < 1) {
+      requestAnimationFrame(animateHeight);
+    }
+  }
+  
+  requestAnimationFrame(animateHeight);
+}
+
+// ============ MERGE SORT ============
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function mergeSort(arr, left, right, depth) {
+  if (isSorting === false) return;
+  
+  if (depth > maxDepth) maxDepth = depth;
+  document.getElementById('depthCount').textContent = depth;
+  
+  if (left >= right) return;
+  
+  const mid = Math.floor((left + right) / 2);
+  
+  // Highlight sub-array being processed
+  for (let i = left; i <= right; i++) {
+    updateBarColor(i, '#ff5252');
+  }
+  await sleep(animSpeed);
+  
+  await mergeSort(arr, left, mid, depth + 1);
+  await mergeSort(arr, mid + 1, right, depth + 1);
+  await merge(arr, left, mid, right);
+}
+
+async function merge(arr, left, mid, right) {
+  const leftArr = arr.slice(left, mid + 1);
+  const rightArr = arr.slice(mid + 1, right + 1);
+  
+  let i = 0, j = 0, k = left;
+  
+  while (i < leftArr.length && j < rightArr.length) {
+    if (!isSorting) return;
+    
+    comparisons++;
+    document.getElementById('compareCount').textContent = comparisons;
+    
+    // Highlight comparing bars
+    updateBarColor(left + i, '#ffeb3b');
+    updateBarColor(mid + 1 + j, '#ffeb3b');
+    
+    await sleep(animSpeed);
+    
+    if (leftArr[i] <= rightArr[j]) {
+      arr[k] = leftArr[i];
+      i++;
+    } else {
+      arr[k] = rightArr[j];
+      j++;
+    }
+    
+    // Update bar height and value
+    updateBarHeight(k, arr[k]);
+    bars[k].userData.value = arr[k];
+    swaps++;
+    document.getElementById('swapCount').textContent = swaps;
+    
+    // Reset colors
+    updateBarColor(left + (i > 0 ? i - 1 : 0), bars[left + (i > 0 ? i - 1 : 0)].userData.originalColor.getHex());
+    updateBarColor(mid + 1 + (j > 0 ? j - 1 : 0), bars[mid + 1 + (j > 0 ? j - 1 : 0)].userData.originalColor.getHex());
+    
+    k++;
+  }
+  
+  while (i < leftArr.length) {
+    if (!isSorting) return;
+    arr[k] = leftArr[i];
+    updateBarHeight(k, arr[k]);
+    bars[k].userData.value = arr[k];
+    updateBarColor(k, '#69f0ae');
+    i++;
+    k++;
+    await sleep(animSpeed / 2);
+  }
+  
+  while (j < rightArr.length) {
+    if (!isSorting) return;
+    arr[k] = rightArr[j];
+    updateBarHeight(k, arr[k]);
+    bars[k].userData.value = arr[k];
+    updateBarColor(k, '#69f0ae');
+    j++;
+    k++;
+    await sleep(animSpeed / 2);
+  }
+}
+
+// ============ ANIMATION LOOP ============
+function animate() {
+  requestAnimationFrame(animate);
+  
+  // Gentle camera orbit
+  const time = Date.now() * 0.0003;
+  if (!isSorting) {
+    camera.position.x = Math.sin(time) * 30;
+    camera.position.z = Math.cos(time) * 30;
+    camera.lookAt(0, 5, 0);
+  }
+  
+  // Animate bars (subtle floating effect)
+  bars.forEach((bar, i) => {
+    if (bar.userData.floatOffset === undefined) {
+      bar.userData.floatOffset = Math.random() * Math.PI * 2;
+    }
+    const float = Math.sin(Date.now() * 0.002 + bar.userData.floatOffset) * 0.05;
+    bar.position.y += float * 0.01;
+  });
+  
+  renderer.render(scene, camera);
+}
+
+// ============ CONTROLS ============
+async function startSort() {
+  if (isSorting) return;
+  
+  isSorting = true;
+  comparisons = 0;
+  swaps = 0;
+  maxDepth = 0;
+  
+  document.getElementById('compareCount').textContent = '0';
+  document.getElementById('swapCount').textContent = '0';
+  document.getElementById('depthCount').textContent = '0';
+  document.getElementById('startBtn').disabled = true;
+  document.getElementById('status').textContent = '🔄 Sorting...';
+  
+  startTime = Date.now();
+  
+  await mergeSort(array, 0, array.length - 1, 0);
+  
+  if (isSorting) {
+    // Mark all as sorted
+    for (let i = 0; i < array.length; i++) {
+      updateBarColor(i, '#69f0ae');
+    }
+    
+    const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+    document.getElementById('timeCount').textContent = elapsed + 's';
+    document.getElementById('status').textContent = '✅ Sort Complete!';
+    isSorting = false;
+    document.getElementById('startBtn').disabled = false;
+  }
+}
+
+function resetArray() {
+  isSorting = false;
+  const size = parseInt(document.getElementById('sizeSlider').value);
+  generateRandomArray(size);
+  createBars();
+  
+  document.getElementById('compareCount').textContent = '0';
+  document.getElementById('swapCount').textContent = '0';
+  document.getElementById('depthCount').textContent = '0';
+  document.getElementById('timeCount').textContent = '0.0s';
+  document.getElementById('startBtn').disabled = false;
+  document.getElementById('status').textContent = 'Click "Start Sort" to begin the 3D merge sort visualization';
+}
+
+function updateSize(val) {
+  document.getElementById('sizeVal').textContent = val;
+  resetArray();
+}
+
+// Update speed display
+document.getElementById('speedSlider').addEventListener('input', function() {
+  document.getElementById('speedVal').textContent = this.value;
+  animSpeed = 110 - (this.value * 10); // Invert: higher = faster (lower ms)
+});
+
+// ============ INIT ============
+initThreeJS();
+animate();
+resetArray();
+</script>
+</body>
+</html>
