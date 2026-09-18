@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f8f6f0">
+  <meta name="description" content="留一點時間給自己的聲音。裝置內分析的清唱練習工具，觀察音高與長音穩定度。">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='12' fill='%237661a0'/%3E%3Ctext x='9' y='30' font-size='30' fill='white'%3E♪%3C/text%3E%3C/svg%3E">
+  <title>聲息 · 清唱練習室</title><link rel="stylesheet" href="styles.css">
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <header class="site-header"><a class="brand" href="#main" aria-label="聲息，前往練習室"><span class="brand-mark" aria-hidden="true">♪</span><span>聲息 <small>sing gently</small></span></a><span class="privacy"><span aria-hidden="true">◈</span> 聲音不離開裝置</span></header>
+  <main id="main">
+    <section class="hero" aria-labelledby="title">
+      <div><p class="eyebrow">YOUR LITTLE SINGING SPACE</p><h1 id="title">慢慢唱，<br>聽見自己的<span>進步。</span></h1><p class="intro">不急著唱得完美。從一段清唱開始，<br class="mobile-break">看見音高的起伏，練習更安定的長音。</p><div class="hero-tags"><span>純本機分析</span><span>不需帳號</span><span>為清唱而設計</span></div></div>
+      <div class="hero-art" aria-hidden="true"><span class="orbit orbit-one"></span><span class="orbit orbit-two"></span><div class="sound-bars"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><span class="art-note">a little practice, a little closer.</span><span class="spark">✧</span></div>
+    </section>
+    <div class="workspace">
+      <section class="card input-card" aria-labelledby="input-title">
+        <div class="section-heading"><span class="step">01</span><div><p class="eyebrow">LET YOUR VOICE IN</p><h2 id="input-title">留下今天的聲音</h2></div><span class="mini-note" aria-hidden="true">♪</span></div>
+        <p class="muted">找個安靜的角落，清唱一段或拉長一個音。</p>
+        <label class="upload-zone" for="recording-file"><span class="upload-icon" aria-hidden="true">↥</span><strong>選擇你的清唱錄音</strong><span>WAV、MP3、M4A、WebM 等*</span><span class="file-limit">單檔 ≤ 25 MB · 長度 ≤ 90 秒</span><input id="recording-file" type="file" accept="audio/*,.m4a,.webm" aria-label="上傳清唱錄音"></label>
+        <div class="divider"><span>或，現在就唱一段</span></div>
+        <div class="record-row"><button id="record" class="button secondary"><svg aria-hidden="true" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 10v2a6 6 0 0 0 12 0v-2M12 18v3M9 21h6"/></svg>開始錄音</button><button id="stop" class="button stop" disabled><span aria-hidden="true">■</span> 停止</button><span id="timer" class="timer" aria-label="錄音時間">00:00</span></div>
+        <div id="source-panel" class="source-panel" hidden><span class="small-label">本次音訊</span><p id="source-name">尚未選擇錄音</p><audio id="preview" controls preload="metadata" aria-label="播放你的錄音"></audio></div>
+        <div class="reference-box"><div class="reference-heading"><label for="reference-file">加入參考清唱 <span class="optional">選用</span></label><button id="remove-reference" class="text-button" hidden>移除</button></div><p class="muted small">同一旋律、同一速度的獨唱音檔，才能比較音高。</p><label class="reference-picker">選擇參考音檔<input id="reference-file" type="file" accept="audio/*,.m4a,.webm" aria-describedby="reference-name" aria-label="上傳參考清唱"></label><p id="reference-name" class="file-name">尚未加入參考音檔</p><audio id="reference-preview" controls preload="metadata" aria-label="播放參考清唱" hidden></audio></div>
+        <button id="analyze" class="button primary" disabled>開始分析 <span aria-hidden="true">↗</span></button>
+        <div class="bottom-actions"><button id="demo" class="text-button">先試試合成示範 <span aria-hidden="true">↗</span></button><button id="reset" class="text-button">全部重設</button></div>
+        <p id="status" role="status" aria-live="polite">準備好了，就從一個音開始。</p><p id="error" role="alert" hidden></p>
+        <p class="format-note">* 實際格式支援依瀏覽器而異；無法解碼時請改用 WAV。</p>
+      </section>
+      <section class="card results-card" aria-labelledby="results-title">
+        <div class="section-heading"><span class="step">02</span><div><p class="eyebrow">LISTEN, NOTICE, GROW</p><h2 id="results-title">看見聲音的線條</h2></div><span class="live-tag">練習筆記</span></div>
+        <div id="result" aria-live="polite"><div class="score-head"><h3 id="metric-title">長音穩定度</h3><span id="mode-label" class="chip">等待音訊</span></div><div class="score-row"><span id="score">—</span><span class="score-unit">/ 100<br><small>啟發式指標</small></span><div class="score-decoration" aria-hidden="true">〰</div></div><p id="result-description">這裡沒有標準答案，只有下一次練習的起點。</p><p id="result-detail" class="small muted">分析後，會顯示可辨識人聲與可用長音的長度。</p></div>
+        <div class="chart-heading"><h3>音高軌跡</h3><div class="legend"><span>● 你的聲音</span><span id="reference-legend" hidden>● 參考</span></div></div>
+        <div class="chart-wrap"><canvas id="contour" role="img" aria-label="尚無音高資料，上傳或錄音後分析。"></canvas><p id="chart-empty">聲音會在這裡留下軌跡。<br><span>先錄一段，或試試合成示範。</span></p></div><p id="chart-caption" class="chart-caption">橫軸：時間（秒） · 縱軸：音高（Hz，對數刻度）</p>
+        <div class="gentle-tip"><span aria-hidden="true">✧</span><div><strong>給今天的你，一個小提醒</strong><p>試著用舒服的音域，穩穩唱一個「啊」。<br>分數是觀察工具，不是你聲音的價值。</p></div></div>
+        <details><summary>這個指標怎麼看？</summary><div class="method"><p><strong>沒有參考：</strong>僅觀察近似長音的音高波動，不代表唱對音、不評音色、氣息或唱功。自然顫音也可能使分數降低。</p><p><strong>加入參考：</strong>將雙方第一個可辨識音框對齊，比較同一時間的音高差。需同旋律、同速度；不做節奏伸縮或移調，不判斷歌曲是否唱對。</p><p>以 8 kHz 音訊、64 ms 音框、20 ms 間隔執行 YIN 音高估計（75–1000 Hz）。長音窗口至少 0.6 秒、範圍不超過 200 cents，總人聲至少 0.8 秒。穩定度 = max(0, 100 − 音分波動 RMS × 1.2)。</p><p>參考符合度 = max(0, 100 − 音分差中位數 ÷ 2)。至少需 0.8 秒共同人聲，涵蓋雙方各 60% 以上人聲。100 cents = 一個半音。門檻與分數未經聲樂教學驗證。</p></div></details>
+      </section>
+    </div>
+    <aside class="notice"><span aria-hidden="true">ⓘ</span><p><strong>只適合單一人聲清唱。</strong>不支援伴奏、和聲或多人合唱；背景音、噪音與八度誤判都會影響結果。安靜或人聲不足時不給分。</p></aside>
+  </main>
+  <footer><span class="footer-brand">聲息 <span>·</span> 留一點時間給自己的聲音</span><span>本機處理 · 不上傳 · 不儲存錄音</span></footer>
+  <noscript><p class="notice">請啟用 JavaScript 才能在裝置上分析音訊。</p></noscript>
+</body>
+</html>
