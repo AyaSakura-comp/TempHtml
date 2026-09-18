@@ -24,6 +24,13 @@
         <div class="record-row"><button id="record" class="button secondary"><svg aria-hidden="true" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 10v2a6 6 0 0 0 12 0v-2M12 18v3M9 21h6"/></svg>開始錄音</button><button id="stop" class="button stop" disabled><span aria-hidden="true">■</span> 停止</button><span id="timer" class="timer" aria-label="錄音時間">00:00</span></div>
         <div id="source-panel" class="source-panel" hidden><span class="small-label">本次音訊</span><p id="source-name">尚未選擇錄音</p><audio id="preview" controls preload="metadata" aria-label="播放你的錄音"></audio></div>
         <div class="reference-box"><div class="reference-heading"><label for="reference-file">加入參考清唱 <span class="optional">選用</span></label><button id="remove-reference" class="text-button" hidden>移除</button></div><p class="muted small">同一旋律、同一速度的獨唱音檔，才能比較音高。</p><label class="reference-picker">選擇參考音檔<input id="reference-file" type="file" accept="audio/*,.m4a,.webm" aria-describedby="reference-name" aria-label="上傳參考清唱"></label><p id="reference-name" class="file-name">尚未加入參考音檔</p><audio id="reference-preview" controls preload="metadata" aria-label="播放參考清唱" hidden></audio></div>
+        <div class="alignment-controls">
+          <label for="alignment-offset">手動偏移（秒，可正可負）</label>
+          <p id="alignment-help" class="small muted">留空自動搜尋整段旋律。錄音時間 = 參考時間 + 偏移；例如錄音晚 2 秒唱同一句，填 +2；錄音從參考第 2 秒起唱，填 −2。手動可覆蓋不明確配對。</p>
+          <input id="alignment-offset" type="number" step="any" placeholder="自動" aria-describedby="alignment-help" disabled>
+          <button id="alignment-auto" class="text-button" disabled>恢復自動對齊</button>
+          <p class="small muted">至少 3 秒共同人聲、較短人聲的 65%。僅同速度；不做節奏伸縮（非 DTW）。</p>
+        </div>
         <button id="analyze" class="button primary" disabled>開始分析 <span aria-hidden="true">↗</span></button>
         <div class="bottom-actions"><button id="demo" class="text-button">先試試合成示範 <span aria-hidden="true">↗</span></button><button id="reset" class="text-button">全部重設</button></div>
         <p id="status" role="status" aria-live="polite">準備好了，就從一個音開始。</p><p id="error" role="alert" hidden></p>
@@ -35,7 +42,7 @@
         <div class="chart-heading"><h3>音高軌跡</h3><div class="legend"><span>● 你的聲音</span><span id="reference-legend" hidden>● 參考</span></div></div>
         <div class="chart-wrap"><canvas id="contour" role="img" aria-label="尚無音高資料，上傳或錄音後分析。"></canvas><p id="chart-empty">聲音會在這裡留下軌跡。<br><span>先錄一段，或試試合成示範。</span></p></div><p id="chart-caption" class="chart-caption">橫軸：時間（秒） · 縱軸：音高（Hz，對數刻度）</p>
         <div class="gentle-tip"><span aria-hidden="true">✧</span><div><strong>給今天的你，一個小提醒</strong><p>試著用舒服的音域，穩穩唱一個「啊」。<br>分數是觀察工具，不是你聲音的價值。</p></div></div>
-        <details><summary>這個指標怎麼看？</summary><div class="method"><p><strong>沒有參考：</strong>僅觀察近似長音的音高波動，不代表唱對音、不評音色、氣息或唱功。自然顫音也可能使分數降低。</p><p><strong>加入參考：</strong>將雙方第一個可辨識音框對齊，比較同一時間的音高差。需同旋律、同速度；不做節奏伸縮或移調，不判斷歌曲是否唱對。</p><p>以 8 kHz 音訊、64 ms 音框、20 ms 間隔執行 YIN 音高估計（75–1000 Hz）。長音窗口至少 0.6 秒、範圍不超過 200 cents，總人聲至少 0.8 秒。穩定度 = max(0, 100 − 音分波動 RMS × 1.2)。</p><p>參考符合度 = max(0, 100 − 音分差中位數 ÷ 2)。至少需 0.8 秒共同人聲，涵蓋雙方各 60% 以上人聲。100 cents = 一個半音。門檻與分數未經聲樂教學驗證。</p></div></details>
+        <details><summary>這個指標怎麼看？</summary><div class="method"><p><strong>沒有參考：</strong>僅觀察近似長音的音高波動，不代表唱對音、不評音色、氣息或唱功。自然顫音也可能使分數降低。</p><p><strong>加入參考：</strong>全域搜尋單一時間偏移，以相對旋律輪廓辨識共同樂句，容許前置靜音、雜音與不同起始樂句。需同速度；不是 DTW，不做節奏伸縮。單音、重複且不明確或不相符的旋律不自動給分，可人工指定偏移。信心是啟發式配對指標，不是機率。</p><p>以 8 kHz 音訊、64 ms 音框、20 ms 間隔執行 YIN 音高估計（75–1000 Hz）。長音窗口至少 0.6 秒、範圍不超過 200 cents，總人聲至少 0.8 秒。穩定度 = max(0, 100 − 音分波動 RMS × 1.2)。</p><p>參考符合度 = max(0, 100 − 音分差中位數 ÷ 2)。至少需 3 秒共同人聲，涵蓋較短人聲的 65% 以上；另列出雙方涵蓋率與實際比較區段，不代表整首歌。評分使用絕對音高差，不消除半音或八度錯誤；中位數可能忽略局部錯音。100 cents = 一個半音。門檻與分數未經聲樂教學驗證。</p></div></details>
       </section>
     </div>
     <aside class="notice"><span aria-hidden="true">ⓘ</span><p><strong>只適合單一人聲清唱。</strong>不支援伴奏、和聲或多人合唱；背景音、噪音與八度誤判都會影響結果。安靜或人聲不足時不給分。</p></aside>

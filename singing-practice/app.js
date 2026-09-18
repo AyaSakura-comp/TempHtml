@@ -1,4 +1,4 @@
-import {LIMITS,validateBounds} from './analysis.js';
+import {LIMITS,validateBounds,chartAlignment} from './analysis.js';
 import {createDemo,encodeWav} from './audio-utils.js';
 const $=id=>document.getElementById(id);
 let recording=null, reference=null, generation=0, busy=false, requesting=false;
@@ -10,6 +10,8 @@ function showError(error){$('error').textContent=error.message || String(error);
 function updateControls(){
   const active=busy || requesting || !!recorder;
   for(const id of ['recording-file','reference-file','record','demo','remove-reference']) $(id).disabled=active;
+  $('alignment-offset').disabled=active || !reference;
+  $('alignment-auto').disabled=active || !reference;
   $('analyze').disabled=active || !recording;
   $('stop').disabled=!recorder || recorder.state!=='recording';
   document.body.classList.toggle('recording',!!recorder);
@@ -31,6 +33,7 @@ function clearResult(){
   $('chart-caption').textContent='橫軸：時間（秒） · 縱軸：音高（Hz，對數刻度）';drawChart();
 }
 function clearSource(kind){
+  $('alignment-offset').value='';
   releaseUrl(kind);
   if(kind==='recording'){recording=null;$('source-panel').hidden=true;$('source-name').textContent='尚未選擇錄音';$('recording-file').value='';}
   else {reference=null;$('reference-name').textContent='尚未加入參考音檔';$('reference-file').value='';$('remove-reference').hidden=true;$('reference-preview').hidden=true;}
@@ -114,13 +117,15 @@ function runWorker(){
     worker.onerror=()=>{finish();reject(new Error('音高分析無法啟動，請透過本機 HTTP 或 HTTPS 開啟此頁。'));};
     const a={samples:recording.samples.slice(),rate:recording.rate};
     const b=reference?{samples:reference.samples.slice(),rate:reference.rate}:null;
-    worker.postMessage({recording:a,reference:b},[a.samples.buffer,...(b?[b.samples.buffer]:[])]);
+    const alignment=$('alignment-offset').value.trim()===''?{}:{offsetSeconds:Number($('alignment-offset').value)};
+    worker.postMessage({recording:a,reference:b,alignment},[a.samples.buffer,...(b?[b.samples.buffer]:[])]);
   });
 }
 async function analyze(){
   if(!recording || busy || recorder)return;
   const token=++generation;clearError();clearResult();busy=true;updateControls();status('正在裝置內擷取音高，請稍候…');
   try {
+    if($('alignment-offset').validity.badInput)throw new Error('偏移秒數必須是有限數值。');
     const result=await runWorker();if(token!==generation)return;
     chartData=result;renderResult(result);drawChart();status('分析完成。聽一遍，再試著唱一次吧。');
   } catch(error){if(token===generation)showError(error);}
@@ -129,18 +134,18 @@ async function analyze(){
 function renderResult({singing,reference:ref,metric}){
   $('score').textContent=metric.score===null?'—':String(metric.score);
   $('metric-title').textContent=ref?'參考音高符合度':'長音穩定度';
-  $('mode-label').textContent=recording.demo?'合成示範':ref?'首音對齊':'僅觀察長音';
+  $('mode-label').textContent=ref?(metric.mode==='manual'?'手動偏移':metric.score===null?'自動未確認':'自動全域對齊'):recording.demo?'合成示範':'僅觀察長音';
   const demo=recording.demo?'合成音示範，非真人演唱。':'';
   $('result-description').textContent=demo+(metric.score===null?metric.reason:ref?'僅供同旋律、同速度的參考比較；不是唱功或歌曲正確性評分。':'僅表示可用長音的音高波動，不代表唱對音，也不評音色或氣息。');
   $('result-detail').textContent=ref?
-    `共同人聲涵蓋率 ${Math.round(metric.coverage*100)}%${metric.score!==null?` · 音分差中位數 ${metric.medianCents.toFixed(1)} cents · 共同 ${metric.pairedSeconds.toFixed(1)} 秒`:''}`:
+    `人聲涵蓋：錄音 ${Math.round(metric.singingCoverage*100)}% · 參考 ${Math.round(metric.referenceCoverage*100)}% · 信心：${metric.mode==='manual'?'人工指定（未驗證配對）':metric.confidence===null?'未確認':`${Math.round(metric.confidence*100)}%（啟發式）`}${Number.isFinite(metric.offset)?` · 偏移 ${metric.offset>=0?'+':''}${metric.offset.toFixed(2)} 秒`:''}${metric.section?` · 實際區段：錄音 ${metric.section.singingStart.toFixed(2)}–${metric.section.singingEnd.toFixed(2)} 秒 ↔ 參考 ${metric.section.referenceStart.toFixed(2)}–${metric.section.referenceEnd.toFixed(2)} 秒 · 共同人聲 ${metric.pairedSeconds.toFixed(2)} 秒（區段內靜音不計）`:''}${metric.score!==null?` · 絕對音分差中位數 ${metric.medianCents.toFixed(1)} cents`:''}`:
     `可辨識人聲 ${metric.voicedSeconds.toFixed(1)} 秒 · 可用長音 ${metric.eligibleSeconds.toFixed(1)} 秒${metric.spreadCents!==null?` · 波動 ${metric.spreadCents.toFixed(1)} cents RMS`:''}`;
   const count=singing.frames.filter(f=>f.hz).length;
   $('chart-empty').hidden=count>0;
   if(!count)$('chart-empty').innerHTML='尚無可辨識音高。<br><span>請靠近麥克風，在安靜處清唱。</span>';
-  $('reference-legend').hidden=!ref;
-  $('chart-caption').textContent=ref?'時間（秒）以雙方第一個可辨識音框為零點；未伸縮節奏。':'橫軸：時間（秒） · 縱軸：音高（Hz，對數刻度）';
-  $('contour').setAttribute('aria-label',`音高軌跡：${singing.duration.toFixed(1)} 秒，${count} 個可辨識音框。${ref?'參考以第一個可辨識音框對齊。':''} ${$('result-detail').textContent}`);
+  $('reference-legend').hidden=!ref || !Number.isFinite(metric.offset);
+  $('chart-caption').textContent=ref?(Number.isFinite(metric.offset)?'錄音時間軸（秒）；參考平移使用上述同一偏移，陰影為比較區段。未伸縮節奏，非 DTW。':'自動對齊未確認，暫不疊加參考。可手動指定偏移；只適用同速度。'):'橫軸：時間（秒） · 縱軸：音高（Hz，對數刻度）';
+  $('contour').setAttribute('aria-label',`音高軌跡：${singing.duration.toFixed(1)} 秒，${count} 個可辨識音框。${$('chart-caption').textContent} ${$('result-detail').textContent}`);
 }
 function drawChart(){
   const canvas=$('contour'),rect=canvas.getBoundingClientRect(),dpr=window.devicePixelRatio||1;
@@ -151,18 +156,22 @@ function drawChart(){
   const y=hz=>p.top+plotH*(1-Math.log(hz/75)/Math.log(1000/75));
   ctx.font='9px system-ui';ctx.fillStyle='#918698';ctx.strokeStyle='#eee8f0';ctx.lineWidth=1;
   for(const hz of [100,200,400,800]){const py=y(hz);ctx.beginPath();ctx.moveTo(p.left,py);ctx.lineTo(w-p.right,py);ctx.stroke();ctx.fillText(String(hz),5,py+3);}
-  const tracks=chartData?[{data:chartData.singing,color:'#80639e'},...(chartData.reference?[{data:chartData.reference,color:'#628e85'}]:[])]:[];
-  const aligned=!!chartData?.reference;
-  const starts=tracks.map(t=>aligned?(t.data.frames.find(f=>f.hz)?.time || 0):0);
-  const duration=Math.max(1,...tracks.map((t,i)=>t.data.duration-starts[i]));
+  const {tracks,start,end}=chartData?chartAlignment(chartData):{tracks:[],start:0,end:1};
+  const duration=end-start;
+  const section=chartData?.metric.section;
+  if(section && Number.isFinite(chartData.metric.offset)){
+    ctx.fillStyle='#80639e12';
+    ctx.fillRect(p.left+(section.singingStart-start)/duration*plotW,p.top,
+      (section.singingEnd-section.singingStart)/duration*plotW,plotH);
+  }
   ctx.fillStyle='#918698';ctx.textAlign='center';
-  for(let i=0;i<=4;i++){const x=p.left+plotW*i/4;ctx.fillText((duration*i/4).toFixed(1),x,h-10);}
+  for(let i=0;i<=4;i++){const x=p.left+plotW*i/4;ctx.fillText((start+duration*i/4).toFixed(1),x,h-10);}
   ctx.save();ctx.beginPath();ctx.rect(p.left,p.top,plotW,plotH);ctx.clip();
   tracks.forEach((track,index)=>{
     ctx.strokeStyle=track.color;ctx.lineWidth=2;ctx.setLineDash(index?[4,3]:[]);ctx.beginPath();let connected=false;
     for(const frame of track.data.frames){
       if(!frame.hz){connected=false;continue;}
-      const x=p.left+(frame.time-starts[index])/duration*plotW,py=y(frame.hz);
+      const x=p.left+(frame.time+track.offset-start)/duration*plotW,py=y(frame.hz);
       if(connected)ctx.lineTo(x,py);else ctx.moveTo(x,py);connected=true;
     }ctx.stroke();
   });ctx.restore();
@@ -209,6 +218,12 @@ async function startRecording(){
 function stopRecording(){
   if(recorder?.state==='recording'){recorder.stop();stopTracks();status('錄音已停止，正在整理音訊…');updateControls();}
 }
+function invalidateAlignment(){
+  generation++;cancelWorker();busy=false;clearError();clearResult();
+  status('對齊設定已變更，請重新分析。');updateControls();
+}
+$('alignment-offset').addEventListener('input',invalidateAlignment);
+$('alignment-auto').addEventListener('click',()=>{$('alignment-offset').value='';invalidateAlignment();});
 $('recording-file').addEventListener('change',e=>loadFile(e.target.files[0],'recording'));
 $('reference-file').addEventListener('change',e=>loadFile(e.target.files[0],'reference'));
 $('record').addEventListener('click',startRecording);$('stop').addEventListener('click',stopRecording);

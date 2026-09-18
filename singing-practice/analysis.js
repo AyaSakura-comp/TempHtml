@@ -78,20 +78,93 @@ export function steadiness(analysis) {
   const spreadCents=Math.sqrt(deviations.reduce((a,b)=>a+b,0)/deviations.length);
   return {...base,score:Math.round(Math.max(0,100-spreadCents*1.2)),spreadCents,eligibleSeconds:deviations.length*hop};
 }
-export function compareReference(singing, reference) {
-  const first=singing.frames.findIndex(f=>f.hz), refFirst=reference.frames.findIndex(f=>f.hz);
-  const none={score:null,medianCents:null,coverage:0,reason:'共同可辨識人聲不足：需至少 0.8 秒，並涵蓋雙方至少 60% 的人聲。'};
-  if(first<0 || refFirst<0) return none;
-  const start=singing.frames[first].time, refStart=reference.frames[refFirst].time;
-  const differences=[];
-  for(const f of singing.frames.slice(first)) {
-    const j=Math.round((f.time-start+refStart)/reference.hop);
-    const r=reference.frames[j];
-    if(f.hz && r?.hz) differences.push(Math.abs(1200*Math.log2(f.hz/r.hz)));
+// Offset convention: singingTime = referenceTime + offset (seconds).
+// Same tempo only: a single translation, never DTW or score transposition.
+const ALIGNMENT = Object.freeze({minSeconds:3, minCoverage:0.65,
+  maxResidual:70, minCorrelation:0.9, ambiguityGap:0.18, distinctSeconds:0.5});
+export function compareReference(singing, reference, options={}) {
+  const manual=Object.hasOwn(options,'offsetSeconds');
+  const mode=manual?'manual':'auto';
+  if(manual && (typeof options.offsetSeconds!=='number' || !Number.isFinite(options.offsetSeconds) ||
+    options.offsetSeconds<=-reference.duration || options.offsetSeconds>=singing.duration))
+    throw new Error('偏移秒數必須是有限數值，且介於 −參考長度與錄音長度之間（不含端點）。');
+  const none={score:null,medianCents:null,coverage:0,singingCoverage:0,referenceCoverage:0,
+    offset:null,pairedSeconds:0,section:null,confidence:null,mode,
+    reason:'共同可辨識人聲不足：需至少 3 秒，並涵蓋較短人聲至少 65%。'};
+  const a=singing.frames.map(f=>f.hz?cents(f.hz):null), b=reference.frames.map(f=>f.hz?cents(f.hz):null);
+  const aSeconds=a.filter(v=>v!==null).length*singing.hop, bSeconds=b.filter(v=>v!==null).length*reference.hop;
+  const shorter=Math.min(aSeconds,bSeconds);
+  if(shorter<ALIGNMENT.minSeconds) return none;
+  // Nearest reference frame; identical mapping for search and final score.
+  const refIndex=(time,offset)=>Math.round((time-offset-(reference.frames[0]?.time||0))/reference.hop);
+  let offset=options.offsetSeconds, confidence=null;
+  if(!manual) {
+    const step=Math.min(singing.hop,reference.hop), dt=singing.hop;
+    function candidate(offset) {
+      let n=0,sx=0,sy=0,sxx=0,syy=0,sxy=0,changesA=0,changesB=0,prevA=null,prevB=null;
+      let lastVoice=-Infinity,changeA=-Infinity,changeB=-Infinity;
+      for(let i=0;i<a.length;i++) {
+        const x=a[i],y=b[refIndex(singing.frames[i].time,offset)];
+        if(x===null || y==null)continue;
+        const time=singing.frames[i].time;
+        // YIN may leave short unvoiced holes at note boundaries. Do not erase
+        // melodic evidence at those holes, or count several frames of one transition.
+        if(time-lastVoice>0.2){prevA=x;prevB=y;}
+        if(Math.abs(x-prevA)>70 && time-changeA>=0.12){changesA++;prevA=x;changeA=time;}
+        if(Math.abs(y-prevB)>70 && time-changeB>=0.12){changesB++;prevB=y;changeB=time;}
+        lastVoice=time;
+        n++;sx+=x;sy+=y;sxx+=x*x;syy+=y*y;sxy+=x*y;
+      }
+      const shared=n*dt, coverage=Math.min(1,shared/shorter);
+      if(shared+1e-9<ALIGNMENT.minSeconds || coverage<ALIGNMENT.minCoverage || changesA<4 || changesB<4)return null;
+      const vx=Math.max(0,sxx/n-(sx/n)**2),vy=Math.max(0,syy/n-(sy/n)**2),cov=sxy/n-sx*sy/(n*n);
+      if(vx<80**2 || vy<80**2)return null;
+      const residual=Math.sqrt(Math.max(0,vx+vy-2*cov)), correlation=cov/Math.sqrt(vx*vy);
+      // Relative contour fit locates the phrase. Absolute pitch is NOT removed from the score below.
+      return {offset,residual,correlation,loss:residual/100+0.25*(1-coverage)};
+    }
+    const candidates=[];
+    // Evaluate EVERY admissible offset at native frame resolution, including rivals.
+    // Coarse-grid-only rivals can miss an equally good repeated phrase one hop away.
+    const lo=Math.ceil((-reference.duration+ALIGNMENT.minSeconds)/step);
+    const hi=Math.floor((singing.duration-ALIGNMENT.minSeconds)/step);
+    for(let k=lo;k<=hi;k++){const c=candidate(k*step);if(c)candidates.push(c);}
+    candidates.sort((x,y)=>x.loss-y.loss);
+    const best=candidates[0];
+    if(!best || best.residual>ALIGNMENT.maxResidual || best.correlation<ALIGNMENT.minCorrelation)
+      return {...none,reason:'無法可靠自動對齊：旋律變化不足或輪廓不相符。可人工指定偏移；仍需同速度。'};
+    const rival=candidates.find(c=>Math.abs(c.offset-best.offset)>=ALIGNMENT.distinctSeconds);
+    const gap=rival?rival.loss-best.loss:Infinity;
+    if(gap<ALIGNMENT.ambiguityGap)
+      return {...none,reason:'無法可靠自動對齊：有多個相似樂句，位置不明確。請人工指定偏移。'};
+    offset=best.offset;
+    // Heuristic confidence, not a calibrated probability or singing grade.
+    confidence=Math.min(1,Math.max(0,1-best.residual/250),gap===Infinity?1:0.7+0.3*Math.min(1,gap/0.6));
   }
-  const denominator=Math.max(singing.frames.filter(f=>f.hz).length,reference.frames.filter(f=>f.hz).length);
-  const coverage=differences.length/denominator;
-  if(differences.length*singing.hop<0.8 || coverage<0.6) return {...none,coverage};
+  const differences=[];let first=null,last=null,refFirst=null,refLast=null;
+  for(let i=0;i<a.length;i++) {
+    const f=singing.frames[i], j=refIndex(f.time,offset);
+    if(a[i]===null || b[j]==null)continue;
+    differences.push(Math.abs(a[i]-b[j]));
+    if(first===null){first=f.time;refFirst=reference.frames[j].time;}
+    last=f.time;refLast=reference.frames[j].time;
+  }
+  const pairedSeconds=differences.length*singing.hop;
+  const singingCoverage=Math.min(1,pairedSeconds/aSeconds),referenceCoverage=Math.min(1,pairedSeconds/bSeconds);
+  const coverage=Math.max(singingCoverage,referenceCoverage);
+  const section=first===null?null:{singingStart:first,singingEnd:last+singing.hop,
+    referenceStart:refFirst,referenceEnd:refLast+reference.hop};
+  const details={...none,offset,confidence,pairedSeconds,singingCoverage,referenceCoverage,coverage,section};
+  if(pairedSeconds+1e-9<ALIGNMENT.minSeconds || coverage+1e-9<ALIGNMENT.minCoverage)
+    return {...details,offset:manual?offset:null,confidence:null};
   const medianCents=median(differences);
-  return {score:Math.round(Math.max(0,100-medianCents/2)),medianCents,coverage,offset:start-refStart,pairedSeconds:differences.length*singing.hop};
+  return {...details,reason:null,score:Math.round(Math.max(0,100-medianCents/2)),medianCents};
+}
+
+// The renderer consumes this model: no independent onset detection/alignment.
+export function chartAlignment({singing,reference,metric}) {
+  const tracks=[{data:singing,offset:0,color:'#80639e'}];
+  if(reference && Number.isFinite(metric.offset))tracks.push({data:reference,offset:metric.offset,color:'#628e85'});
+  return {tracks,start:Math.min(0,...tracks.map(t=>t.offset)),
+    end:Math.max(1,...tracks.map(t=>t.data.duration+t.offset))};
 }
