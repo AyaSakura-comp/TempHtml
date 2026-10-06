@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>傳送門 🌀 給好累的你</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html,body { height:100%; overflow:hidden; }
+  body {
+    font-family: "Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+    background: radial-gradient(ellipse at 50% 40%, #2a2f55 0%, #16182c 55%, #0b0c18 100%);
+    color:#eef1ff;
+    display:flex; align-items:center; justify-content:center;
+    position:relative;
+  }
+  /* 星空 */
+  .stars { position:fixed; inset:0; pointer-events:none; }
+  .star {
+    position:absolute; width:2px; height:2px; border-radius:50%;
+    background:#fff; opacity:.7; animation:tw 3s infinite ease-in-out;
+  }
+  @keyframes tw { 0%,100%{opacity:.15} 50%{opacity:.9} }
+
+  .wrap { text-align:center; z-index:5; padding:24px; }
+  h1 { font-size:clamp(22px,4.5vw,34px); font-weight:700; letter-spacing:.06em;
+       text-shadow:0 0 24px rgba(140,180,255,.5); margin-bottom:8px; }
+  .sub { opacity:.75; font-size:15px; margin-bottom:28px; }
+
+  /* 傳送門 */
+  .portal {
+    position:relative; width:min(58vw,300px); height:min(58vw,300px);
+    margin:0 auto; border-radius:50%; cursor:pointer;
+    background:
+      conic-gradient(from 0deg,
+        rgba(120,200,255,.0), rgba(120,200,255,.55), rgba(200,140,255,.0),
+        rgba(120,255,220,.45), rgba(120,200,255,.0));
+    animation:spin 9s linear infinite;
+    box-shadow:
+      0 0 60px 12px rgba(130,180,255,.35),
+      0 0 140px 40px rgba(160,120,255,.25),
+      inset 0 0 80px 30px rgba(20,24,48,.9);
+    transition:transform .5s ease;
+  }
+  .portal::before {
+    content:""; position:absolute; inset:9%;
+    border-radius:50%;
+    background:
+      radial-gradient(circle at 50% 50%, rgba(255,255,255,.9) 0%, rgba(170,210,255,.55) 18%, rgba(90,110,200,.25) 40%, rgba(10,12,26,.92) 75%);
+    animation:spin 6s linear infinite reverse, breathe 4s ease-in-out infinite;
+  }
+  .portal::after {
+    content:"🌀"; position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    font-size:min(18vw,90px); filter:drop-shadow(0 0 18px rgba(160,200,255,.8));
+    animation:breathe 4s ease-in-out infinite;
+  }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  @keyframes breathe { 0%,100%{filter:brightness(1)} 50%{filter:brightness(1.35)} }
+  .portal:hover { transform:scale(1.06); }
+
+  .hint { margin-top:26px; opacity:.8; font-size:15px; }
+  .hint b { color:#9fd0ff; }
+
+  /* 目的地 */
+  .dests { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:18px; }
+  .dest {
+    background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.18);
+    color:#eef1ff; padding:10px 16px; border-radius:999px; font-size:14px; cursor:pointer;
+    backdrop-filter:blur(4px); transition:.25s;
+  }
+  .dest:hover { background:rgba(150,190,255,.25); transform:translateY(-2px); }
+
+  /* 跳轉後的世界 */
+  .world {
+    position:fixed; inset:0; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; text-align:center; padding:32px;
+    opacity:0; pointer-events:none; transition:opacity 1.4s ease; z-index:10;
+  }
+  .world.on { opacity:1; pointer-events:auto; }
+  .world .big { font-size:min(24vw,150px); animation:float 5s ease-in-out infinite; }
+  @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-16px)} }
+  .world p { max-width:520px; line-height:1.9; font-size:17px; margin-top:14px; opacity:.92; }
+  .back {
+    margin-top:26px; background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.25);
+    color:#fff; padding:10px 20px; border-radius:999px; cursor:pointer; font-size:14px;
+  }
+  .back:hover { background:rgba(255,255,255,.2); }
+
+  .flash { position:fixed; inset:0; background:#fff; opacity:0; pointer-events:none; transition:opacity .45s; z-index:9; }
+  .flash.on { opacity:.9; }
+
+  .cloud { position:fixed; font-size:60px; opacity:.25; animation:drift 40s linear infinite; pointer-events:none; }
+  @keyframes drift { from{transform:translateX(-15vw)} to{transform:translateX(115vw)} }
+</style>
+</head>
+<body>
+<div class="stars" id="stars"></div>
+
+<div class="wrap" id="gate">
+  <h1>好累了吧，這裡有一扇門</h1>
+  <div class="sub">不用解釋、不用撐著，走進去就好。</div>
+  <div class="portal" id="portal" title="點一下"></div>
+  <div class="hint">點一下傳送門，或選一個目的地 →</div>
+  <div class="dests">
+    <button class="dest" data-d="cloud">☁️ 雲朵沙發</button>
+    <button class="dest" data-d="sea">🌊 海邊棧道</button>
+    <button class="dest" data-d="forest">🌲 森林小徑</button>
+    <button class="dest" data-d="onsen">♨️ 深夜溫泉</button>
+    <button class="dest" data-d="space">🌌 宇宙漂浮</button>
+  </div>
+</div>
+
+<div class="flash" id="flash"></div>
+<div class="world" id="world">
+  <div class="big" id="wIcon"></div>
+  <p id="wText"></p>
+  <button class="back" id="back">← 回傳送門</button>
+</div>
+
+<script>
+const W = {
+  cloud:  ["☁️","你陷進一朵剛曬過太陽的雲。<br>肩膀可以放下來了，重量交給雲就好。<br>今天已經夠努力了，剩下的事明天再說。"],
+  sea:    ["🌊","木棧道盡頭的海風剛剛好。<br>浪一聲一聲地來，把腦中那些待辦事項沖得遠遠的。<br>聽一下，就一下下也可以。"],
+  forest: ["🌲","森林裡沒有 KPI，只有樹影和鳥叫。<br>走慢一點沒關係，這裡的路不會準時。<br>深呼吸——空氣是涼的、乾淨的。"],
+  onsen:  ["♨️","深夜的溫泉，只有你和水聲。<br>熱氣把痠的地方一點一點融化。<br>泡到臉頰熱熱的，就可以睡得很好了。"],
+  space:  ["🌌","你飄在宇宙裡，地球只是一顆藍色小點。<br>所有煩惱都變得小小的。<br>在這裡，什麼都不用做，漂浮本身就是全部任務。"]
+};
+const stars = document.getElementById('stars');
+for (let i=0;i<90;i++){
+  const s=document.createElement('div'); s.className='star';
+  s.style.left=Math.random()*100+'%'; s.style.top=Math.random()*100+'%';
+  s.style.animationDelay=(Math.random()*3)+'s';
+  s.style.width=s.style.height=(Math.random()*2+1)+'px';
+  stars.appendChild(s);
+}
+const gate=document.getElementById('gate'), world=document.getElementById('world'),
+      flash=document.getElementById('flash');
+function go(key){
+  flash.classList.add('on');
+  setTimeout(()=>{
+    document.body.style.background = key==='sea'
+      ? 'linear-gradient(#8fd3f4,#5bb8e8 45%,#1d6fa5)'
+      : key==='forest' ? 'linear-gradient(#1e3d2f,#0f2419)'
+      : key==='onsen'  ? 'linear-gradient(#3b2f3f,#241b28)'
+      : key==='cloud'  ? 'linear-gradient(#cfe3f7,#9fbfe0 60%,#7d9cc4)'
+      : 'radial-gradient(#1b2340,#05060d)';
+    document.getElementById('wIcon').textContent=W[key][0];
+    document.getElementById('wText').innerHTML=W[key][1];
+    gate.style.display='none'; world.classList.add('on');
+    flash.classList.remove('on');
+  },450);
+}
+document.getElementById('portal').onclick=()=>go('cloud');
+document.querySelectorAll('.dest').forEach(b=>b.onclick=()=>go(b.dataset.d));
+document.getElementById('back').onclick=()=>{
+  world.classList.remove('on');
+  document.body.style.background='radial-gradient(ellipse at 50% 40%, #2a2f55 0%, #16182c 55%, #0b0c18 100%)';
+  gate.style.display='block';
+};
+</script>
+</body>
+</html>
