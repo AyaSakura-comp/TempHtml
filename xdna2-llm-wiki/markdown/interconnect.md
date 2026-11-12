@@ -80,9 +80,13 @@ Circuit/packet route都要有合法連接和ownership；multicast不保證每個
 - [synchronization](synchronization.md)
 - [events-debug](events-debug.md)
 - [spec-gaps](spec-gaps.md)
+- [am027-tile](am027-tile.md)
 
 ## 反向連結
 - [spec-index](spec-index.md)
 - [tile-microarchitecture](tile-microarchitecture.md)
+- [data-ingress](data-ingress.md)
 - [dma-registers](dma-registers.md)
+- [am027-tile](am027-tile.md)
+- [am027-memtile](am027-memtile.md)
 - [spec-gaps](spec-gaps.md)

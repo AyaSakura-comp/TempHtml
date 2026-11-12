@@ -107,3 +107,5 @@ GPR 與 spill 位寬見 [暫存器寬度與 GPR](https://github.com/Xilinx/llvm-
 - [tile-microarchitecture](tile-microarchitecture.md)
 - [isa-encoding](isa-encoding.md)
 - [isa-instructions](isa-instructions.md)
+- [am027-overview](am027-overview.md)
+- [am027-core](am027-core.md)

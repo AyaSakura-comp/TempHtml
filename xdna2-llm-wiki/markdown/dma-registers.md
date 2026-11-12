@@ -76,10 +76,13 @@
 - [tile-microarchitecture](tile-microarchitecture.md)
 - [events-debug](events-debug.md)
 - [spec-gaps](spec-gaps.md)
+- [am027-memtile](am027-memtile.md)
 
 ## 反向連結
 - [spec-index](spec-index.md)
 - [tile-microarchitecture](tile-microarchitecture.md)
 - [interconnect](interconnect.md)
 - [events-debug](events-debug.md)
+- [am027-tile](am027-tile.md)
+- [am027-memtile](am027-memtile.md)
 - [spec-gaps](spec-gaps.md)

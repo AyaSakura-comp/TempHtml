@@ -98,6 +98,7 @@ python3 whole_array.py --dev npu2 --n-aie-cols 8 \
 
 ## 反向連結
 - [dma](dma.md)
+- [data-ingress](data-ingress.md)
 - [synchronization](synchronization.md)
 - [compiler](compiler.md)
 - [deployment](deployment.md)

@@ -61,6 +61,8 @@ prefill 有較多 token 可併成矩陣工作，decode 常是較小的即時工�
 - 閱讀 [記憶體](memory.md) 後估算能容納的工作集，再選 [矩陣原語](mma.md)。
 - 未知項保留為未知：SKU 實際可用資源、頻率、鏈路有效頻寬、端到端延遲與框架算子覆蓋率均未由本次查核證明。
 
+AIE-ML、AIE2P、AIE-ML v2 三個世代名稱與各自的官方手冊對照表在 [規格缺口](spec-gaps.md)；資料從主機到核心的路徑見 [資料上 tile](data-ingress.md)。
+
 ## 來源
 - [AIE2P 版本標頭](https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/clang/lib/Headers/aie2p/aie2p_version.h#L14-L20) — arch 21 與 model 巨集；不可混用 arch 22。 僅靜態來源查核。
 - [Peano README：架構與後端](https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/README.md#L1-L66) — XDNA2 target triple、in-order exposed-pipeline VLIW、編譯器責任及成熟度限制。示例 timing 非本次硬體規格。 僅靜態來源查核。
@@ -76,10 +78,13 @@ prefill 有較多 token 可併成矩陣工作，decode 常是較小的即時工�
 - [synchronization](synchronization.md)
 - [heterogeneous](heterogeneous.md)
 - [llm-graph](llm-graph.md)
+- [data-ingress](data-ingress.md)
+- [am027-overview](am027-overview.md)
 
 ## 反向連結
 - [tile-microarchitecture](tile-microarchitecture.md)
 - [compute](compute.md)
 - [memory](memory.md)
 - [dma](dma.md)
+- [am027-overview](am027-overview.md)
 - [glossary](glossary.md)

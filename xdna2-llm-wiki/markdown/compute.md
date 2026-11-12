@@ -92,3 +92,4 @@
 - [synchronization](synchronization.md)
 - [isa](isa.md)
 - [mma](mma.md)
+- [am027-core](am027-core.md)

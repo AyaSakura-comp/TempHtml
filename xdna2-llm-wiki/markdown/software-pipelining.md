@@ -107,3 +107,4 @@ load-use latency 是 7，**穩態 II 是 2**。若 consumer 視為占一個可�
 - [spec-index](spec-index.md)
 - [vliw-pipeline](vliw-pipeline.md)
 - [instruction-cycles](instruction-cycles.md)
+- [data-ingress](data-ingress.md)

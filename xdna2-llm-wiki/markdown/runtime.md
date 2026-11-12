@@ -78,6 +78,7 @@ IRON HRX 文件明列 host-mapped buffer 的 flush／invalidate，以及 chain �
 
 ## 反向連結
 - [dma](dma.md)
+- [data-ingress](data-ingress.md)
 - [compiler](compiler.md)
 - [iron](iron.md)
 - [triton](triton.md)
@@ -85,4 +86,5 @@ IRON HRX 文件明列 host-mapped buffer 的 flush／invalidate，以及 chain �
 - [heterogeneous](heterogeneous.md)
 - [deployment](deployment.md)
 - [debug](debug.md)
+- [am027-system](am027-system.md)
 - [glossary](glossary.md)

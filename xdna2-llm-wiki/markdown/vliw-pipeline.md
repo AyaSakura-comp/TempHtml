@@ -101,6 +101,7 @@ IssueWidth=1000 並非千路發射；以 77 種 composite format 與資源時序
 - [compiler](compiler.md)
 - [instruction-cycles](instruction-cycles.md)
 - [software-pipelining](software-pipelining.md)
+- [am027-core](am027-core.md)
 
 ## 反向連結
 - [spec-index](spec-index.md)
@@ -108,3 +109,4 @@ IssueWidth=1000 並非千路發射；以 77 種 composite format 與資源時序
 - [instruction-cycles](instruction-cycles.md)
 - [software-pipelining](software-pipelining.md)
 - [events-debug](events-debug.md)
+- [am027-core](am027-core.md)

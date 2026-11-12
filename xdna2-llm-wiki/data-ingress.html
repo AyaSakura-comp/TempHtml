@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="每顆 tile 的 SRAM 都要靠 DMA 餵資料：路徑、IRON 寫法、lock 握手、和指令排程的關係，以及這台 NPU 上錄到的事件 trace。"><meta name="color-scheme" content="light"><title>資料上 tile：DMA 路徑、lock 握手、雙緩衝與硬體 trace — XDNA 2 LLM Wiki</title><link rel="icon" href="assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="assets/wiki.css"><script src="assets/model.js" defer></script><script src="assets/search-data.js?v=a241e611b41d" defer></script><script src="assets/app.js" defer></script></head>
+<body><a class="skip" href="#main">跳到正文</a><header class="topbar"><a class="wordmark" href="index.html"><span class="seal" aria-hidden="true">文</span><span>XDNA 2 <b>LLM WIKI</b></span></a><nav class="header-links" aria-label="常用連結"><a href="index.html#search">搜尋</a><a href="glossary.html">術語</a><a href="llms.txt">LLM 索引</a></nav></header><div class="layout"><aside class="sidebar" aria-label="知識庫導覽"><details id="nav-menu"><summary>全站目錄 <span>＋</span></summary><nav class="navtree"><div class="nav-group"><h3>架構</h3><a href="spec-index.html">XDNA2 規格總索引：ISA、cycles、VLIW、tile 與互連</a><a href="system.html">XDNA2 系統：空間資料流與 NPU2 分區</a><a href="tile-microarchitecture.html">Tile 微架構：SRAM、地址視窗、banks 與三種 tile</a><a href="compute.html">計算核心：scalar、SIMD、VLIW 與累加器</a><a href="isa-registers.html">AIE2P 暫存器：類別、寬度、編碼與重疊視圖</a><a href="vliw-pipeline.html">VLIW 與外露管線：bundle 格式、scoreboard 與 hazard</a><a href="instruction-cycles.html">指令週期：完整 itinerary、操作數時點與旁路</a><a href="isa-encoding.html">AIE2P 編碼：16–128-bit VLIW、slot 欄位與立即數</a><a href="isa-instructions.html">AIE2P 指令族：純量、向量、搬移、控制、串流與矩陣</a><a href="memory.html">記憶體：program、data、banks 與局部地址</a><a href="interconnect.html">Interconnect 規格：switch ports、packet routing 與 cascade</a><a href="dma.html">DMA：描述子、通道與資料布局</a><a href="data-ingress.html" aria-current="page">資料上 tile：DMA 路徑、lock 握手、雙緩衝與硬體 trace</a><a href="dma-registers.html">DMA / MMIO 規格：BD 欄位、locks、burst 與完整 register 索引</a><a href="synchronization.html">同步：鎖、背壓、停頓與死鎖</a><a href="events-debug.html">Events 與可觀測微架構：stall、bank conflict、counters 與 trace</a><a href="isa.html">ISA 閱讀：從 AIE2P header 追到後端原語</a><a href="am027-overview.html">AM027 導讀：AIE-ML v2 的陣列、時脈、記憶體保護與三代比較</a><a href="am027-tile.html">AM027 Tile 架構：記憶體鄰接、stream switch、程式記憶體與 memory module</a><a href="am027-core.html">AM027 處理器架構：暫存器、load／store、純量與向量單元、六級管線</a><a href="am027-memtile.html">AM027 Memory tile：512 KB、12 條 DMA 通道、鄰居存取、padding 與壓縮</a><a href="am027-system.html">AM027 介面、開機與觀測：array interface、中斷、設定流程、debug、trace 與事件</a><a href="spec-gaps.html">規格缺口與衝突：哪些已知，哪些不能由 compiler 推成 silicon</a></div><div class="nav-group"><h3>數值</h3><a href="datatypes.html">數值型別：INT4、BF16、BFP16 與 FP32 的分層支援</a><a href="mma.html">矩陣乘加：原語、API 包裝與 LLM microtile</a><a href="quantization.html">LLM 量化：格式、數學與 kernel 是三件事</a></div><div class="nav-group"><h3>程式設計</h3><a href="software-pipelining.html">軟體管線化：II、recurrence、resource 與迴圈總成本</a><a href="compiler.html">編譯器分工：從資料流到 XDNA2 產物</a><a href="iron.html">IRON：以 Worker 與 ObjectFifo 設計資料流</a><a href="triton.html">Triton-XDNA：算子、Transform 與支援證據</a><a href="runtime.html">執行期與共享緩衝：格式、ABI、可見性</a><a href="deployment.html">LLM 部署生態：研究 compiler 與成品 runtime</a><a href="debug.html">除錯與證據分級：不要把 fallback 當 NPU 成功</a></div><div class="nav-group"><h3>LLM推論</h3><a href="llm-graph.html">LLM 計算圖：算子、狀態與裝置邊界</a><a href="qwen-case.html">Qwen2.5 案例：CPU＋NPU、GPU 與異質路由</a><a href="gemm.html">GEMM：把矩陣切成可搬、可算的工作</a><a href="attention.html">Attention：算子可拆，不代表整體已能在 NPU 跑</a><a href="kv-cache.html">KV cache：容量、頻寬與生命週期</a><a href="prefill-decode.html">Prefill 與 decode：兩個不同的效能問題</a><a href="heterogeneous.html">CPU × GPU × NPU：分工與資料所有權</a></div><div class="nav-group"><h3>驗證與知識庫</h3><a href="performance.html">效能模型：容量、Roofline 與端到端下界</a><a href="validation.html">正確性與效能驗證：一套不把 fallback 當成功的流程</a><a href="glossary.html">術語辭典：同一個字，在不同層可能不同意思</a><a href="sources.html">來源地圖、證據等級與未解問題</a><a href="wiki-method.html">LLM Wiki 使用與維護：來源 → 條目 → 連結</a></div></nav></details></aside><main id="main" tabindex="-1"><div class="breadcrumbs"><a href="index.html">首頁</a> / 架構</div><div class="article-meta"><span>官方手冊／本機產物</span><span>來源快照 2026-09-12</span><a href="markdown/data-ingress.md" download>Markdown ↓</a></div><h1>資料上 tile：DMA 路徑、lock 握手、雙緩衝與硬體 trace</h1><p class="lede">每顆 tile 的 SRAM 都要靠 DMA 餵資料：路徑、IRON 寫法、lock 握手、和指令排程的關係，以及這台 NPU 上錄到的事件 trace。</p><div class="evidence-note">本文區分官方手冊、原始碼查核、本機產物與工程推導。標為「本機」的段落來自這台機器上已編譯的設計與已錄下的硬體 trace，日期寫在正文；其餘段落沒有在本機執行。</div><nav class="toc" aria-label="本頁目錄"><strong>本頁導覽</strong><a href="#section-1">每顆 tile 有自己的 SRAM</a><a href="#section-2">一筆資料上 tile 的五個步驟</a><a href="#section-3">IRON 裡要寫的四樣東西</a><a href="#section-4">另外三種進到 tile 的方式</a><a href="#section-5">Lock 握手：一個真實設計的設定（本機產物）</a><a href="#section-6">資料搬移能不能和 VLIW 指令重疊</a><a href="#section-7">硬體 trace 看得到什麼（本機 trace）</a><a href="#section-8">未驗證與限制</a><a href="#references">來源與延伸</a></nav><article class="article-body"><h2 id="section-1">每顆 tile 有自己的 SRAM</h2>
+<p>XDNA 2 的每顆 tile 都有自己的記憶體，和主機 DRAM 不相通：compute tile 是 64 KiB 資料記憶體加 16 KiB 程式記憶體，memory tile 是 512 KiB（容量來源見 <a href="tile-microarchitecture.html">Tile 微架構</a>）。AMD 寫的 <a href="https://docs.kernel.org/accel/amdxdna/amdnpu.html">Linux 驅動文件</a>把 memory tile 稱為軟體管理的 L2，並說明由 DMA 在主機 DDR 與 memory tile 之間搬資料。核心沒有任何指令可以直接讀主機記憶體，所以「資料怎麼上 tile」就是「DMA 怎麼排」。</p>
+<button aria-label="複製程式碼" class="copy-code" type="button">複製</button><pre tabindex="0"><code class="language-text">主機 DDR ─▶ shim DMA ─▶ memory tile SRAM ─▶ compute tile SRAM ─▶ 核心 load
+（列 0）     stream      （列 1，512 KiB）  stream  （列 2–5，64 KiB）
+</code></pre>
+<h2 id="section-2">一筆資料上 tile 的五個步驟</h2>
+<ol>
+<li><strong>主機</strong>：把資料放進 XRT 緩衝區並同步到裝置。NPU 不看 CPU cache，沒同步會讀到舊資料（見 <a href="runtime.html">執行期</a>）。</li>
+<li><strong>Shim（列 0）</strong>：DMA 從主機 DDR 讀出資料，變成 stream 往上送。</li>
+<li><strong>Memory tile（列 1）</strong>：DMA 把 stream 寫進 512 KiB，再讀出來往上送；這一站可以把一份資料切給多顆核心，或重播多次。</li>
+<li><strong>Compute tile</strong>：tile 上的 DMA 把 stream 寫進自己的 64 KiB，寫完後釋放一把 lock。</li>
+<li><strong>核心</strong>：取得那把 lock，用一般的 load 指令讀那塊位址。</li>
+</ol>
+<p>結果回主機是同一條路反過來走。每顆 compute tile 只有 2 進 2 出的 DMA 通道，一筆資料要放得進 64 KiB 扣掉 stack 與其他緩衝區後的空間（見 <a href="dma.html">DMA</a> 與 <a href="memory.html">記憶體</a>）。</p>
+<h2 id="section-3">IRON 裡要寫的四樣東西</h2>
+<p>設計者不直接設定 DMA 暫存器。在 IRON 裡寫下列四樣，編譯器會產生 <a href="https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/include/aie/Dialect/AIE/IR/AIEOps.td#L940-L1064">BD 描述子</a>、<a href="https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/include/aie/Dialect/AIE/IR/AIEOps.td#L1500-L1611">lock</a> 與路由：</p>
+<div aria-label="可橫向捲動的資料表" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>你寫的</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ObjectFifo(型別, depth=…)</code></td>
+<td>宣告一條資料通道、每筆資料的大小與緩衝數（見 <a href="https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_guide/section-2/section-2a/README.md#L258-L298">ObjectFifo 文件</a>）</td>
+</tr>
+<tr>
+<td><code>.split(…, tile=Tile(c, 1))</code>、<code>.forward(…)</code>、<code>.join(…)</code></td>
+<td>指定在哪顆 memory tile 中轉，以及怎麼切、怎麼合、重播幾次</td>
+</tr>
+<tr>
+<td><code>Worker(kernel, [fifo.cons(), …])</code></td>
+<td>把通道接到某顆核心；核心程式裡以 <code>acquire</code>／<code>release</code> 取用</td>
+</tr>
+<tr>
+<td>runtime sequence 裡的 <code>fill(…)</code>、<code>drain(…)</code></td>
+<td>執行時把主機緩衝區的哪一段送進哪條通道、從哪條收回（見 <a href="https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_guide/section-2/section-2d/README.md#L28-L36">runtime sequence 文件</a>）</td>
+</tr>
+</tbody>
+</table></div>
+<p><code>fill</code>／<code>drain</code> 會降成 shim DMA 的工作；放置（哪顆核心算哪一段）在手寫設計裡由設計者指定，路由與位址由編譯器決定（見 <a href="iron.html">IRON</a> 與 <a href="compiler.html">編譯器分工</a>）。</p>
+<h2 id="section-4">另外三種進到 tile 的方式</h2>
+<ul>
+<li><strong>編譯時寫死</strong>：常數表放進核心的 ELF，載入設計時就寫進 SRAM。<a href="https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/core/xaie_elfloader.c#L126-L202">aie-rt 的 ELF loader</a> 依資料段位址決定寫進哪一顆 tile 的記憶體，適合不會變的小表。</li>
+<li><strong>Cascade</strong>：上游核心把累加器的值直接送給下游核心，不經過 SRAM，常用來串接部分和（見 <a href="interconnect.html">Interconnect</a>）。</li>
+<li><strong>相鄰核心共用記憶體</strong>：核心直接讀寫鄰居的 SRAM，不經 DMA。<a href="https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Tile-Architecture">AM027 Tile Architecture</a> 與 <a href="https://docs.amd.com/r/en-US/am020-versal-aie-ml">AM020</a> 列的是自己、北、南、西四塊，沒有東邊；ObjectFifo 兩端若能共用同一塊記憶體，編譯器就不產生 DMA。<strong>本機檢查</strong>：2026-11-12 掃過這台機器上 400 份已編譯設計（12,375 顆核心），沒有任何一顆核心引用別顆 tile 的緩衝區；這條路在本機沒有被用過，也沒有實測。</li>
+</ul>
+<h2 id="section-5">Lock 握手：一個真實設計的設定（本機產物）</h2>
+<p>以下取自這台機器上一個手寫 GEMM 設計（8 欄 × 4 列）編譯後的 <code>input_with_addresses.mlir</code> 與核心 ELF 的反組譯，核心在第 3 欄第 3 列。A 是單緩衝，W 是雙緩衝：</p>
+<div aria-label="可橫向捲動的資料表" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>物件</th>
+<th>位址（核心視角）</th>
+<th>大小</th>
+<th>bank</th>
+<th>lock（生產／消費，初值）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A 緩衝</td>
+<td><code>0x70800</code></td>
+<td>23,040 B</td>
+<td>0</td>
+<td>lock 0／lock 1，初值 1／0</td>
+</tr>
+<tr>
+<td>W 緩衝 0</td>
+<td><code>0x78000</code></td>
+<td>10,560 B</td>
+<td>2</td>
+<td>lock 2／lock 3，初值 2／0</td>
+</tr>
+<tr>
+<td>W 緩衝 1</td>
+<td><code>0x7C000</code></td>
+<td>10,560 B</td>
+<td>3</td>
+<td>同上（兩塊共用一對 lock）</td>
+</tr>
+</tbody>
+</table></div>
+<p>DMA 這一側（compute tile 的 S2MM 通道 1，兩個 BD 互相接續）：</p>
+<button aria-label="複製程式碼" class="copy-code" type="button">複製</button><pre tabindex="0"><code class="language-text">BD1: 取得 lock 2 (&gt;=1) → 寫 W 緩衝 0（10,560 B） → 釋放 lock 3 → 接 BD2
+BD2: 取得 lock 2 (&gt;=1) → 寫 W 緩衝 1（10,560 B） → 釋放 lock 3 → 接 BD1
+</code></pre>
+<p>核心這一側（外層迴圈的反組譯，lock 編號 <code>0x30</code> 起是自己這顆 tile 的 lock，見 <a href="https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/lib/Dialect/AIE/IR/AIETargetModel.cpp#L1554-L1577">lock 編號視窗</a>）：</p>
+<button aria-label="複製程式碼" class="copy-code" type="button">複製</button><pre tabindex="0"><code class="language-text">acq #0x31            ; 等 A 就緒（自己的 lock 1）
+重複 40 次：
+  acq #0x33          ; 等一塊 W 就緒（自己的 lock 3）
+  p0 = 0x70800       ; A
+  p1 = 0x78000 或 0x7C000   ; 兩塊 W 輪流
+  jl  kernel
+  rel #0x32          ; 把這塊 W 還給 DMA（自己的 lock 2）
+rel #0x30            ; 把 A 還給 DMA（自己的 lock 0）
+</code></pre>
+<p>lock 是計數 semaphore：lock 2 的初值 2 代表「有兩塊空的 W 緩衝可寫」，DMA 每寫完一塊就把 lock 3 加一，核心每用完一塊就把 lock 2 加一。<a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/clang/lib/Headers/aie2p/aie2p_locks.h#L14-L61">Peano 的 lock header</a> 是核心端的介面；語意見 <a href="synchronization.html">同步</a>。</p>
+<h2 id="section-6">資料搬移能不能和 VLIW 指令重疊</h2>
+<p>可以，方法是雙緩衝，不是把搬移寫進指令排程：</p>
+<ul>
+<li><strong>重疊的條件</strong>：ObjectFifo 的 <code>depth</code> 至少 2 時，核心在算緩衝 0 的同時，DMA 可以把下一筆寫進緩衝 1。上例的 W 就是這樣；A 是單緩衝，換下一筆 A 時核心必須等。</li>
+<li><strong>核心端的成本</strong>：資料已經到的時候，一次 <code>acq</code> 或 <code>rel</code> 在下面的本機 trace 裡只佔 1 個週期；資料還沒到，核心就停在 <code>acq</code>。</li>
+<li><strong>Stall 期間整顆核心暫停</strong>：<a href="https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2">AM027 Interfaces</a> 列出核心會因 lock、stream 滿或空、資料記憶體衝突而 stall。暫停時所有指令一起停住，所以 kernel 內部以週期計的排程（見 <a href="instruction-cycles.html">指令週期</a> 與 <a href="software-pipelining.html">軟體管線化</a>）不需要為 DMA 預留空檔；排程裡的「第幾週期」是不含 stall 的週期。這是由手冊敘述與下面 trace 得出的工程推論。</li>
+<li><strong>Bank</strong>：AM027（姊妹代）說每個 bank 各自仲裁，不同 bank 可同時存取。上例中編譯器把 A 放在 bank 0、兩塊 W 放在 bank 2 與 3，DMA 寫下一塊 W 時不會和核心正在讀的那塊同 bank。</li>
+<li><strong>速率要配得上</strong>：DMA 填滿一塊緩衝的時間若長於核心算完一塊的時間，核心每一輪都會在 <code>acq</code> 等。上例一塊 W 是 10,560 B，kernel 每塊約 1,280 個 MAC 週期加上銜接，兩者同一量級；這個設計沒有錄過 trace，哪一邊在等沒有量測。</li>
+</ul>
+<h2 id="section-7">硬體 trace 看得到什麼（本機 trace）</h2>
+<p>硬體沒有逐指令、逐管線級的波形。能錄的是事件 trace：每顆 tile 的 trace unit 追蹤最多八個事件，AM027（姊妹代）列出 event-time（逐週期記錄事件狀態變化）與 event-PC（事件成立時記錄 PC）兩種模式。IRON 以 <code>Program.enable_trace(...)</code> 開啟，trace 封包經 stream 送到 shim 寫回主機，再用 <code>aie.utils.trace</code> 解析成 Perfetto JSON（見 <a href="https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_guide/section-4/section-4b/README.md#L30-L72">trace 文件</a> 與 <a href="events-debug.html">Events</a>）。</p>
+<p>以下是這台 NPU 上 2026-10-27 錄的一份 event-time trace：手寫 conv3x3 設計（兩顆核心以 cascade 串成一條鏈，128 列影像），不是上一節的 GEMM 設計。從第一次呼叫 kernel 到最後一次返回，各事件佔的週期比例：</p>
+<div aria-label="可橫向捲動的資料表" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>核心</th>
+<th>向量指令</th>
+<th>等 lock</th>
+<th>等 cascade</th>
+<th>bank 衝突</th>
+<th>其他</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>鏈頭（列 5）</td>
+<td>86.1%</td>
+<td>0.6%</td>
+<td>8.2%</td>
+<td>0.8%</td>
+<td>4.3%</td>
+</tr>
+<tr>
+<td>鏈尾（列 4）</td>
+<td>89.6%</td>
+<td>0.7%</td>
+<td>0.0%</td>
+<td>3.1%</td>
+<td>6.6%</td>
+</tr>
+</tbody>
+</table></div>
+<ul>
+<li><strong>穩定狀態</strong>：每列影像一次 kernel 呼叫，週期約 2,540，其中 2,304 個是 VMAC。每次交接有 2 到 4 次 lock 操作，各停 1 個週期，表示 DMA 一直領先核心。</li>
+<li><strong>開頭</strong>：鏈尾核心在第一筆資料到之前停了 28,851 個週期，第三列之後又停了一次 1,703 個週期等 DMA；之後不再出現長的 lock stall。</li>
+<li><strong>Bank 衝突</strong>：每次 1 個週期，鏈尾每列約 80 次、鏈頭約 20 次。trace 只給事件名稱，沒有指出是和誰衝突。</li>
+<li><strong>Cascade</strong>：鏈頭每列有 4 次等 cascade，中位數 26 個週期，是下游較慢造成的背壓。</li>
+</ul>
+<p>一次交接的事件順序（週期為 trace 計數）：</p>
+<div aria-label="可橫向捲動的資料表" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>週期</th>
+<th>核心</th>
+<th>事件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>45,786–45,815</td>
+<td>鏈尾</td>
+<td>8 次 MEMORY_STALL，各 1 週期，夾在向量指令之間</td>
+</tr>
+<tr>
+<td>45,832</td>
+<td>鏈尾</td>
+<td>INSTR_RETURN，這一列的 kernel 返回</td>
+</tr>
+<tr>
+<td>45,832–45,873</td>
+<td>鏈頭</td>
+<td>CASCADE_STALL 41 週期</td>
+</tr>
+<tr>
+<td>45,842、45,847</td>
+<td>鏈尾</td>
+<td>LOCK_STALL 各 1 週期</td>
+</tr>
+<tr>
+<td>45,852</td>
+<td>鏈尾</td>
+<td>INSTR_CALL，下一列開始</td>
+</tr>
+<tr>
+<td>45,854、45,859</td>
+<td>鏈尾</td>
+<td>LOCK_STALL 各 1 週期</td>
+</tr>
+<tr>
+<td>45,892</td>
+<td>鏈尾</td>
+<td>向量指令恢復</td>
+</tr>
+<tr>
+<td>45,897</td>
+<td>鏈頭</td>
+<td>向量指令恢復</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="section-8">未驗證與限制</h2>
+<ul>
+<li>上面的 trace 來自 conv3x3 設計；GEMM 設計沒有 trace，它的 lock 握手只有編譯產物與反組譯為證，沒有量到核心等了多久。</li>
+<li>AM020 與 AM027 是前一代與 Versal 姊妹代的手冊，AIE2P 沒有公開的專屬架構手冊；頻寬、load 寬度、stream 寬度等數字不可直接搬用（見 <a href="spec-gaps.html">規格缺口</a>）。</li>
+<li>核心直接讀寫鄰居 SRAM、核心是否完全不能碰 memory tile，在本機都沒有實測。</li>
+<li>event-PC 模式在本機沒有錄過；它給的是事件成立時的 PC，不是完整的指令序列。</li>
+<li>錄 trace 需要另外的 shim 通道與緩衝，會改變設計的資料路徑；trace 版的時間不能直接當成正式版的時間。</li>
+</ul></article><section id="references" class="references"><h2>來源與查核範圍</h2><ol><li><a href="https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Tile-Architecture">AM027：AIE-ML v2 Tile Architecture</a><span>AMD 官方手冊 rev 1.1（2025-10-23）；記憶體鄰接為自己／北／南／西。Versal 姊妹代，非 AIE2P 專屬。2026-11-12 取得原文。</span><small>https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Tile-Architecture</small></li><li><a href="https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2">AM027：Versal AIE-ML v2 Architecture Manual</a><span>Interfaces（stall 來源）、Memory Module（bank 仲裁）、Memory Tile DMA、Trace（event-time／event-PC）各節。非 AIE2P 專屬。</span><small>https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2</small></li><li><a href="https://docs.amd.com/r/en-US/am020-versal-aie-ml">AM020：Versal AIE-ML Architecture Manual</a><span>AMD 官方手冊 rev 1.5（2026-02-18）；前一代，記憶體鄰接列舉與 AM027 相同。</span><small>https://docs.amd.com/r/en-US/am020-versal-aie-ml</small></li><li><a href="https://docs.kernel.org/accel/amdxdna/amdnpu.html">Linux kernel：AMD NPU（amdxdna）</a><span>AMD 撰寫的驅動文件：Strix Point 4x8、memory tile 為 L2、DMA 在主機 DDR 與 memory tile 間搬移。</span><small>https://docs.kernel.org/accel/amdxdna/amdnpu.html</small></li><li><a href="https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/core/xaie_elfloader.c#L126-L202">aie-rt ELF loader：資料段位址對應 tile</a><span>AIE2P 表下 CardDir 4／5／6／7 對應南／西／北／自己。僅靜態來源查核。</span><small>https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/core/xaie_elfloader.c#L126-L202</small></li><li><a href="https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/include/aie/Dialect/AIE/IR/AIEOps.td#L940-L1064">AIE DMABDOp：描述子與 lock</a><span>BD 可附帶 acquire／release 並接續下一個 BD。僅靜態來源查核。</span><small>https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/include/aie/Dialect/AIE/IR/AIEOps.td#L940-L1064</small></li><li><a href="https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/include/aie/Dialect/AIE/IR/AIEOps.td#L1500-L1611">AIE LockOp／UseLockOp：鎖語意</a><span>Counting semaphore 的 AcquireGreaterEqual 與 Release。僅靜態來源查核。</span><small>https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/include/aie/Dialect/AIE/IR/AIEOps.td#L1500-L1611</small></li><li><a href="https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/lib/Dialect/AIE/IR/AIETargetModel.cpp#L1554-L1577">AIETargetModel：lock 編號視窗</a><span>核心視角的 lock 編號：南 0、西 16、北 32、自己 48 起。僅靜態來源查核。</span><small>https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/lib/Dialect/AIE/IR/AIETargetModel.cpp#L1554-L1577</small></li><li><a href="https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_guide/section-2/section-2a/README.md#L258-L298">ObjectFifo 文件：深度與重疊</a><span>深度與生產者、消費者能否重疊的關係。</span><small>https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_guide/section-2/section-2a/README.md#L258-L298</small></li><li><a href="https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_guide/section-2/section-2d/README.md#L28-L36">Runtime sequence 文件：fill／drain</a><span>fill／drain 降成 shim DMA 工作。</span><small>https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_guide/section-2/section-2d/README.md#L28-L36</small></li><li><a href="https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_guide/section-4/section-4b/README.md#L30-L72">Trace 文件：enable_trace 與解析</a><span>trace unit 設定、封包路由到 shim、core_trace_mode。</span><small>https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_guide/section-4/section-4b/README.md#L30-L72</small></li><li><a href="https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/clang/lib/Headers/aie2p/aie2p_locks.h#L14-L61">Peano AIE2P lock header</a><span>核心端 acquire／release 介面。僅靜態來源查核。</span><small>https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/clang/lib/Headers/aie2p/aie2p_locks.h#L14-L61</small></li></ol></section><div class="link-panels"><section><h2>接著閱讀</h2><div class="related-links"><a href="dma.html">DMA：描述子、通道與資料布局</a><a href="synchronization.html">同步：鎖、背壓、停頓與死鎖</a><a href="memory.html">記憶體：program、data、banks 與局部地址</a><a href="tile-microarchitecture.html">Tile 微架構：SRAM、地址視窗、banks 與三種 tile</a><a href="events-debug.html">Events 與可觀測微架構：stall、bank conflict、counters 與 trace</a><a href="iron.html">IRON：以 Worker 與 ObjectFifo 設計資料流</a><a href="runtime.html">執行期與共享緩衝：格式、ABI、可見性</a><a href="software-pipelining.html">軟體管線化：II、recurrence、resource 與迴圈總成本</a><a href="spec-gaps.html">規格缺口與衝突：哪些已知，哪些不能由 compiler 推成 silicon</a><a href="am027-tile.html">AM027 Tile 架構：記憶體鄰接、stream switch、程式記憶體與 memory module</a><a href="am027-memtile.html">AM027 Memory tile：512 KB、12 條 DMA 通道、鄰居存取、padding 與壓縮</a></div></section><section><h2>哪些條目連到這裡？</h2><div class="related-links"><a href="system.html">XDNA2 系統：空間資料流與 NPU2 分區</a><a href="tile-microarchitecture.html">Tile 微架構：SRAM、地址視窗、banks 與三種 tile</a><a href="memory.html">記憶體：program、data、banks 與局部地址</a><a href="dma.html">DMA：描述子、通道與資料布局</a><a href="synchronization.html">同步：鎖、背壓、停頓與死鎖</a><a href="events-debug.html">Events 與可觀測微架構：stall、bank conflict、counters 與 trace</a><a href="am027-tile.html">AM027 Tile 架構：記憶體鄰接、stream switch、程式記憶體與 memory module</a><a href="am027-memtile.html">AM027 Memory tile：512 KB、12 條 DMA 通道、鄰居存取、padding 與壓縮</a><a href="am027-system.html">AM027 介面、開機與觀測：array interface、中斷、設定流程、debug、trace 與事件</a></div></section></div><a class="back-top" href="#main">回到本文頂端 ↑</a></main></div><footer class="footer">XDNA 2 / AIE2P · 繁體中文知識庫 · 來源快照 2026-09-12<br>公開文件與固定版本原始碼查核，不是完整保密 ISA 手冊；未執行 NPU 實驗。<a href="wiki-method.html">維護方法與證據界線</a> · <a href="guide/index.html">原始長篇指南</a></footer></body></html>

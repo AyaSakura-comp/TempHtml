@@ -219,6 +219,48 @@
     ]
   },
   {
+    "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Tile-Architecture",
+    "label": "AM027 Tile Architecture",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "tile-microarchitecture",
+      "data-ingress",
+      "am027-tile"
+    ],
+    "notes": [
+      "固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。",
+      "AMD 官方手冊 rev 1.1（2025-10-23）；記憶體鄰接為自己／北／南／西。Versal 姊妹代，非 AIE2P 專屬。2026-11-12 取得原文。",
+      "AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。"
+    ]
+  },
+  {
+    "url": "https://docs.amd.com/r/en-US/am020-versal-aie-ml",
+    "label": "AM020",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "tile-microarchitecture",
+      "data-ingress",
+      "spec-gaps"
+    ],
+    "notes": [
+      "固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。",
+      "AMD 官方手冊 rev 1.5（2026-02-18）；前一代，記憶體鄰接列舉與 AM027 相同。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/core/xaie_elfloader.c#L126-L202",
+    "label": "aie-rt ELF loader",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "tile-microarchitecture",
+      "data-ingress"
+    ],
+    "notes": [
+      "固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。",
+      "AIE2P 表下 CardDir 4／5／6／7 對應南／西／北／自己。僅靜態來源查核。"
+    ]
+  },
+  {
     "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/include/aie/Dialect/AIE/IR/AIETargetModel.h#L830-L835",
     "label": "模型 getNumBanks",
     "retrieved": "2026-09-12",
@@ -474,10 +516,12 @@
     "label": "BM／CM／DM 累加器別名",
     "retrieved": "2026-09-12",
     "articles": [
-      "isa-registers"
+      "isa-registers",
+      "am027-core"
     ],
     "notes": [
-      "固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。"
+      "固定版本 TableGen 來源定義；不是硬體實測或完整 ISA 保證。",
+      "AIE2P 的 BM／CM／DM 索引 0–4。僅靜態來源查核。"
     ]
   },
   {
@@ -724,10 +768,12 @@
     "articles": [
       "vliw-pipeline",
       "instruction-cycles",
-      "software-pipelining"
+      "software-pipelining",
+      "am027-core"
     ],
     "notes": [
-      "整數與浮點／不同路徑不可共用一個 latency；表內 dst、acc1、s1、s2 分開。 固定 commit 靜態查核，非實測晶片保證。"
+      "整數與浮點／不同路徑不可共用一個 latency；表內 dst、acc1、s1、s2 分開。 固定 commit 靜態查核，非實測晶片保證。",
+      "VMAC 的 dst=6、acc1=4、s1=s2=1。編譯器 itinerary，不是矽上量測。"
     ]
   },
   {
@@ -1605,10 +1651,12 @@
     "retrieved": "2026-09-12",
     "articles": [
       "dma",
+      "data-ingress",
       "synchronization"
     ],
     "notes": [
-      "Buffer、offset/len、元素單位、BD 鏈與 ND layout；文件內 stride 例子與限制文字有落差，本文不判定所有可用步距。 僅靜態來源查核。"
+      "Buffer、offset/len、元素單位、BD 鏈與 ND layout；文件內 stride 例子與限制文字有落差，本文不判定所有可用步距。 僅靜態來源查核。",
+      "BD 可附帶 acquire／release 並接續下一個 BD。僅靜態來源查核。"
     ]
   },
   {
@@ -1621,6 +1669,111 @@
     ],
     "notes": [
       "鎖、BD 數、ND 維度及 mem tile channel 對 BD 半區的可達性。 僅靜態來源查核。"
+    ]
+  },
+  {
+    "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2",
+    "label": "AM027：Versal AIE-ML v2 Architecture Manual",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "data-ingress",
+      "spec-gaps"
+    ],
+    "notes": [
+      "Interfaces（stall 來源）、Memory Module（bank 仲裁）、Memory Tile DMA、Trace（event-time／event-PC）各節。非 AIE2P 專屬。",
+      "固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。"
+    ]
+  },
+  {
+    "url": "https://docs.kernel.org/accel/amdxdna/amdnpu.html",
+    "label": "Linux kernel：AMD NPU（amdxdna）",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "data-ingress",
+      "am027-overview",
+      "am027-system",
+      "spec-gaps"
+    ],
+    "notes": [
+      "AMD 撰寫的驅動文件：Strix Point 4x8、memory tile 為 L2、DMA 在主機 DDR 與 memory tile 間搬移。",
+      "AMD 撰寫的驅動文件；XDNA 陣列拓樸、L2 記憶體與分區。",
+      "AMD 撰寫的驅動文件；XDNA 的韌體管理與分區。",
+      "固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/include/aie/Dialect/AIE/IR/AIEOps.td#L1500-L1611",
+    "label": "AIE LockOp／UseLockOp：鎖語意",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "data-ingress",
+      "synchronization"
+    ],
+    "notes": [
+      "Counting semaphore 的 AcquireGreaterEqual 與 Release。僅靜態來源查核。",
+      "Counting semaphore、AcquireGreaterEqual 等待後扣除、Release 增加；非主機 mutex/coherence 保證。 僅靜態來源查核。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/lib/Dialect/AIE/IR/AIETargetModel.cpp#L1554-L1577",
+    "label": "AIETargetModel：lock 編號視窗",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "data-ingress",
+      "dma-registers",
+      "spec-gaps"
+    ],
+    "notes": [
+      "核心視角的 lock 編號：南 0、西 16、北 32、自己 48 起。僅靜態來源查核。",
+      "固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_guide/section-2/section-2a/README.md#L258-L298",
+    "label": "ObjectFifo 文件：深度與重疊",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "data-ingress",
+      "synchronization"
+    ],
+    "notes": [
+      "深度與生產者、消費者能否重疊的關係。",
+      "批量取得、可前進與可重疊所需容量不同；範例不是完整有限迴圈活性證明。 僅靜態來源查核。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_guide/section-2/section-2d/README.md#L28-L36",
+    "label": "Runtime sequence 文件：fill／drain",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "data-ingress"
+    ],
+    "notes": [
+      "fill／drain 降成 shim DMA 工作。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_guide/section-4/section-4b/README.md#L30-L72",
+    "label": "Trace 文件：enable_trace 與解析",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "data-ingress"
+    ],
+    "notes": [
+      "trace unit 設定、封包路由到 shim、core_trace_mode。"
+    ]
+  },
+  {
+    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/clang/lib/Headers/aie2p/aie2p_locks.h#L14-L61",
+    "label": "Peano AIE2P lock header",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "data-ingress",
+      "synchronization"
+    ],
+    "notes": [
+      "核心端 acquire／release 介面。僅靜態來源查核。",
+      "Greater-equal 的負值編碼及 pointer overload；不應按負號猜測邏輯計數初值。 僅靜態來源查核。"
     ]
   },
   {
@@ -1673,18 +1826,6 @@
     "retrieved": "2026-09-12",
     "articles": [
       "dma-registers"
-    ],
-    "notes": [
-      "固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。"
-    ]
-  },
-  {
-    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/lib/Dialect/AIE/IR/AIETargetModel.cpp#L1554-L1577",
-    "label": "local index",
-    "retrieved": "2026-09-12",
-    "articles": [
-      "dma-registers",
-      "spec-gaps"
     ],
     "notes": [
       "固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。"
@@ -1745,39 +1886,6 @@
     ],
     "notes": [
       "固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。"
-    ]
-  },
-  {
-    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/include/aie/Dialect/AIE/IR/AIEOps.td#L1500-L1611",
-    "label": "AIE LockOp／UseLockOp：鎖語意",
-    "retrieved": "2026-09-12",
-    "articles": [
-      "synchronization"
-    ],
-    "notes": [
-      "Counting semaphore、AcquireGreaterEqual 等待後扣除、Release 增加；非主機 mutex/coherence 保證。 僅靜態來源查核。"
-    ]
-  },
-  {
-    "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/clang/lib/Headers/aie2p/aie2p_locks.h#L14-L61",
-    "label": "Peano AIE2P locks：builtin 包裝",
-    "retrieved": "2026-09-12",
-    "articles": [
-      "synchronization"
-    ],
-    "notes": [
-      "Greater-equal 的負值編碼及 pointer overload；不應按負號猜測邏輯計數初值。 僅靜態來源查核。"
-    ]
-  },
-  {
-    "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_guide/section-2/section-2a/README.md#L258-L298",
-    "label": "ObjectFifo：概念深度與局部池",
-    "retrieved": "2026-09-12",
-    "articles": [
-      "synchronization"
-    ],
-    "notes": [
-      "批量取得、可前進與可重疊所需容量不同；範例不是完整有限迴圈活性證明。 僅靜態來源查核。"
     ]
   },
   {
@@ -2826,6 +2934,498 @@
     ],
     "notes": [
       "enable_trace、事件與 DDR trace buffer；不可混用不同世代事件值。"
+    ]
+  },
+  {
+    "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Introduction-to-AI-Engines-and-AIE-ML-v2",
+    "label": "AM027：Introduction to AI Engines and AIE-ML v2",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "am027-overview"
+    ],
+    "notes": [
+      "AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。"
+    ]
+  },
+  {
+    "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Tile-Features",
+    "label": "AM027：AIE-ML v2 Tile Features",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "am027-overview"
+    ],
+    "notes": [
+      "AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。"
+    ]
+  },
+  {
+    "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Memory-Tile-Features",
+    "label": "AM027：AIE-ML v2 Memory Tile Features",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "am027-overview"
+    ],
+    "notes": [
+      "AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。"
+    ]
+  },
+  {
+    "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Array-Interface-to-NoC-and-PL-Resources",
+    "label": "AM027：AIE-ML v2 Array Interface to NoC and PL Resources",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "am027-overview"
+    ],
+    "notes": [
+      "AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。"
+    ]
+  },
+  {
+    "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Array-Overview",
+    "label": "AM027：AIE-ML v2 Array Overview",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "am027-overview"
+    ],
+    "notes": [
+      "AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。"
+    ]
+  },
+  {
+    "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Array-Hierarchy",
+    "label": "AM027：AIE-ML v2 Array Hierarchy",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "am027-overview"
+    ],
+    "notes": [
+      "AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。"
+    ]
+  },
+  {
+    "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Performance",
+    "label": "AM027：Performance",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "am027-overview"
+    ],
+    "notes": [
+      "AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。"
+    ]
+  },
+  {
+    "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Clocking-Structure",
+    "label": "AM027：Clocking Structure",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "am027-overview"
+    ],
+    "notes": [
+      "AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。"
+    ]
+  },
+  {
+    "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Memory-Error-Handling",
+    "label": "AM027：Memory Error Handling",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "am027-overview"
+    ],
+    "notes": [
+      "AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。"
+    ]
+  },
+  {
+    "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Privileged-Register-Access-Control",
+    "label": "AM027：Privileged Register Access Control",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "am027-overview"
+    ],
+    "notes": [
+      "AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。"
+    ]
+  },
+  {
+    "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Comparison-of-AIE-Generations",
+    "label": "AM027：Comparison of AIE Generations",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "am027-overview"
+    ],
+    "notes": [
+      "AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。"
+    ]
+  },
+  {
+    "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Revision-History",
+    "label": "AM027：Revision History",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "am027-overview"
+    ],
+    "notes": [
+      "AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。"
+    ]
+  },
+  {
+    "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Memory-Tile-Overview-and-Features",
+    "label": "AM027：AIE-ML v2 Memory Tile Overview and Features",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "am027-overview",
+      "am027-memtile"
+    ],
+    "notes": [
+      "AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。"
+    ]
+  },
+  {
+    "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Memory-Tile-Memory",
+    "label": "AM027：AIE-ML v2 Memory Tile Memory",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "am027-overview",
+      "am027-memtile"
+    ],
+    "notes": [
+      "AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。"
+    ]
+  },
+  {
+    "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Accumulator-Registers",
+    "label": "AM027：Accumulator Registers",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "am027-overview",
+      "am027-core"
+    ],
+    "notes": [
+      "AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。"
+    ]
+  },
+  {
+    "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Functional-Overview",
+    "label": "AM027：Functional Overview",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "am027-overview",
+      "am027-core"
+    ],
+    "notes": [
+      "AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。"
+    ]
+  },
+  {
+    "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Interfaces",
+    "label": "AM027：AIE-ML v2 Interfaces",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "am027-overview",
+      "am027-tile"
+    ],
+    "notes": [
+      "AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。"
+    ]
+  },
+  {
+    "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Memory-mapped-AXI4-Interconnect",
+    "label": "AM027：Memory-mapped AXI4 Interconnect",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "am027-overview",
+      "am027-tile"
+    ],
+    "notes": [
+      "AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。"
+    ]
+  },
+  {
+    "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AXI4-Stream-Interconnect",
+    "label": "AM027：AXI4-Stream Interconnect",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "am027-tile"
+    ],
+    "notes": [
+      "AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。"
+    ]
+  },
+  {
+    "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Tile-Program-Memory",
+    "label": "AM027：AIE-ML v2 Tile Program Memory",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "am027-tile"
+    ],
+    "notes": [
+      "AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。"
+    ]
+  },
+  {
+    "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Memory-Module",
+    "label": "AM027：AIE-ML v2 Memory Module",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "am027-tile"
+    ],
+    "notes": [
+      "AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。"
+    ]
+  },
+  {
+    "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Load-and-Store-Unit",
+    "label": "AM027：Load and Store Unit",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "am027-tile",
+      "am027-core"
+    ],
+    "notes": [
+      "AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。"
+    ]
+  },
+  {
+    "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Register-Move-Functionality",
+    "label": "AM027：Register Move Functionality",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "am027-tile",
+      "am027-core"
+    ],
+    "notes": [
+      "AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。"
+    ]
+  },
+  {
+    "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Scalar-Registers",
+    "label": "AM027：Scalar Registers",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "am027-core"
+    ],
+    "notes": [
+      "AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。"
+    ]
+  },
+  {
+    "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Special-Registers",
+    "label": "AM027：Special Registers",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "am027-core"
+    ],
+    "notes": [
+      "AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。"
+    ]
+  },
+  {
+    "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Vector-Registers",
+    "label": "AM027：Vector Registers",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "am027-core"
+    ],
+    "notes": [
+      "AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。"
+    ]
+  },
+  {
+    "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Mask-Registers",
+    "label": "AM027：Mask Registers",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "am027-core"
+    ],
+    "notes": [
+      "AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。"
+    ]
+  },
+  {
+    "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Instruction-Fetch-and-Decode-Unit",
+    "label": "AM027：Instruction Fetch and Decode Unit",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "am027-core"
+    ],
+    "notes": [
+      "AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。"
+    ]
+  },
+  {
+    "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Arithmetic-Logic-Unit-and-Scalar-Functions",
+    "label": "AM027：Arithmetic Logic Unit and Scalar Functions",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "am027-core"
+    ],
+    "notes": [
+      "AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。"
+    ]
+  },
+  {
+    "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Fixed-point-Vector-Unit",
+    "label": "AM027：Fixed-point Vector Unit",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "am027-core"
+    ],
+    "notes": [
+      "AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。"
+    ]
+  },
+  {
+    "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Fixed-Point-SRS-and-UPS-Conversions",
+    "label": "AM027：Fixed-Point SRS and UPS Conversions",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "am027-core"
+    ],
+    "notes": [
+      "AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。"
+    ]
+  },
+  {
+    "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Floating-point-Vector-Unit",
+    "label": "AM027：Floating-point Vector Unit",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "am027-core"
+    ],
+    "notes": [
+      "AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。"
+    ]
+  },
+  {
+    "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Memory-Tile-DMA",
+    "label": "AM027：AIE-ML v2 Memory Tile DMA",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "am027-memtile"
+    ],
+    "notes": [
+      "AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。"
+    ]
+  },
+  {
+    "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Memory-Tile-Locks-Module-and-Stream-Switch",
+    "label": "AM027：AIE-ML v2 Memory Tile Locks Module and Stream Switch",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "am027-memtile"
+    ],
+    "notes": [
+      "AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。"
+    ]
+  },
+  {
+    "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Debug",
+    "label": "AM027：AIE-ML v2 Debug",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "am027-system"
+    ],
+    "notes": [
+      "AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。"
+    ]
+  },
+  {
+    "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Trace",
+    "label": "AM027：Trace",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "am027-system"
+    ],
+    "notes": [
+      "AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。"
+    ]
+  },
+  {
+    "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Profiling-Performance-Counters",
+    "label": "AM027：Profiling (Performance Counters)",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "am027-system"
+    ],
+    "notes": [
+      "AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。"
+    ]
+  },
+  {
+    "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Events",
+    "label": "AM027：AIE-ML v2 Events",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "am027-system"
+    ],
+    "notes": [
+      "AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。"
+    ]
+  },
+  {
+    "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Array-Interface-Architecture",
+    "label": "AM027：AIE-ML v2 Array Interface Architecture",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "am027-system"
+    ],
+    "notes": [
+      "AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。"
+    ]
+  },
+  {
+    "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Array-Interface",
+    "label": "AM027：AIE-ML v2 Array Interface",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "am027-system"
+    ],
+    "notes": [
+      "AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。"
+    ]
+  },
+  {
+    "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Interrupt-Handling",
+    "label": "AM027：Interrupt Handling",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "am027-system"
+    ],
+    "notes": [
+      "AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。"
+    ]
+  },
+  {
+    "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Array-Configuration",
+    "label": "AM027：AIE-ML v2 Array Configuration",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "am027-system"
+    ],
+    "notes": [
+      "AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。"
+    ]
+  },
+  {
+    "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Boot-Sequence",
+    "label": "AM027：AIE-ML v2 Boot Sequence",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "am027-system"
+    ],
+    "notes": [
+      "AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。"
+    ]
+  },
+  {
+    "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Array-Reconfiguration",
+    "label": "AM027：AIE-ML v2 Array Reconfiguration",
+    "retrieved": "2026-09-12",
+    "articles": [
+      "am027-system"
+    ],
+    "notes": [
+      "AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。"
     ]
   },
   {

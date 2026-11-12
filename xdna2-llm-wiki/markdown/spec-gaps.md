@@ -39,7 +39,17 @@
 
 ## AIE2P 與 AIE2PS 手冊混用風險
 
-[版本header](https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/clang/lib/Headers/aie2p/aie2p_version.h#L14-L20)鎖定arch21。AMD [AM027 portal](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Architecture)是Versal AIE-ML v2；本次抓取僅得到loading頁，未宣稱讀完完整手冊。即使拿到AM027，也須逐項比對AIE2P，而不是搬入FP8/MX6、accumulator數或pipeline圖。
+[版本header](https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/clang/lib/Headers/aie2p/aie2p_version.h#L14-L20)鎖定arch21。AMD [AM027 portal](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Architecture)是Versal AIE-ML v2；2026-09-12 抓取僅得到loading頁；2026-11-12 由文件站取得 rev 1.1 全部 60 節的文字並讀完，27 張圖只看了其中幾張；摘要分成五頁，從 [AM027 導讀](am027-overview.md) 進入。即使拿到AM027，也須逐項比對AIE2P，而不是搬入FP8/MX6、accumulator數或pipeline圖。
+
+三個名稱容易混用：
+
+| 名稱 | 編譯器代號 | 用在哪 | 官方架構手冊 |
+|---|---|---|---|
+| AIE-ML | AIE2 | Versal、XDNA 1（Phoenix／Hawk Point，`npu1`） | [AM020](https://docs.amd.com/r/en-US/am020-versal-aie-ml) |
+| AIE2P | AIE2P（arch 21） | XDNA 2（Strix／Strix Halo／Krackan，`npu2`） | 沒有公開的專屬手冊 |
+| AIE-ML v2 | AIE2PS（arch 22） | Versal AI Edge Gen 2 | [AM027](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2) |
+
+AMD 寫的 [Linux 驅動文件](https://docs.kernel.org/accel/amdxdna/amdnpu.html)描述 Strix Point 為 4x8、L2 記憶體共 4096 KB，架構細節指向 AM020。因此 AM020／AM027 可用來對照共通結構（記憶體鄰接、memory tile、trace 模式），頻寬、load 寬度、stream 寬度等數字不可直接搬到 AIE2P。
 
 具名外部研究 [Daniel Estévez的Ryzen AI 7 350案例](https://destevez.net/2026/05/getting-peak-tops-on-a-ryzen-ai-7-350-npu/)在更新中指出aie2p/aie2ps與accumulator數差別，但後文仍部分沿用AIE-MLv2資料。本Wiki把它當閱讀assembly／觀測方法的案例，不將其1.8GHz、圖中pipeline或TOPS移植成gfx1151平台保證。附帶的公開assembly圖同样是他人案例，不是本機生成或量測。
 
@@ -65,6 +75,9 @@
 - [check函式](https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/dma/xaie_dma_aie2p.c#L27-L50) — 固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。
 - [版本header](https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/clang/lib/Headers/aie2p/aie2p_version.h#L14-L20) — 固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。
 - [AM027 portal](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Architecture) — 固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。
+- [AM020](https://docs.amd.com/r/en-US/am020-versal-aie-ml) — 固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。
+- [AM027](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2) — 固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。
+- [Linux 驅動文件](https://docs.kernel.org/accel/amdxdna/amdnpu.html) — 固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。
 - [Daniel Estévez的Ryzen AI 7 350案例](https://destevez.net/2026/05/getting-peak-tops-on-a-ryzen-ai-7-350-npu/) — 固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。
 
 ## 關聯
@@ -74,10 +87,14 @@
 - [interconnect](interconnect.md)
 - [dma-registers](dma-registers.md)
 - [validation](validation.md)
+- [am027-overview](am027-overview.md)
 
 ## 反向連結
 - [spec-index](spec-index.md)
+- [system](system.md)
 - [tile-microarchitecture](tile-microarchitecture.md)
 - [interconnect](interconnect.md)
+- [data-ingress](data-ingress.md)
 - [dma-registers](dma-registers.md)
 - [events-debug](events-debug.md)
+- [am027-overview](am027-overview.md)

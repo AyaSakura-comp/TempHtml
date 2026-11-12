@@ -113,5 +113,6 @@ BF16 是[獨立的 `__bf16` 型別](https://github.com/Xilinx/llvm-aie/blob/386c
 - [quantization](quantization.md)
 - [performance](performance.md)
 - [debug](debug.md)
+- [am027-core](am027-core.md)
 - [glossary](glossary.md)
 - [sources](sources.md)

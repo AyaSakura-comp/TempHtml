@@ -69,6 +69,8 @@ BD 可以附帶 acquire／release，見[DMA 描述子契約](https://github.com/
 
 後續 [驗證](validation.md) 應把功能正確、協定活性與效能分成不同驗收項目；能完成一次工作不代表所有批量與緩衝配置都安全。
 
+一個真實設計的 lock 初值、BD 接續與核心端 `acq`／`rel` 順序，以及本機錄到的 lock stall 週期數，見 [資料上 tile](data-ingress.md)。
+
 ## 來源
 - [AIE LockOp／UseLockOp：鎖語意](https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/include/aie/Dialect/AIE/IR/AIEOps.td#L1500-L1611) — Counting semaphore、AcquireGreaterEqual 等待後扣除、Release 增加；非主機 mutex/coherence 保證。 僅靜態來源查核。
 - [AIETargetModel：鎖與 BD 資源](https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/include/aie/Dialect/AIE/IR/AIETargetModel.h#L759-L824) — 鎖、BD 數、ND 維度及 mem tile channel 對 BD 半區的可達性。 僅靜態來源查核。
@@ -85,14 +87,17 @@ BD 可以附帶 acquire／release，見[DMA 描述子契約](https://github.com/
 - [iron](iron.md)
 - [debug](debug.md)
 - [validation](validation.md)
+- [data-ingress](data-ingress.md)
 
 ## 反向連結
 - [system](system.md)
 - [compute](compute.md)
 - [interconnect](interconnect.md)
 - [dma](dma.md)
+- [data-ingress](data-ingress.md)
 - [iron](iron.md)
 - [runtime](runtime.md)
 - [heterogeneous](heterogeneous.md)
 - [debug](debug.md)
+- [am027-tile](am027-tile.md)
 - [glossary](glossary.md)

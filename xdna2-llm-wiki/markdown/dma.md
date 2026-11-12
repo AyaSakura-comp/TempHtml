@@ -70,6 +70,8 @@ Mem tile 較多 ND 維度與容量，使它適合作為某些 layout 轉換或�
 
 本頁只查核描述與模型；完整通道仲裁、路由可行性及端到端完成語意仍需對具體產物驗證。接續閱讀 [同步](synchronization.md) 可把這些資源轉成可檢查的等待圖。
 
+資料從主機一路到核心的完整步驟、真實設計的 BD 與 lock 設定，整理在 [資料上 tile](data-ingress.md)。
+
 ## 來源
 - [AIE DMAStartOp：通道契約](https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/include/aie/Dialect/AIE/IR/AIEOps.td#L1291-L1347) — 通道由 MM2S/S2MM 方向與 index 定義；channel、BD 與 per-channel padding 分層。 僅靜態來源查核。
 - [AIE DMABDOp：描述子與布局契約](https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/include/aie/Dialect/AIE/IR/AIEOps.td#L940-L1064) — Buffer、offset/len、元素單位、BD 鏈與 ND layout；文件內 stride 例子與限制文字有落差，本文不判定所有可用步距。 僅靜態來源查核。
@@ -85,12 +87,15 @@ Mem tile 較多 ND 維度與容量，使它適合作為某些 layout 轉換或�
 - [gemm](gemm.md)
 - [runtime](runtime.md)
 - [iron](iron.md)
+- [data-ingress](data-ingress.md)
 
 ## 反向連結
 - [system](system.md)
 - [memory](memory.md)
+- [data-ingress](data-ingress.md)
 - [dma-registers](dma-registers.md)
 - [synchronization](synchronization.md)
 - [iron](iron.md)
 - [gemm](gemm.md)
+- [am027-memtile](am027-memtile.md)
 - [glossary](glossary.md)

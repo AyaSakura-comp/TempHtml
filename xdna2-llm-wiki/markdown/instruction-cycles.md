@@ -116,5 +116,7 @@ WAR 要避免晚讀看到新值，使用「早讀點−後寫點（反向 bypass
 - [tile-microarchitecture](tile-microarchitecture.md)
 - [vliw-pipeline](vliw-pipeline.md)
 - [software-pipelining](software-pipelining.md)
+- [data-ingress](data-ingress.md)
 - [events-debug](events-debug.md)
+- [am027-core](am027-core.md)
 - [spec-gaps](spec-gaps.md)

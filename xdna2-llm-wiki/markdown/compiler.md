@@ -85,6 +85,7 @@ Triton 的 [Triton 的 AIR 版本鎖](https://github.com/amd/Triton-XDNA/blob/5c
 - [vliw-pipeline](vliw-pipeline.md)
 - [instruction-cycles](instruction-cycles.md)
 - [software-pipelining](software-pipelining.md)
+- [data-ingress](data-ingress.md)
 - [isa](isa.md)
 - [iron](iron.md)
 - [triton](triton.md)

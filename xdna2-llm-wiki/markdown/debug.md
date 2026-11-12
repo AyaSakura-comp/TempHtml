@@ -101,3 +101,4 @@ python3 programming_examples/basic/vector_scalar_add/vector_scalar_add.py \
 - [runtime](runtime.md)
 - [performance](performance.md)
 - [validation](validation.md)
+- [am027-system](am027-system.md)

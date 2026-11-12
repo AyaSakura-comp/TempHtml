@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="AMD 官方 AIE-ML v2 架構手冊的總覽章節：這本手冊和 XDNA 2 的關係、陣列組成、時脈目標、ECC，以及三代 AI Engine 的比較表。"><meta name="color-scheme" content="light"><title>AM027 導讀：AIE-ML v2 的陣列、時脈、記憶體保護與三代比較 — XDNA 2 LLM Wiki</title><link rel="icon" href="assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="assets/wiki.css"><script src="assets/model.js" defer></script><script src="assets/search-data.js?v=a241e611b41d" defer></script><script src="assets/app.js" defer></script></head>
+<body><a class="skip" href="#main">跳到正文</a><header class="topbar"><a class="wordmark" href="index.html"><span class="seal" aria-hidden="true">文</span><span>XDNA 2 <b>LLM WIKI</b></span></a><nav class="header-links" aria-label="常用連結"><a href="index.html#search">搜尋</a><a href="glossary.html">術語</a><a href="llms.txt">LLM 索引</a></nav></header><div class="layout"><aside class="sidebar" aria-label="知識庫導覽"><details id="nav-menu"><summary>全站目錄 <span>＋</span></summary><nav class="navtree"><div class="nav-group"><h3>架構</h3><a href="spec-index.html">XDNA2 規格總索引：ISA、cycles、VLIW、tile 與互連</a><a href="system.html">XDNA2 系統：空間資料流與 NPU2 分區</a><a href="tile-microarchitecture.html">Tile 微架構：SRAM、地址視窗、banks 與三種 tile</a><a href="compute.html">計算核心：scalar、SIMD、VLIW 與累加器</a><a href="isa-registers.html">AIE2P 暫存器：類別、寬度、編碼與重疊視圖</a><a href="vliw-pipeline.html">VLIW 與外露管線：bundle 格式、scoreboard 與 hazard</a><a href="instruction-cycles.html">指令週期：完整 itinerary、操作數時點與旁路</a><a href="isa-encoding.html">AIE2P 編碼：16–128-bit VLIW、slot 欄位與立即數</a><a href="isa-instructions.html">AIE2P 指令族：純量、向量、搬移、控制、串流與矩陣</a><a href="memory.html">記憶體：program、data、banks 與局部地址</a><a href="interconnect.html">Interconnect 規格：switch ports、packet routing 與 cascade</a><a href="dma.html">DMA：描述子、通道與資料布局</a><a href="data-ingress.html">資料上 tile：DMA 路徑、lock 握手、雙緩衝與硬體 trace</a><a href="dma-registers.html">DMA / MMIO 規格：BD 欄位、locks、burst 與完整 register 索引</a><a href="synchronization.html">同步：鎖、背壓、停頓與死鎖</a><a href="events-debug.html">Events 與可觀測微架構：stall、bank conflict、counters 與 trace</a><a href="isa.html">ISA 閱讀：從 AIE2P header 追到後端原語</a><a href="am027-overview.html" aria-current="page">AM027 導讀：AIE-ML v2 的陣列、時脈、記憶體保護與三代比較</a><a href="am027-tile.html">AM027 Tile 架構：記憶體鄰接、stream switch、程式記憶體與 memory module</a><a href="am027-core.html">AM027 處理器架構：暫存器、load／store、純量與向量單元、六級管線</a><a href="am027-memtile.html">AM027 Memory tile：512 KB、12 條 DMA 通道、鄰居存取、padding 與壓縮</a><a href="am027-system.html">AM027 介面、開機與觀測：array interface、中斷、設定流程、debug、trace 與事件</a><a href="spec-gaps.html">規格缺口與衝突：哪些已知，哪些不能由 compiler 推成 silicon</a></div><div class="nav-group"><h3>數值</h3><a href="datatypes.html">數值型別：INT4、BF16、BFP16 與 FP32 的分層支援</a><a href="mma.html">矩陣乘加：原語、API 包裝與 LLM microtile</a><a href="quantization.html">LLM 量化：格式、數學與 kernel 是三件事</a></div><div class="nav-group"><h3>程式設計</h3><a href="software-pipelining.html">軟體管線化：II、recurrence、resource 與迴圈總成本</a><a href="compiler.html">編譯器分工：從資料流到 XDNA2 產物</a><a href="iron.html">IRON：以 Worker 與 ObjectFifo 設計資料流</a><a href="triton.html">Triton-XDNA：算子、Transform 與支援證據</a><a href="runtime.html">執行期與共享緩衝：格式、ABI、可見性</a><a href="deployment.html">LLM 部署生態：研究 compiler 與成品 runtime</a><a href="debug.html">除錯與證據分級：不要把 fallback 當 NPU 成功</a></div><div class="nav-group"><h3>LLM推論</h3><a href="llm-graph.html">LLM 計算圖：算子、狀態與裝置邊界</a><a href="qwen-case.html">Qwen2.5 案例：CPU＋NPU、GPU 與異質路由</a><a href="gemm.html">GEMM：把矩陣切成可搬、可算的工作</a><a href="attention.html">Attention：算子可拆，不代表整體已能在 NPU 跑</a><a href="kv-cache.html">KV cache：容量、頻寬與生命週期</a><a href="prefill-decode.html">Prefill 與 decode：兩個不同的效能問題</a><a href="heterogeneous.html">CPU × GPU × NPU：分工與資料所有權</a></div><div class="nav-group"><h3>驗證與知識庫</h3><a href="performance.html">效能模型：容量、Roofline 與端到端下界</a><a href="validation.html">正確性與效能驗證：一套不把 fallback 當成功的流程</a><a href="glossary.html">術語辭典：同一個字，在不同層可能不同意思</a><a href="sources.html">來源地圖、證據等級與未解問題</a><a href="wiki-method.html">LLM Wiki 使用與維護：來源 → 條目 → 連結</a></div></nav></details></aside><main id="main" tabindex="-1"><div class="breadcrumbs"><a href="index.html">首頁</a> / 架構</div><div class="article-meta"><span>官方手冊摘要（AIE-ML v2，非 AIE2P）</span><span>來源快照 2026-09-12</span><a href="markdown/am027-overview.md" download>Markdown ↓</a></div><h1>AM027 導讀：AIE-ML v2 的陣列、時脈、記憶體保護與三代比較</h1><p class="lede">AMD 官方 AIE-ML v2 架構手冊的總覽章節：這本手冊和 XDNA 2 的關係、陣列組成、時脈目標、ECC，以及三代 AI Engine 的比較表。</p><div class="evidence-note">本文區分公開來源、原始碼查核與工程推導。未在本機執行 compiler 或 NPU；可用型別、可編譯、可派送、無 fallback、效能達標是不同證據。</div><nav class="toc" aria-label="本頁目錄"><strong>本頁導覽</strong><a href="#section-1">這本手冊和這台機器的關係</a><a href="#section-2">陣列組成與四種記憶體</a><a href="#section-3">時脈與設定介面頻寬</a><a href="#section-4">記憶體錯誤保護與特權暫存器</a><a href="#section-5">三代比較表</a><a href="#section-6">手冊內部不一致的地方</a><a href="#section-7">和 XDNA 2 的對照</a><a href="#references">來源與延伸</a></nav><article class="article-body"><h2 id="section-1">這本手冊和這台機器的關係</h2>
+<p>本頁是 AMD 手冊 AM027（Versal AIE-ML v2，編譯器代號 AIE2PS）的中文摘要，rev 1.1，2026-11-12 讀取。XDNA 2 用的是 AIE2P，沒有公開的專屬架構手冊；本頁的數字除非在「和 XDNA 2 的對照」一節另外寫明，都不能直接當成 AIE2P 的規格。</p>
+<p>手冊共 60 節、27 張圖，<a href="https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Revision-History">修訂紀錄</a>列出 1.0（2025-05-30）、1.0.1、1.0.2 與 1.1（2025-10-23）四版；1.1 更新了 Performance、Tile Architecture、兩種 interconnect、Memory Module、Trace 與世代比較表。<a href="https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Introduction-to-AI-Engines-and-AIE-ML-v2">引言</a>把 AIE-ML v2 定位為 AIE-ML 的第二代：每顆 tile 的運算量最多兩倍、新增原生資料型別、能效更好。三個世代名稱的對照表在 <a href="spec-gaps.html">規格缺口</a>。</p>
+<p>本 Wiki 把手冊拆成五頁：本頁、<a href="am027-tile.html">Tile</a>、<a href="am027-core.html">處理器</a>、<a href="am027-memtile.html">Memory tile</a>、<a href="am027-system.html">介面、開機與觀測</a>。</p>
+<h2 id="section-2">陣列組成與四種記憶體</h2>
+<p><a href="https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Array-Overview">Array Overview</a> 與 <a href="https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Array-Hierarchy">Array Hierarchy</a>：陣列由 AIE-ML v2 tile、一或兩列 memory tile、以及最底下一列 array interface tile 組成。Versal 裝置上有四種記憶體可用：</p>
+<div aria-label="可橫向捲動的資料表" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>記憶體</th>
+<th>位置</th>
+<th>怎麼到</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>外部 DDR</td>
+<td>晶片外</td>
+<td>經 NoC</td>
+</tr>
+<tr>
+<td>PL 記憶體（UltraRAM／block RAM）</td>
+<td>可程式邏輯</td>
+<td>經 PL 介面</td>
+</tr>
+<tr>
+<td>Memory tile 的共享記憶體</td>
+<td>陣列內，每顆 512 KB</td>
+<td>DMA 與 stream</td>
+</tr>
+<tr>
+<td>Tile 的本地資料記憶體</td>
+<td>每顆 tile 64 KB</td>
+<td>核心 load／store，或 tile DMA</td>
+</tr>
+</tbody>
+</table></div>
+<p>三種 tile 的特性（<a href="https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Tile-Features">Tile Features</a>、<a href="https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Memory-Tile-Features">Memory Tile Features</a>、<a href="https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Array-Interface-to-NoC-and-PL-Resources">Array Interface</a>）：</p>
+<div aria-label="可橫向捲動的資料表" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th></th>
+<th>AIE-ML v2 tile</th>
+<th>Memory tile</th>
+<th>Array interface tile</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>處理器</td>
+<td>VLIW SIMD 向量處理器</td>
+<td>無</td>
+<td>無（有 control module）</td>
+</tr>
+<tr>
+<td>資料記憶體</td>
+<td>64 KB：硬體 8 個 bank，各 8 KB（256-bit × 256 word）；程式視角兩兩交錯成 4 個 512-bit bank</td>
+<td>512 KB：8 個實體 bank，各 256-bit × 2K word</td>
+<td>無本地資料記憶體</td>
+</tr>
+<tr>
+<td>DMA</td>
+<td>2 S2MM＋2 MM2S，4-D 位址產生</td>
+<td>6 S2MM＋6 MM2S，64-bit stream、256-bit 記憶體介面，可壓縮零值</td>
+<td>2 S2MM＋2 MM2S，接 NoC</td>
+</tr>
+<tr>
+<td>其他</td>
+<td>lock、memory-mapped AXI4 設定、debug／trace／profile</td>
+<td>同左</td>
+<td>PL 介面（跨時脈域）、NoC 介面、每欄一個 control module</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="section-3">時脈與設定介面頻寬</h2>
+<p><a href="https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Performance">Performance</a>：整個陣列（含 interface tile）是單一時脈域。–1 速度等級、VCC_AIE 0.725 V 的目標是 1 GHz。</p>
+<div aria-label="可橫向捲動的資料表" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>時脈</th>
+<th>目標</th>
+<th>和陣列時脈的關係</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AIE-ML v2 陣列時脈</td>
+<td>1 GHz</td>
+<td>來源是陣列自己的 PLL</td>
+</tr>
+<tr>
+<td>NoC 時脈</td>
+<td>1000 MHz</td>
+<td>非同步，在 NoC 內跨時脈域</td>
+</tr>
+<tr>
+<td>PL 時脈</td>
+<td>500 MHz</td>
+<td>非同步，在 array interface 跨時脈域</td>
+</tr>
+<tr>
+<td>NPI 時脈</td>
+<td>300 MHz</td>
+<td>非同步</td>
+</tr>
+</tbody>
+</table></div>
+<p>同一節另有一張 memory-mapped AXI4 設定介面的最低頻寬表（單位 GB/s，前提是陣列時脈 1 GHz、整批連續存取、在 NSU 量）。原表四個欄位標題都寫 Target Write BW，哪一欄是讀取原文沒有標明，這裡照原順序列出：</p>
+<div aria-label="可橫向捲動的資料表" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>目標區塊</th>
+<th>128-bit 存取</th>
+<th></th>
+<th>32-bit 存取</th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Tile 與 memory tile 的資料記憶體</td>
+<td>3.0</td>
+<td>1.1</td>
+<td>0.80</td>
+<td>0.32</td>
+</tr>
+<tr>
+<td>Tile 的程式記憶體</td>
+<td>2.9</td>
+<td>1.1</td>
+<td>0.32</td>
+<td>0.32</td>
+</tr>
+<tr>
+<td>Stream switch 與 BD 暫存器</td>
+<td>3.0</td>
+<td>2.0</td>
+<td>1.7</td>
+<td>0.80</td>
+</tr>
+</tbody>
+</table></div>
+<p><a href="https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Clocking-Structure">Clocking Structure</a>：每顆 interface tile 有一個欄時脈閘控暫存器，控制同一欄所有 memory tile 與 tile 的時脈（不影響 interface tile 自己）；整欄沒用到時關掉可以省電。</p>
+<h2 id="section-4">記憶體錯誤保護與特權暫存器</h2>
+<p><a href="https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Memory-Error-Handling">Memory Error Handling</a>：</p>
+<div aria-label="可橫向捲動的資料表" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>記憶體</th>
+<th>保護方式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Tile 程式記憶體 16 KB</td>
+<td>兩組 8-bit ECC，各涵蓋 64 bits；可更正 1-bit、偵測 2-bit</td>
+</tr>
+<tr>
+<td>Tile 資料記憶體 bank 0–1</td>
+<td>256-bit word 的每個 32-bit lane 各有 7-bit ECC</td>
+</tr>
+<tr>
+<td>Tile 資料記憶體 bank 2–7</td>
+<td>每個 32-bit 一個奇同位；出錯時 memory module 發出事件</td>
+</tr>
+<tr>
+<td>Memory tile 512 KB</td>
+<td>全部 bank 都是每 32-bit 一組 7-bit ECC，另有 ECC scrubbing</td>
+</tr>
+<tr>
+<td>Control module</td>
+<td>三塊 SRAM：程式 32 KB、資料 16 KB（32-bit 介面）、共享 32 KB（128-bit 介面），以 32-bit 為單位檢查 ECC</td>
+</tr>
+</tbody>
+</table></div>
+<p><a href="https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Privileged-Register-Access-Control">Privileged Register Access Control</a>：tile、memory tile、interface tile 各有少數特權暫存器，只管制寫入；AXI4 的 <code>AWPROT[1]=0</code> 代表安全交易。</p>
+<h2 id="section-5">三代比較表</h2>
+<p><a href="https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Comparison-of-AIE-Generations">Comparison of AIE Generations</a> 的重點（B/cycle 是每週期 bytes）：</p>
+<div aria-label="可橫向捲動的資料表" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>項目</th>
+<th>AI Engine</th>
+<th>AIE-ML</th>
+<th>AIE-ML v2</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>每 tile 乘法器（節錄）</td>
+<td>128（INT8×INT8）、8（fp32）</td>
+<td>256（INT8×INT8）、128（bfloat16）</td>
+<td>512（INT8×INT8）、256（bfloat16、fp16）、512（fp8）、512（MX9）、1024（MX6）</td>
+</tr>
+<tr>
+<td>從自己 tile 的資料記憶體 load</td>
+<td>64 B/cycle</td>
+<td>64 B/cycle</td>
+<td>128 B/cycle</td>
+</tr>
+<tr>
+<td>從鄰居 tile 的資料記憶體 load</td>
+<td>64 B/cycle</td>
+<td>64 B/cycle</td>
+<td>單一鄰居 64 B/cycle；兩個鄰居合計 128 B/cycle</td>
+</tr>
+<tr>
+<td>Store</td>
+<td>32 B/cycle</td>
+<td>32 B/cycle</td>
+<td>64 B/cycle</td>
+</tr>
+<tr>
+<td>Cascade</td>
+<td>48 B/cycle</td>
+<td>64 B/cycle</td>
+<td>64 B/cycle</td>
+</tr>
+<tr>
+<td>每顆 compute tile 的資料記憶體</td>
+<td>32 KB</td>
+<td>64 KB</td>
+<td>64 KB</td>
+</tr>
+<tr>
+<td>每顆 memory tile</td>
+<td>沒有 memory tile</td>
+<td>512 KB</td>
+<td>512 KB</td>
+</tr>
+<tr>
+<td>DMA（compute／memory／interface tile）</td>
+<td>2+2／無／2+2</td>
+<td>2+2／6+6／2+2</td>
+<td>2+2／6+6／2+2</td>
+</tr>
+<tr>
+<td>Stream 寬度</td>
+<td>32-bit</td>
+<td>32-bit</td>
+<td>64-bit</td>
+</tr>
+<tr>
+<td>Compute tile 的 stream 條數</td>
+<td>南→北 6、北→南 4、東↔西各 4</td>
+<td>同左</td>
+<td>同左（每條頻寬加倍）</td>
+</tr>
+<tr>
+<td>Memory tile 的 stream 條數</td>
+<td>—</td>
+<td>南→北 6、北→南 4、沒有東西向</td>
+<td>同左</td>
+</tr>
+<tr>
+<td>有 control module</td>
+<td>否</td>
+<td>否</td>
+<td>是</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="section-6">手冊內部不一致的地方</h2>
+<p>讀全文時看到下列前後不一致，手冊沒有說明哪一個才對，本 Wiki 照原文並列、不自行更正：</p>
+<ul>
+<li>Memory tile 的 bank：正文寫 8 個 bank、各 64 KB；比較表寫「16 x 32B banks」。</li>
+<li>Memory tile DMA 的位址維度：特性清單寫 4D，DMA 一節寫 5D（含 iteration-offset）。</li>
+<li><a href="https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Memory-Tile-Overview-and-Features">Memory Tile Overview</a> 的特性清單把「Six memory to stream (MM2S)」列了兩次，第二次的內容（解壓縮、out-of-order、Finish on TLAST）是 S2MM 的功能；<a href="https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Memory-Tile-Memory">Memory Tile Memory</a> 的寫入介面也寫成來自鄰居的 MM2S。</li>
+<li>累加器：<a href="https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Accumulator-Registers">Accumulator Registers</a> 說 512-bit 可看成 16 個 32-bit lane；<a href="https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Functional-Overview">Functional Overview</a> 的累加模式寫 64 個 32-bit lane 或 32 個 64-bit lane（對應 2048-bit）。浮點資料路徑圖上寫「Accumulator Register A 9x 1024b」「Exponent Register E 12x 128b」，暫存器表則是 8 個 2048-bit 累加器、E 為 64 bits。</li>
+<li>核心的直接 stream 介面：<a href="https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Interfaces">Interfaces</a> 寫一進一出各 32-bit；Functional Overview 寫 2×32-bit subordinate、1×32-bit manager。</li>
+<li><a href="https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Memory-mapped-AXI4-Interconnect">Memory-mapped AXI4</a> 位址表的 row 欄位，表頭寫 <code>[22:18]</code>，下一列寫 <code>[24:20]</code>（5 bits）。</li>
+</ul>
+<h2 id="section-7">和 XDNA 2 的對照</h2>
+<ul>
+<li><strong>相同（有 AIE2P 來源）</strong>：compute tile 64 KB 資料＋16 KB 程式、memory tile 512 KB、DMA 通道數 2+2／6+6／2+2，見 <a href="tile-microarchitecture.html">Tile 微架構</a> 引用的 aie-rt AIE2P 表與 mlir-aie 模型。</li>
+<li><strong>不同</strong>：XDNA 2 在 Ryzen AI 上沒有 PL、NoC、PMC；<a href="https://docs.kernel.org/accel/amdxdna/amdnpu.html">Linux 驅動文件</a> 描述的是 4x8 陣列、一列 memory tile、由韌體管理的欄分區。AIE2P 的累加器是 5 個 2048-bit（<a href="isa-registers.html">AIE2P 暫存器</a>），本手冊是 8 個。</li>
+<li><strong>未核實</strong>：stream 寬度、load／store 每週期位元數、MX6／MX9／fp8 型別、control module 在 AIE2P 上是否存在。本機 NPU 的時脈在先前量測筆記裡約 1.8 GHz，和本手冊 –1 等級的 1 GHz 目標不是同一顆晶片的數字。</li>
+</ul></article><section id="references" class="references"><h2>來源與查核範圍</h2><ol><li><a href="https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Introduction-to-AI-Engines-and-AIE-ML-v2">AM027：Introduction to AI Engines and AIE-ML v2</a><span>AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。</span><small>https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Introduction-to-AI-Engines-and-AIE-ML-v2</small></li><li><a href="https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Tile-Features">AM027：AIE-ML v2 Tile Features</a><span>AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。</span><small>https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Tile-Features</small></li><li><a href="https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Memory-Tile-Features">AM027：AIE-ML v2 Memory Tile Features</a><span>AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。</span><small>https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Memory-Tile-Features</small></li><li><a href="https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Array-Interface-to-NoC-and-PL-Resources">AM027：AIE-ML v2 Array Interface to NoC and PL Resources</a><span>AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。</span><small>https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Array-Interface-to-NoC-and-PL-Resources</small></li><li><a href="https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Array-Overview">AM027：AIE-ML v2 Array Overview</a><span>AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。</span><small>https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Array-Overview</small></li><li><a href="https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Array-Hierarchy">AM027：AIE-ML v2 Array Hierarchy</a><span>AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。</span><small>https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Array-Hierarchy</small></li><li><a href="https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Performance">AM027：Performance</a><span>AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。</span><small>https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Performance</small></li><li><a href="https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Clocking-Structure">AM027：Clocking Structure</a><span>AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。</span><small>https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Clocking-Structure</small></li><li><a href="https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Memory-Error-Handling">AM027：Memory Error Handling</a><span>AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。</span><small>https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Memory-Error-Handling</small></li><li><a href="https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Privileged-Register-Access-Control">AM027：Privileged Register Access Control</a><span>AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。</span><small>https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Privileged-Register-Access-Control</small></li><li><a href="https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Comparison-of-AIE-Generations">AM027：Comparison of AIE Generations</a><span>AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。</span><small>https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Comparison-of-AIE-Generations</small></li><li><a href="https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Revision-History">AM027：Revision History</a><span>AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。</span><small>https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Revision-History</small></li><li><a href="https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Memory-Tile-Overview-and-Features">AM027：AIE-ML v2 Memory Tile Overview and Features</a><span>AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。</span><small>https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Memory-Tile-Overview-and-Features</small></li><li><a href="https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Memory-Tile-Memory">AM027：AIE-ML v2 Memory Tile Memory</a><span>AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。</span><small>https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Memory-Tile-Memory</small></li><li><a href="https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Accumulator-Registers">AM027：Accumulator Registers</a><span>AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。</span><small>https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Accumulator-Registers</small></li><li><a href="https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Functional-Overview">AM027：Functional Overview</a><span>AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。</span><small>https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Functional-Overview</small></li><li><a href="https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Interfaces">AM027：AIE-ML v2 Interfaces</a><span>AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。</span><small>https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Interfaces</small></li><li><a href="https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Memory-mapped-AXI4-Interconnect">AM027：Memory-mapped AXI4 Interconnect</a><span>AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。</span><small>https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Memory-mapped-AXI4-Interconnect</small></li><li><a href="https://docs.kernel.org/accel/amdxdna/amdnpu.html">Linux kernel：AMD NPU（amdxdna）</a><span>AMD 撰寫的驅動文件；XDNA 陣列拓樸、L2 記憶體與分區。</span><small>https://docs.kernel.org/accel/amdxdna/amdnpu.html</small></li></ol></section><div class="link-panels"><section><h2>接著閱讀</h2><div class="related-links"><a href="am027-tile.html">AM027 Tile 架構：記憶體鄰接、stream switch、程式記憶體與 memory module</a><a href="am027-core.html">AM027 處理器架構：暫存器、load／store、純量與向量單元、六級管線</a><a href="am027-memtile.html">AM027 Memory tile：512 KB、12 條 DMA 通道、鄰居存取、padding 與壓縮</a><a href="am027-system.html">AM027 介面、開機與觀測：array interface、中斷、設定流程、debug、trace 與事件</a><a href="spec-gaps.html">規格缺口與衝突：哪些已知，哪些不能由 compiler 推成 silicon</a><a href="tile-microarchitecture.html">Tile 微架構：SRAM、地址視窗、banks 與三種 tile</a><a href="system.html">XDNA2 系統：空間資料流與 NPU2 分區</a></div></section><section><h2>哪些條目連到這裡？</h2><div class="related-links"><a href="system.html">XDNA2 系統：空間資料流與 NPU2 分區</a><a href="am027-tile.html">AM027 Tile 架構：記憶體鄰接、stream switch、程式記憶體與 memory module</a><a href="am027-core.html">AM027 處理器架構：暫存器、load／store、純量與向量單元、六級管線</a><a href="am027-memtile.html">AM027 Memory tile：512 KB、12 條 DMA 通道、鄰居存取、padding 與壓縮</a><a href="am027-system.html">AM027 介面、開機與觀測：array interface、中斷、設定流程、debug、trace 與事件</a><a href="spec-gaps.html">規格缺口與衝突：哪些已知，哪些不能由 compiler 推成 silicon</a></div></section></div><a class="back-top" href="#main">回到本文頂端 ↑</a></main></div><footer class="footer">XDNA 2 / AIE2P · 繁體中文知識庫 · 來源快照 2026-09-12<br>公開文件與固定版本原始碼查核，不是完整保密 ISA 手冊；未執行 NPU 實驗。<a href="wiki-method.html">維護方法與證據界線</a> · <a href="guide/index.html">原始長篇指南</a></footer></body></html>

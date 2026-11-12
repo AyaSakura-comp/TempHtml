@@ -24,6 +24,7 @@
 - [記憶體：program、data、banks 與局部地址](markdown/memory.md): 用容量、連續空間、對齊及生命週期四張帳，區分 scratchpad、地址視窗與核心連結限制。
 - [Interconnect 規格：switch ports、packet routing 與 cascade](markdown/interconnect.md): 完整列出模型可見的 source/destination 埠資源，区分交換網路、局部 SRAM 鄰接與 cascade。
 - [DMA：描述子、通道與資料布局](markdown/dma.md): 分清 BD 程式、具方向的通道與鎖協定，將 LLM packing、搬移和緩衝生命週期一起設計。
+- [資料上 tile：DMA 路徑、lock 握手、雙緩衝與硬體 trace](markdown/data-ingress.md): 每顆 tile 的 SRAM 都要靠 DMA 餵資料：路徑、IRON 寫法、lock 握手、和指令排程的關係，以及這台 NPU 上錄到的事件 trace。
 - [DMA / MMIO 規格：BD 欄位、locks、burst 與完整 register 索引](markdown/dma-registers.md): 從抽象搬移操作下鑽到 AIE2P runtime 的 descriptors、field masks、地址單位與來源差異。
 - [同步：鎖、背壓、停頓與死鎖](markdown/synchronization.md): 以生產者／消費者 ownership 與等待圖理解核心和 DMA 的協定，區分正常阻塞與無法前進。
 - [Events 與可觀測微架構：stall、bank conflict、counters 與 trace](markdown/events-debug.md): 整理可用的事件識別欄位，說明如何區分資料相依、memory stall 與資料流阻塞。
@@ -46,6 +47,11 @@
 - [效能模型：容量、Roofline 與端到端下界](markdown/performance.md): 用可驗算的公式排除不合理期待，再用量測找瓶頸；計算器預設值不是本機 XDNA2 規格。
 - [正確性與效能驗證：一套不把 fallback 當成功的流程](markdown/validation.md): 从 reference、數值誤差、dispatch 證據到完整 LLM quality；每一層只回答自己能證明的問題。
 - [除錯與證據分級：不要把 fallback 當 NPU 成功](markdown/debug.md): 建立從生成、編譯、載入、同步到數值的檢查順序，記錄 signedness 舊路徑風險及測試未執行的邊界。
+- [AM027 導讀：AIE-ML v2 的陣列、時脈、記憶體保護與三代比較](markdown/am027-overview.md): AMD 官方 AIE-ML v2 架構手冊的總覽章節：這本手冊和 XDNA 2 的關係、陣列組成、時脈目標、ECC，以及三代 AI Engine 的比較表。
+- [AM027 Tile 架構：記憶體鄰接、stream switch、程式記憶體與 memory module](markdown/am027-tile.md): AIE-ML v2 一顆 tile 的三個模組：核心看得到哪四塊記憶體、64-bit stream switch 的延遲與緩衝、介面清單、bank 仲裁、tile DMA 與 lock。
+- [AM027 處理器架構：暫存器、load／store、純量與向量單元、六級管線](markdown/am027-core.md): AIE-ML v2 核心的功能單元：暫存器檔、指令長度、三個 AGU、純量 ALU 延遲、整數與浮點向量乘加的六級管線、型別轉換與暫存器搬移。
+- [AM027 Memory tile：512 KB、12 條 DMA 通道、鄰居存取、padding 與壓縮](markdown/am027-memtile.md): AIE-ML v2 memory tile 的記憶體介面、DMA 功能、東西鄰居的位址與 lock 編號範圍，以及 stream switch 和 lock module。
+- [AM027 介面、開機與觀測：array interface、中斷、設定流程、debug、trace 與事件](markdown/am027-system.md): AIE-ML v2 陣列和外界的介面、開機與重設步驟，以及觀測手段：memory-mapped debug、兩種 trace 模式、效能計數器、事件動作與廣播。
 - [規格缺口與衝突：哪些已知，哪些不能由 compiler 推成 silicon](markdown/spec-gaps.md): 把無法核實的cycle、bank、互連與跨世代規格公開列出，避免LLM把推導當成事實。
 - [術語辭典：同一個字，在不同層可能不同意思](markdown/glossary.md): 快速對照 XDNA2、AIE2P、tile、buffer、MMA、BF16/BFP16 與 LLM 推論常用語，並連回完整條目。
 - [來源地圖、證據等級與未解問題](markdown/sources.md): 主張要能回到原始文件與固定 source；公共架構介紹、API 表、compiler 實作和 benchmark 各有不同證明力。
@@ -202,6 +208,8 @@ prefill 有較多 token 可併成矩陣工作，decode 常是較小的即時工�
 - 閱讀 [記憶體](memory.html) 後估算能容納的工作集，再選 [矩陣原語](mma.html)。
 - 未知項保留為未知：SKU 實際可用資源、頻率、鏈路有效頻寬、端到端延遲與框架算子覆蓋率均未由本次查核證明。
 
+AIE-ML、AIE2P、AIE-ML v2 三個世代名稱與各自的官方手冊對照表在 [規格缺口](spec-gaps.html)；資料從主機到核心的路徑見 [資料上 tile](data-ingress.html)。
+
 ## 來源
 - [AIE2P 版本標頭](https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/clang/lib/Headers/aie2p/aie2p_version.h#L14-L20) — arch 21 與 model 巨集；不可混用 arch 22。 僅靜態來源查核。
 - [Peano README：架構與後端](https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/README.md#L1-L66) — XDNA2 target triple、in-order exposed-pipeline VLIW、編譯器責任及成熟度限制。示例 timing 非本次硬體規格。 僅靜態來源查核。
@@ -217,12 +225,15 @@ prefill 有較多 token 可併成矩陣工作，decode 常是較小的即時工�
 - [synchronization](synchronization.html)
 - [heterogeneous](heterogeneous.html)
 - [llm-graph](llm-graph.html)
+- [data-ingress](data-ingress.html)
+- [am027-overview](am027-overview.html)
 
 ## 反向連結
 - [tile-microarchitecture](tile-microarchitecture.html)
 - [compute](compute.html)
 - [memory](memory.html)
 - [dma](dma.html)
+- [am027-overview](am027-overview.html)
 - [glossary](glossary.html)
 
 
@@ -271,11 +282,17 @@ prefill 有較多 token 可併成矩陣工作，decode 常是較小的即時工�
 
 這是地址視窗，不是四份新分配的64KiB私有 SRAM。Mem tile 的相鄰視窗則為 west=0、self=0x80000、east=0x100000，見 [getMemLocalBaseAddress](https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/lib/Dialect/AIE/IR/AIETargetModel.cpp#L1579-L1603)。共用同一 buffer 必須協調 ownership；位址可見不等於 cache coherence 或 free bandwidth。
 
+**官方手冊對照（2026-11-12 取得原文）：**[AM027 Tile Architecture](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Tile-Architecture)（AIE-ML v2，rev 1.1，2025-10-23）寫明每顆核心 “interface with up to four distinct memory modules”：its own local memory module、north、south、west；陣列邊緣的核心少一到兩塊。[AM020](https://docs.amd.com/r/en-US/am020-versal-aie-ml)（AIE-ML，rev 1.5，2026-02-18）同一節的列舉相同。兩本另有一句 “can access memory modules in all four directions as one contiguous block”：這裡的四個方向是四個位址視窗，東視窗就是自己，不可讀成能存取東鄰 tile。AM027 的 Memory Tile DMA 一節列 West `0x0_0000–0x7_FFFF`、Local `0x8_0000–0xF_FFFF`、East `0x10_0000–0x17_FFFF`，只有 channel 0–3 可達左右鄰居，與上列模型值一致；memory tile 的存取介面清單裡沒有 compute 核心。
+
+這兩本是 Versal 的前一代與姊妹代手冊，不是 AIE2P 專屬文件。AIE2P 專屬的對應是 [aie-rt ELF loader](https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/core/xaie_elfloader.c#L126-L202)：位址除以 64 KiB 得 4／5／6／7，對應南／西／北／自己（AIE2P 的 `IsCheckerBoard=0`）。核心直接讀鄰居 SRAM 在本機沒有實測；資料實際怎麼進 tile 見 [資料上 tile](data-ingress.html)。
+
 ## Allocator bank 與 event bank 的口徑差異
 
 [模型 getNumBanks](https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/include/aie/Dialect/AIE/IR/AIETargetModel.h#L830-L835)給 core=4、mem=8；[allocator](https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/lib/Dialect/AIE/Transforms/AIEAssignBuffers.cpp#L983-L1003)以 memory size 除以此值形成配置區間。因此得到 core 的16KiB區間、mem的64KiB區間，是**該配置模型的算術推導**。
 
 但 AIE2P runtime 的 [core-memory conflict events](https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/events/xaie_events_aie2p.h#L235-L255)列 `DM_BANK_0..7`，[mem-tile events](https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/events/xaie_events_aie2p.h#L527-L543)列 `DM_BANK_0..15`。不能說 silicon 只有4／8 banks，也不能僅憑event名稱就證明固定二對一物理配對、單埠/雙埠或 interleaving bit。這裡登錄的是**配置分區4/8，事件命名8/16**，物理映射仍待同代手冊或實驗核實。
+
+AM027 的 Memory Module 一節對姊妹代給了解釋：硬體是 8 個單埠 bank，程式視角每兩個交錯成一個，共 4 個 512-bit bank。方向與「配置分區 4、事件命名 8」相同，但那是 AIE-ML v2 的敘述，AIE2P 的實體映射仍沒有同代文件。
 
 ## SRAM 與 MMIO 是不同位址命名空間
 
@@ -296,6 +313,9 @@ GEMM double buffering 要同時記帳 A/B/C、stack、靜態data、bank配置與
 - [地址基底](https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/include/aie/Dialect/AIE/IR/AIETargetModel.h#L743-L756) — 固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。
 - [鄰接函式](https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/lib/Dialect/AIE/IR/AIETargetModel.cpp#L755-L824) — 固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。
 - [getMemLocalBaseAddress](https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/lib/Dialect/AIE/IR/AIETargetModel.cpp#L1579-L1603) — 固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。
+- [AM027 Tile Architecture](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Tile-Architecture) — 固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。
+- [AM020](https://docs.amd.com/r/en-US/am020-versal-aie-ml) — 固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。
+- [aie-rt ELF loader](https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/core/xaie_elfloader.c#L126-L202) — 固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。
 - [模型 getNumBanks](https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/include/aie/Dialect/AIE/IR/AIETargetModel.h#L830-L835) — 固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。
 - [allocator](https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/lib/Dialect/AIE/Transforms/AIEAssignBuffers.cpp#L983-L1003) — 固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。
 - [core-memory conflict events](https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/events/xaie_events_aie2p.h#L235-L255) — 固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。
@@ -311,11 +331,17 @@ GEMM double buffering 要同時記帳 A/B/C、stack、靜態data、bank配置與
 - [vliw-pipeline](vliw-pipeline.html)
 - [interconnect](interconnect.html)
 - [spec-gaps](spec-gaps.html)
+- [data-ingress](data-ingress.html)
+- [am027-tile](am027-tile.html)
 
 ## 反向連結
 - [spec-index](spec-index.html)
 - [interconnect](interconnect.html)
+- [data-ingress](data-ingress.html)
 - [dma-registers](dma-registers.html)
+- [am027-overview](am027-overview.html)
+- [am027-tile](am027-tile.html)
+- [am027-memtile](am027-memtile.html)
 - [spec-gaps](spec-gaps.html)
 
 
@@ -415,6 +441,7 @@ GEMM double buffering 要同時記帳 A/B/C、stack、靜態data、bank配置與
 - [synchronization](synchronization.html)
 - [isa](isa.html)
 - [mma](mma.html)
+- [am027-core](am027-core.html)
 
 
 ---
@@ -528,6 +555,8 @@ GPR 與 spill 位寬見 [暫存器寬度與 GPR](https://github.com/Xilinx/llvm-
 - [tile-microarchitecture](tile-microarchitecture.html)
 - [isa-encoding](isa-encoding.html)
 - [isa-instructions](isa-instructions.html)
+- [am027-overview](am027-overview.html)
+- [am027-core](am027-core.html)
 
 
 ---
@@ -635,6 +664,7 @@ IssueWidth=1000 並非千路發射；以 77 種 composite format 與資源時序
 - [compiler](compiler.html)
 - [instruction-cycles](instruction-cycles.html)
 - [software-pipelining](software-pipelining.html)
+- [am027-core](am027-core.html)
 
 ## 反向連結
 - [spec-index](spec-index.html)
@@ -642,6 +672,7 @@ IssueWidth=1000 並非千路發射；以 77 種 composite format 與資源時序
 - [instruction-cycles](instruction-cycles.html)
 - [software-pipelining](software-pipelining.html)
 - [events-debug](events-debug.html)
+- [am027-core](am027-core.html)
 
 
 ---
@@ -764,7 +795,9 @@ WAR 要避免晚讀看到新值，使用「早讀點−後寫點（反向 bypass
 - [tile-microarchitecture](tile-microarchitecture.html)
 - [vliw-pipeline](vliw-pipeline.html)
 - [software-pipelining](software-pipelining.html)
+- [data-ingress](data-ingress.html)
 - [events-debug](events-debug.html)
+- [am027-core](am027-core.html)
 - [spec-gaps](spec-gaps.html)
 
 
@@ -879,6 +912,7 @@ load-use latency 是 7，**穩態 II 是 2**。若 consumer 視為占一個可�
 - [spec-index](spec-index.html)
 - [vliw-pipeline](vliw-pipeline.html)
 - [instruction-cycles](instruction-cycles.html)
+- [data-ingress](data-ingress.html)
 
 
 ---
@@ -1255,6 +1289,8 @@ program 放核心程式；data 工作區容納執行時資料。不可把兩者�
 - 同時檢查程式容量、最大連續 data run、stack 完整性與向量對齊。
 - 不照抄「L1 固定一個 cycle」；仲裁、bank 映射細節、實際衝突率與存取延遲仍未量測。
 
+核心可見的四塊記憶體在官方手冊的列舉（自己、北、南、西），以及資料實際怎麼被 DMA 寫進這 64 KiB，見 [資料上 tile](data-ingress.html)。
+
 ## 來源
 - [AIETargetModel：核心容量與地址](https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/include/aie/Dialect/AIE/IR/AIETargetModel.h#L749-L790) — 64 KiB data、16 KiB program、地址視窗、256-bit load/store bus 及 cascade 模型；非存取延遲量測。 僅靜態來源查核。
 - [AIETargetModel：mem tile 容量與 banks](https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/include/aie/Dialect/AIE/IR/AIETargetModel.h#L830-L834) — 512 KiB mem tile；模型回傳 mem tile 八 banks、其他 tile 四 banks。 僅靜態來源查核。
@@ -1273,18 +1309,21 @@ program 放核心程式；data 工作區容納執行時資料。不可把兩者�
 - [kv-cache](kv-cache.html)
 - [gemm](gemm.html)
 - [debug](debug.html)
+- [data-ingress](data-ingress.html)
 
 ## 反向連結
 - [system](system.html)
 - [tile-microarchitecture](tile-microarchitecture.html)
 - [compute](compute.html)
 - [dma](dma.html)
+- [data-ingress](data-ingress.html)
 - [synchronization](synchronization.html)
 - [datatypes](datatypes.html)
 - [iron](iron.html)
 - [runtime](runtime.html)
 - [gemm](gemm.html)
 - [kv-cache](kv-cache.html)
+- [am027-memtile](am027-memtile.html)
 - [glossary](glossary.html)
 
 
@@ -1372,11 +1411,15 @@ Circuit/packet route都要有合法連接和ownership；multicast不保證每個
 - [synchronization](synchronization.html)
 - [events-debug](events-debug.html)
 - [spec-gaps](spec-gaps.html)
+- [am027-tile](am027-tile.html)
 
 ## 反向連結
 - [spec-index](spec-index.html)
 - [tile-microarchitecture](tile-microarchitecture.html)
+- [data-ingress](data-ingress.html)
 - [dma-registers](dma-registers.html)
+- [am027-tile](am027-tile.html)
+- [am027-memtile](am027-memtile.html)
 - [spec-gaps](spec-gaps.html)
 
 
@@ -1454,6 +1497,8 @@ Mem tile 較多 ND 維度與容量，使它適合作為某些 layout 轉換或�
 
 本頁只查核描述與模型；完整通道仲裁、路由可行性及端到端完成語意仍需對具體產物驗證。接續閱讀 [同步](synchronization.html) 可把這些資源轉成可檢查的等待圖。
 
+資料從主機一路到核心的完整步驟、真實設計的 BD 與 lock 設定，整理在 [資料上 tile](data-ingress.html)。
+
 ## 來源
 - [AIE DMAStartOp：通道契約](https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/include/aie/Dialect/AIE/IR/AIEOps.td#L1291-L1347) — 通道由 MM2S/S2MM 方向與 index 定義；channel、BD 與 per-channel padding 分層。 僅靜態來源查核。
 - [AIE DMABDOp：描述子與布局契約](https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/include/aie/Dialect/AIE/IR/AIEOps.td#L940-L1064) — Buffer、offset/len、元素單位、BD 鏈與 ND layout；文件內 stride 例子與限制文字有落差，本文不判定所有可用步距。 僅靜態來源查核。
@@ -1469,15 +1514,184 @@ Mem tile 較多 ND 維度與容量，使它適合作為某些 layout 轉換或�
 - [gemm](gemm.html)
 - [runtime](runtime.html)
 - [iron](iron.html)
+- [data-ingress](data-ingress.html)
 
 ## 反向連結
 - [system](system.html)
 - [memory](memory.html)
+- [data-ingress](data-ingress.html)
 - [dma-registers](dma-registers.html)
 - [synchronization](synchronization.html)
 - [iron](iron.html)
 - [gemm](gemm.html)
+- [am027-memtile](am027-memtile.html)
 - [glossary](glossary.html)
+
+
+---
+
+# 資料上 tile：DMA 路徑、lock 握手、雙緩衝與硬體 trace
+
+分類：架構 · 官方手冊／本機產物 · 來源快照 2026-09-12
+
+每顆 tile 的 SRAM 都要靠 DMA 餵資料：路徑、IRON 寫法、lock 握手、和指令排程的關係，以及這台 NPU 上錄到的事件 trace。
+
+> 官方手冊、固定版本原始碼與本機產物；本機段落的日期與範圍見正文。
+
+## 每顆 tile 有自己的 SRAM
+
+XDNA 2 的每顆 tile 都有自己的記憶體，和主機 DRAM 不相通：compute tile 是 64 KiB 資料記憶體加 16 KiB 程式記憶體，memory tile 是 512 KiB（容量來源見 [Tile 微架構](tile-microarchitecture.html)）。AMD 寫的 [Linux 驅動文件](https://docs.kernel.org/accel/amdxdna/amdnpu.html)把 memory tile 稱為軟體管理的 L2，並說明由 DMA 在主機 DDR 與 memory tile 之間搬資料。核心沒有任何指令可以直接讀主機記憶體，所以「資料怎麼上 tile」就是「DMA 怎麼排」。
+
+```text
+主機 DDR ─▶ shim DMA ─▶ memory tile SRAM ─▶ compute tile SRAM ─▶ 核心 load
+（列 0）     stream      （列 1，512 KiB）  stream  （列 2–5，64 KiB）
+```
+
+## 一筆資料上 tile 的五個步驟
+
+1. **主機**：把資料放進 XRT 緩衝區並同步到裝置。NPU 不看 CPU cache，沒同步會讀到舊資料（見 [執行期](runtime.html)）。
+2. **Shim（列 0）**：DMA 從主機 DDR 讀出資料，變成 stream 往上送。
+3. **Memory tile（列 1）**：DMA 把 stream 寫進 512 KiB，再讀出來往上送；這一站可以把一份資料切給多顆核心，或重播多次。
+4. **Compute tile**：tile 上的 DMA 把 stream 寫進自己的 64 KiB，寫完後釋放一把 lock。
+5. **核心**：取得那把 lock，用一般的 load 指令讀那塊位址。
+
+結果回主機是同一條路反過來走。每顆 compute tile 只有 2 進 2 出的 DMA 通道，一筆資料要放得進 64 KiB 扣掉 stack 與其他緩衝區後的空間（見 [DMA](dma.html) 與 [記憶體](memory.html)）。
+
+## IRON 裡要寫的四樣東西
+
+設計者不直接設定 DMA 暫存器。在 IRON 裡寫下列四樣，編譯器會產生 [BD 描述子](https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/include/aie/Dialect/AIE/IR/AIEOps.td#L940-L1064)、[lock](https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/include/aie/Dialect/AIE/IR/AIEOps.td#L1500-L1611) 與路由：
+
+| 你寫的 | 作用 |
+|---|---|
+| `ObjectFifo(型別, depth=…)` | 宣告一條資料通道、每筆資料的大小與緩衝數（見 [ObjectFifo 文件](https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_guide/section-2/section-2a/README.md#L258-L298)） |
+| `.split(…, tile=Tile(c, 1))`、`.forward(…)`、`.join(…)` | 指定在哪顆 memory tile 中轉，以及怎麼切、怎麼合、重播幾次 |
+| `Worker(kernel, [fifo.cons(), …])` | 把通道接到某顆核心；核心程式裡以 `acquire`／`release` 取用 |
+| runtime sequence 裡的 `fill(…)`、`drain(…)` | 執行時把主機緩衝區的哪一段送進哪條通道、從哪條收回（見 [runtime sequence 文件](https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_guide/section-2/section-2d/README.md#L28-L36)） |
+
+`fill`／`drain` 會降成 shim DMA 的工作；放置（哪顆核心算哪一段）在手寫設計裡由設計者指定，路由與位址由編譯器決定（見 [IRON](iron.html) 與 [編譯器分工](compiler.html)）。
+
+## 另外三種進到 tile 的方式
+
+- **編譯時寫死**：常數表放進核心的 ELF，載入設計時就寫進 SRAM。[aie-rt 的 ELF loader](https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/core/xaie_elfloader.c#L126-L202) 依資料段位址決定寫進哪一顆 tile 的記憶體，適合不會變的小表。
+- **Cascade**：上游核心把累加器的值直接送給下游核心，不經過 SRAM，常用來串接部分和（見 [Interconnect](interconnect.html)）。
+- **相鄰核心共用記憶體**：核心直接讀寫鄰居的 SRAM，不經 DMA。[AM027 Tile Architecture](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Tile-Architecture) 與 [AM020](https://docs.amd.com/r/en-US/am020-versal-aie-ml) 列的是自己、北、南、西四塊，沒有東邊；ObjectFifo 兩端若能共用同一塊記憶體，編譯器就不產生 DMA。**本機檢查**：2026-11-12 掃過這台機器上 400 份已編譯設計（12,375 顆核心），沒有任何一顆核心引用別顆 tile 的緩衝區；這條路在本機沒有被用過，也沒有實測。
+
+## Lock 握手：一個真實設計的設定（本機產物）
+
+以下取自這台機器上一個手寫 GEMM 設計（8 欄 × 4 列）編譯後的 `input_with_addresses.mlir` 與核心 ELF 的反組譯，核心在第 3 欄第 3 列。A 是單緩衝，W 是雙緩衝：
+
+| 物件 | 位址（核心視角） | 大小 | bank | lock（生產／消費，初值） |
+|---|---|---|---|---|
+| A 緩衝 | `0x70800` | 23,040 B | 0 | lock 0／lock 1，初值 1／0 |
+| W 緩衝 0 | `0x78000` | 10,560 B | 2 | lock 2／lock 3，初值 2／0 |
+| W 緩衝 1 | `0x7C000` | 10,560 B | 3 | 同上（兩塊共用一對 lock） |
+
+DMA 這一側（compute tile 的 S2MM 通道 1，兩個 BD 互相接續）：
+
+```text
+BD1: 取得 lock 2 (>=1) → 寫 W 緩衝 0（10,560 B） → 釋放 lock 3 → 接 BD2
+BD2: 取得 lock 2 (>=1) → 寫 W 緩衝 1（10,560 B） → 釋放 lock 3 → 接 BD1
+```
+
+核心這一側（外層迴圈的反組譯，lock 編號 `0x30` 起是自己這顆 tile 的 lock，見 [lock 編號視窗](https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/lib/Dialect/AIE/IR/AIETargetModel.cpp#L1554-L1577)）：
+
+```text
+acq #0x31            ; 等 A 就緒（自己的 lock 1）
+重複 40 次：
+  acq #0x33          ; 等一塊 W 就緒（自己的 lock 3）
+  p0 = 0x70800       ; A
+  p1 = 0x78000 或 0x7C000   ; 兩塊 W 輪流
+  jl  kernel
+  rel #0x32          ; 把這塊 W 還給 DMA（自己的 lock 2）
+rel #0x30            ; 把 A 還給 DMA（自己的 lock 0）
+```
+
+lock 是計數 semaphore：lock 2 的初值 2 代表「有兩塊空的 W 緩衝可寫」，DMA 每寫完一塊就把 lock 3 加一，核心每用完一塊就把 lock 2 加一。[Peano 的 lock header](https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/clang/lib/Headers/aie2p/aie2p_locks.h#L14-L61) 是核心端的介面；語意見 [同步](synchronization.html)。
+
+## 資料搬移能不能和 VLIW 指令重疊
+
+可以，方法是雙緩衝，不是把搬移寫進指令排程：
+
+- **重疊的條件**：ObjectFifo 的 `depth` 至少 2 時，核心在算緩衝 0 的同時，DMA 可以把下一筆寫進緩衝 1。上例的 W 就是這樣；A 是單緩衝，換下一筆 A 時核心必須等。
+- **核心端的成本**：資料已經到的時候，一次 `acq` 或 `rel` 在下面的本機 trace 裡只佔 1 個週期；資料還沒到，核心就停在 `acq`。
+- **Stall 期間整顆核心暫停**：[AM027 Interfaces](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2) 列出核心會因 lock、stream 滿或空、資料記憶體衝突而 stall。暫停時所有指令一起停住，所以 kernel 內部以週期計的排程（見 [指令週期](instruction-cycles.html) 與 [軟體管線化](software-pipelining.html)）不需要為 DMA 預留空檔；排程裡的「第幾週期」是不含 stall 的週期。這是由手冊敘述與下面 trace 得出的工程推論。
+- **Bank**：AM027（姊妹代）說每個 bank 各自仲裁，不同 bank 可同時存取。上例中編譯器把 A 放在 bank 0、兩塊 W 放在 bank 2 與 3，DMA 寫下一塊 W 時不會和核心正在讀的那塊同 bank。
+- **速率要配得上**：DMA 填滿一塊緩衝的時間若長於核心算完一塊的時間，核心每一輪都會在 `acq` 等。上例一塊 W 是 10,560 B，kernel 每塊約 1,280 個 MAC 週期加上銜接，兩者同一量級；這個設計沒有錄過 trace，哪一邊在等沒有量測。
+
+## 硬體 trace 看得到什麼（本機 trace）
+
+硬體沒有逐指令、逐管線級的波形。能錄的是事件 trace：每顆 tile 的 trace unit 追蹤最多八個事件，AM027（姊妹代）列出 event-time（逐週期記錄事件狀態變化）與 event-PC（事件成立時記錄 PC）兩種模式。IRON 以 `Program.enable_trace(...)` 開啟，trace 封包經 stream 送到 shim 寫回主機，再用 `aie.utils.trace` 解析成 Perfetto JSON（見 [trace 文件](https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_guide/section-4/section-4b/README.md#L30-L72) 與 [Events](events-debug.html)）。
+
+以下是這台 NPU 上 2026-10-27 錄的一份 event-time trace：手寫 conv3x3 設計（兩顆核心以 cascade 串成一條鏈，128 列影像），不是上一節的 GEMM 設計。從第一次呼叫 kernel 到最後一次返回，各事件佔的週期比例：
+
+| 核心 | 向量指令 | 等 lock | 等 cascade | bank 衝突 | 其他 |
+|---|---|---|---|---|---|
+| 鏈頭（列 5） | 86.1% | 0.6% | 8.2% | 0.8% | 4.3% |
+| 鏈尾（列 4） | 89.6% | 0.7% | 0.0% | 3.1% | 6.6% |
+
+- **穩定狀態**：每列影像一次 kernel 呼叫，週期約 2,540，其中 2,304 個是 VMAC。每次交接有 2 到 4 次 lock 操作，各停 1 個週期，表示 DMA 一直領先核心。
+- **開頭**：鏈尾核心在第一筆資料到之前停了 28,851 個週期，第三列之後又停了一次 1,703 個週期等 DMA；之後不再出現長的 lock stall。
+- **Bank 衝突**：每次 1 個週期，鏈尾每列約 80 次、鏈頭約 20 次。trace 只給事件名稱，沒有指出是和誰衝突。
+- **Cascade**：鏈頭每列有 4 次等 cascade，中位數 26 個週期，是下游較慢造成的背壓。
+
+一次交接的事件順序（週期為 trace 計數）：
+
+| 週期 | 核心 | 事件 |
+|---|---|---|
+| 45,786–45,815 | 鏈尾 | 8 次 MEMORY_STALL，各 1 週期，夾在向量指令之間 |
+| 45,832 | 鏈尾 | INSTR_RETURN，這一列的 kernel 返回 |
+| 45,832–45,873 | 鏈頭 | CASCADE_STALL 41 週期 |
+| 45,842、45,847 | 鏈尾 | LOCK_STALL 各 1 週期 |
+| 45,852 | 鏈尾 | INSTR_CALL，下一列開始 |
+| 45,854、45,859 | 鏈尾 | LOCK_STALL 各 1 週期 |
+| 45,892 | 鏈尾 | 向量指令恢復 |
+| 45,897 | 鏈頭 | 向量指令恢復 |
+
+## 未驗證與限制
+
+- 上面的 trace 來自 conv3x3 設計；GEMM 設計沒有 trace，它的 lock 握手只有編譯產物與反組譯為證，沒有量到核心等了多久。
+- AM020 與 AM027 是前一代與 Versal 姊妹代的手冊，AIE2P 沒有公開的專屬架構手冊；頻寬、load 寬度、stream 寬度等數字不可直接搬用（見 [規格缺口](spec-gaps.html)）。
+- 核心直接讀寫鄰居 SRAM、核心是否完全不能碰 memory tile，在本機都沒有實測。
+- event-PC 模式在本機沒有錄過；它給的是事件成立時的 PC，不是完整的指令序列。
+- 錄 trace 需要另外的 shim 通道與緩衝，會改變設計的資料路徑；trace 版的時間不能直接當成正式版的時間。
+
+## 來源
+- [AM027：AIE-ML v2 Tile Architecture](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Tile-Architecture) — AMD 官方手冊 rev 1.1（2025-10-23）；記憶體鄰接為自己／北／南／西。Versal 姊妹代，非 AIE2P 專屬。2026-11-12 取得原文。
+- [AM027：Versal AIE-ML v2 Architecture Manual](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2) — Interfaces（stall 來源）、Memory Module（bank 仲裁）、Memory Tile DMA、Trace（event-time／event-PC）各節。非 AIE2P 專屬。
+- [AM020：Versal AIE-ML Architecture Manual](https://docs.amd.com/r/en-US/am020-versal-aie-ml) — AMD 官方手冊 rev 1.5（2026-02-18）；前一代，記憶體鄰接列舉與 AM027 相同。
+- [Linux kernel：AMD NPU（amdxdna）](https://docs.kernel.org/accel/amdxdna/amdnpu.html) — AMD 撰寫的驅動文件：Strix Point 4x8、memory tile 為 L2、DMA 在主機 DDR 與 memory tile 間搬移。
+- [aie-rt ELF loader：資料段位址對應 tile](https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/core/xaie_elfloader.c#L126-L202) — AIE2P 表下 CardDir 4／5／6／7 對應南／西／北／自己。僅靜態來源查核。
+- [AIE DMABDOp：描述子與 lock](https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/include/aie/Dialect/AIE/IR/AIEOps.td#L940-L1064) — BD 可附帶 acquire／release 並接續下一個 BD。僅靜態來源查核。
+- [AIE LockOp／UseLockOp：鎖語意](https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/include/aie/Dialect/AIE/IR/AIEOps.td#L1500-L1611) — Counting semaphore 的 AcquireGreaterEqual 與 Release。僅靜態來源查核。
+- [AIETargetModel：lock 編號視窗](https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/lib/Dialect/AIE/IR/AIETargetModel.cpp#L1554-L1577) — 核心視角的 lock 編號：南 0、西 16、北 32、自己 48 起。僅靜態來源查核。
+- [ObjectFifo 文件：深度與重疊](https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_guide/section-2/section-2a/README.md#L258-L298) — 深度與生產者、消費者能否重疊的關係。
+- [Runtime sequence 文件：fill／drain](https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_guide/section-2/section-2d/README.md#L28-L36) — fill／drain 降成 shim DMA 工作。
+- [Trace 文件：enable_trace 與解析](https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_guide/section-4/section-4b/README.md#L30-L72) — trace unit 設定、封包路由到 shim、core_trace_mode。
+- [Peano AIE2P lock header](https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/clang/lib/Headers/aie2p/aie2p_locks.h#L14-L61) — 核心端 acquire／release 介面。僅靜態來源查核。
+
+## 關聯
+- [dma](dma.html)
+- [synchronization](synchronization.html)
+- [memory](memory.html)
+- [tile-microarchitecture](tile-microarchitecture.html)
+- [events-debug](events-debug.html)
+- [iron](iron.html)
+- [runtime](runtime.html)
+- [software-pipelining](software-pipelining.html)
+- [spec-gaps](spec-gaps.html)
+- [am027-tile](am027-tile.html)
+- [am027-memtile](am027-memtile.html)
+
+## 反向連結
+- [system](system.html)
+- [tile-microarchitecture](tile-microarchitecture.html)
+- [memory](memory.html)
+- [dma](dma.html)
+- [synchronization](synchronization.html)
+- [events-debug](events-debug.html)
+- [am027-tile](am027-tile.html)
+- [am027-memtile](am027-memtile.html)
+- [am027-system](am027-system.html)
 
 
 ---
@@ -1560,12 +1774,15 @@ Mem tile 較多 ND 維度與容量，使它適合作為某些 layout 轉換或�
 - [tile-microarchitecture](tile-microarchitecture.html)
 - [events-debug](events-debug.html)
 - [spec-gaps](spec-gaps.html)
+- [am027-memtile](am027-memtile.html)
 
 ## 反向連結
 - [spec-index](spec-index.html)
 - [tile-microarchitecture](tile-microarchitecture.html)
 - [interconnect](interconnect.html)
 - [events-debug](events-debug.html)
+- [am027-tile](am027-tile.html)
+- [am027-memtile](am027-memtile.html)
 - [spec-gaps](spec-gaps.html)
 
 
@@ -1642,6 +1859,8 @@ BD 可以附帶 acquire／release，見[DMA 描述子契約](https://github.com/
 
 後續 [驗證](validation.html) 應把功能正確、協定活性與效能分成不同驗收項目；能完成一次工作不代表所有批量與緩衝配置都安全。
 
+一個真實設計的 lock 初值、BD 接續與核心端 `acq`／`rel` 順序，以及本機錄到的 lock stall 週期數，見 [資料上 tile](data-ingress.html)。
+
 ## 來源
 - [AIE LockOp／UseLockOp：鎖語意](https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/include/aie/Dialect/AIE/IR/AIEOps.td#L1500-L1611) — Counting semaphore、AcquireGreaterEqual 等待後扣除、Release 增加；非主機 mutex/coherence 保證。 僅靜態來源查核。
 - [AIETargetModel：鎖與 BD 資源](https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/include/aie/Dialect/AIE/IR/AIETargetModel.h#L759-L824) — 鎖、BD 數、ND 維度及 mem tile channel 對 BD 半區的可達性。 僅靜態來源查核。
@@ -1658,16 +1877,19 @@ BD 可以附帶 acquire／release，見[DMA 描述子契約](https://github.com/
 - [iron](iron.html)
 - [debug](debug.html)
 - [validation](validation.html)
+- [data-ingress](data-ingress.html)
 
 ## 反向連結
 - [system](system.html)
 - [compute](compute.html)
 - [interconnect](interconnect.html)
 - [dma](dma.html)
+- [data-ingress](data-ingress.html)
 - [iron](iron.html)
 - [runtime](runtime.html)
 - [heterogeneous](heterogeneous.html)
 - [debug](debug.html)
+- [am027-tile](am027-tile.html)
 - [glossary](glossary.html)
 
 
@@ -1721,6 +1943,8 @@ BD 可以附帶 acquire／release，見[DMA 描述子契約](https://github.com/
 
 Trace buffer容量、packet輸出、共享DMA與讀回本身可能影響觀測。事件配置需透過正確runtime/platform權限；本Wiki只給來源與解讀，不要求使用者直接寫debug registers。
 
+AM027 的 Trace 一節（姊妹代）列出 core module 有 event-time 與 event-PC 兩種模式，memory module、memory tile 與 shim 只有 event-time；每個 trace unit 追蹤最多八個事件，封包為 8×32 bits。event-time 逐週期記錄事件狀態變化，event-PC 在事件成立的週期記錄 PC。兩者都不是逐指令、逐管線級的波形。本機實際錄到的事件 trace 與讀法見 [資料上 tile](data-ingress.html)。
+
 ## 建議的驗證紀錄格式
 
 ```text
@@ -1750,11 +1974,15 @@ DMA_bytes / completion_boundary / stalls / trace_overhead
 - [dma-registers](dma-registers.html)
 - [debug](debug.html)
 - [spec-gaps](spec-gaps.html)
+- [data-ingress](data-ingress.html)
+- [am027-system](am027-system.html)
 
 ## 反向連結
 - [spec-index](spec-index.html)
 - [interconnect](interconnect.html)
+- [data-ingress](data-ingress.html)
 - [dma-registers](dma-registers.html)
+- [am027-system](am027-system.html)
 
 
 ---
@@ -1997,6 +2225,7 @@ BF16 是[獨立的 `__bf16` 型別](https://github.com/Xilinx/llvm-aie/blob/386c
 - [quantization](quantization.html)
 - [performance](performance.html)
 - [debug](debug.html)
+- [am027-core](am027-core.html)
 - [glossary](glossary.html)
 - [sources](sources.html)
 
@@ -2212,6 +2441,7 @@ Triton 的 [Triton 的 AIR 版本鎖](https://github.com/amd/Triton-XDNA/blob/5c
 - [vliw-pipeline](vliw-pipeline.html)
 - [instruction-cycles](instruction-cycles.html)
 - [software-pipelining](software-pipelining.html)
+- [data-ingress](data-ingress.html)
 - [isa](isa.html)
 - [iron](iron.html)
 - [triton](triton.html)
@@ -2323,6 +2553,7 @@ python3 whole_array.py --dev npu2 --n-aie-cols 8 \
 
 ## 反向連結
 - [dma](dma.html)
+- [data-ingress](data-ingress.html)
 - [synchronization](synchronization.html)
 - [compiler](compiler.html)
 - [deployment](deployment.html)
@@ -2511,6 +2742,7 @@ IRON HRX 文件明列 host-mapped buffer 的 flush／invalidate，以及 chain �
 
 ## 反向連結
 - [dma](dma.html)
+- [data-ingress](data-ingress.html)
 - [compiler](compiler.html)
 - [iron](iron.html)
 - [triton](triton.html)
@@ -2518,6 +2750,7 @@ IRON HRX 文件明列 host-mapped buffer 的 flush／invalidate，以及 chain �
 - [heterogeneous](heterogeneous.html)
 - [deployment](deployment.html)
 - [debug](debug.html)
+- [am027-system](am027-system.html)
 - [glossary](glossary.html)
 
 
@@ -3511,6 +3744,659 @@ python3 programming_examples/basic/vector_scalar_add/vector_scalar_add.py \
 - [runtime](runtime.html)
 - [performance](performance.html)
 - [validation](validation.html)
+- [am027-system](am027-system.html)
+
+
+---
+
+# AM027 導讀：AIE-ML v2 的陣列、時脈、記憶體保護與三代比較
+
+分類：架構 · 官方手冊摘要（AIE-ML v2，非 AIE2P） · 來源快照 2026-09-12
+
+AMD 官方 AIE-ML v2 架構手冊的總覽章節：這本手冊和 XDNA 2 的關係、陣列組成、時脈目標、ECC，以及三代 AI Engine 的比較表。
+
+> 公開資料與固定版本原始碼；未執行 NPU 實測。
+
+## 這本手冊和這台機器的關係
+
+本頁是 AMD 手冊 AM027（Versal AIE-ML v2，編譯器代號 AIE2PS）的中文摘要，rev 1.1，2026-11-12 讀取。XDNA 2 用的是 AIE2P，沒有公開的專屬架構手冊；本頁的數字除非在「和 XDNA 2 的對照」一節另外寫明，都不能直接當成 AIE2P 的規格。
+
+手冊共 60 節、27 張圖，[修訂紀錄](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Revision-History)列出 1.0（2025-05-30）、1.0.1、1.0.2 與 1.1（2025-10-23）四版；1.1 更新了 Performance、Tile Architecture、兩種 interconnect、Memory Module、Trace 與世代比較表。[引言](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Introduction-to-AI-Engines-and-AIE-ML-v2)把 AIE-ML v2 定位為 AIE-ML 的第二代：每顆 tile 的運算量最多兩倍、新增原生資料型別、能效更好。三個世代名稱的對照表在 [規格缺口](spec-gaps.html)。
+
+本 Wiki 把手冊拆成五頁：本頁、[Tile](am027-tile.html)、[處理器](am027-core.html)、[Memory tile](am027-memtile.html)、[介面、開機與觀測](am027-system.html)。
+
+## 陣列組成與四種記憶體
+
+[Array Overview](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Array-Overview) 與 [Array Hierarchy](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Array-Hierarchy)：陣列由 AIE-ML v2 tile、一或兩列 memory tile、以及最底下一列 array interface tile 組成。Versal 裝置上有四種記憶體可用：
+
+| 記憶體 | 位置 | 怎麼到 |
+|---|---|---|
+| 外部 DDR | 晶片外 | 經 NoC |
+| PL 記憶體（UltraRAM／block RAM） | 可程式邏輯 | 經 PL 介面 |
+| Memory tile 的共享記憶體 | 陣列內，每顆 512 KB | DMA 與 stream |
+| Tile 的本地資料記憶體 | 每顆 tile 64 KB | 核心 load／store，或 tile DMA |
+
+三種 tile 的特性（[Tile Features](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Tile-Features)、[Memory Tile Features](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Memory-Tile-Features)、[Array Interface](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Array-Interface-to-NoC-and-PL-Resources)）：
+
+| | AIE-ML v2 tile | Memory tile | Array interface tile |
+|---|---|---|---|
+| 處理器 | VLIW SIMD 向量處理器 | 無 | 無（有 control module） |
+| 資料記憶體 | 64 KB：硬體 8 個 bank，各 8 KB（256-bit × 256 word）；程式視角兩兩交錯成 4 個 512-bit bank | 512 KB：8 個實體 bank，各 256-bit × 2K word | 無本地資料記憶體 |
+| DMA | 2 S2MM＋2 MM2S，4-D 位址產生 | 6 S2MM＋6 MM2S，64-bit stream、256-bit 記憶體介面，可壓縮零值 | 2 S2MM＋2 MM2S，接 NoC |
+| 其他 | lock、memory-mapped AXI4 設定、debug／trace／profile | 同左 | PL 介面（跨時脈域）、NoC 介面、每欄一個 control module |
+
+## 時脈與設定介面頻寬
+
+[Performance](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Performance)：整個陣列（含 interface tile）是單一時脈域。–1 速度等級、VCC_AIE 0.725 V 的目標是 1 GHz。
+
+| 時脈 | 目標 | 和陣列時脈的關係 |
+|---|---|---|
+| AIE-ML v2 陣列時脈 | 1 GHz | 來源是陣列自己的 PLL |
+| NoC 時脈 | 1000 MHz | 非同步，在 NoC 內跨時脈域 |
+| PL 時脈 | 500 MHz | 非同步，在 array interface 跨時脈域 |
+| NPI 時脈 | 300 MHz | 非同步 |
+
+同一節另有一張 memory-mapped AXI4 設定介面的最低頻寬表（單位 GB/s，前提是陣列時脈 1 GHz、整批連續存取、在 NSU 量）。原表四個欄位標題都寫 Target Write BW，哪一欄是讀取原文沒有標明，這裡照原順序列出：
+
+| 目標區塊 | 128-bit 存取 | | 32-bit 存取 | |
+|---|---|---|---|---|
+| Tile 與 memory tile 的資料記憶體 | 3.0 | 1.1 | 0.80 | 0.32 |
+| Tile 的程式記憶體 | 2.9 | 1.1 | 0.32 | 0.32 |
+| Stream switch 與 BD 暫存器 | 3.0 | 2.0 | 1.7 | 0.80 |
+
+[Clocking Structure](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Clocking-Structure)：每顆 interface tile 有一個欄時脈閘控暫存器，控制同一欄所有 memory tile 與 tile 的時脈（不影響 interface tile 自己）；整欄沒用到時關掉可以省電。
+
+## 記憶體錯誤保護與特權暫存器
+
+[Memory Error Handling](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Memory-Error-Handling)：
+
+| 記憶體 | 保護方式 |
+|---|---|
+| Tile 程式記憶體 16 KB | 兩組 8-bit ECC，各涵蓋 64 bits；可更正 1-bit、偵測 2-bit |
+| Tile 資料記憶體 bank 0–1 | 256-bit word 的每個 32-bit lane 各有 7-bit ECC |
+| Tile 資料記憶體 bank 2–7 | 每個 32-bit 一個奇同位；出錯時 memory module 發出事件 |
+| Memory tile 512 KB | 全部 bank 都是每 32-bit 一組 7-bit ECC，另有 ECC scrubbing |
+| Control module | 三塊 SRAM：程式 32 KB、資料 16 KB（32-bit 介面）、共享 32 KB（128-bit 介面），以 32-bit 為單位檢查 ECC |
+
+[Privileged Register Access Control](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Privileged-Register-Access-Control)：tile、memory tile、interface tile 各有少數特權暫存器，只管制寫入；AXI4 的 `AWPROT[1]=0` 代表安全交易。
+
+## 三代比較表
+
+[Comparison of AIE Generations](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Comparison-of-AIE-Generations) 的重點（B/cycle 是每週期 bytes）：
+
+| 項目 | AI Engine | AIE-ML | AIE-ML v2 |
+|---|---|---|---|
+| 每 tile 乘法器（節錄） | 128（INT8×INT8）、8（fp32） | 256（INT8×INT8）、128（bfloat16） | 512（INT8×INT8）、256（bfloat16、fp16）、512（fp8）、512（MX9）、1024（MX6） |
+| 從自己 tile 的資料記憶體 load | 64 B/cycle | 64 B/cycle | 128 B/cycle |
+| 從鄰居 tile 的資料記憶體 load | 64 B/cycle | 64 B/cycle | 單一鄰居 64 B/cycle；兩個鄰居合計 128 B/cycle |
+| Store | 32 B/cycle | 32 B/cycle | 64 B/cycle |
+| Cascade | 48 B/cycle | 64 B/cycle | 64 B/cycle |
+| 每顆 compute tile 的資料記憶體 | 32 KB | 64 KB | 64 KB |
+| 每顆 memory tile | 沒有 memory tile | 512 KB | 512 KB |
+| DMA（compute／memory／interface tile） | 2+2／無／2+2 | 2+2／6+6／2+2 | 2+2／6+6／2+2 |
+| Stream 寬度 | 32-bit | 32-bit | 64-bit |
+| Compute tile 的 stream 條數 | 南→北 6、北→南 4、東↔西各 4 | 同左 | 同左（每條頻寬加倍） |
+| Memory tile 的 stream 條數 | — | 南→北 6、北→南 4、沒有東西向 | 同左 |
+| 有 control module | 否 | 否 | 是 |
+
+## 手冊內部不一致的地方
+
+讀全文時看到下列前後不一致，手冊沒有說明哪一個才對，本 Wiki 照原文並列、不自行更正：
+
+- Memory tile 的 bank：正文寫 8 個 bank、各 64 KB；比較表寫「16 x 32B banks」。
+- Memory tile DMA 的位址維度：特性清單寫 4D，DMA 一節寫 5D（含 iteration-offset）。
+- [Memory Tile Overview](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Memory-Tile-Overview-and-Features) 的特性清單把「Six memory to stream (MM2S)」列了兩次，第二次的內容（解壓縮、out-of-order、Finish on TLAST）是 S2MM 的功能；[Memory Tile Memory](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Memory-Tile-Memory) 的寫入介面也寫成來自鄰居的 MM2S。
+- 累加器：[Accumulator Registers](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Accumulator-Registers) 說 512-bit 可看成 16 個 32-bit lane；[Functional Overview](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Functional-Overview) 的累加模式寫 64 個 32-bit lane 或 32 個 64-bit lane（對應 2048-bit）。浮點資料路徑圖上寫「Accumulator Register A 9x 1024b」「Exponent Register E 12x 128b」，暫存器表則是 8 個 2048-bit 累加器、E 為 64 bits。
+- 核心的直接 stream 介面：[Interfaces](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Interfaces) 寫一進一出各 32-bit；Functional Overview 寫 2×32-bit subordinate、1×32-bit manager。
+- [Memory-mapped AXI4](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Memory-mapped-AXI4-Interconnect) 位址表的 row 欄位，表頭寫 `[22:18]`，下一列寫 `[24:20]`（5 bits）。
+
+## 和 XDNA 2 的對照
+
+- **相同（有 AIE2P 來源）**：compute tile 64 KB 資料＋16 KB 程式、memory tile 512 KB、DMA 通道數 2+2／6+6／2+2，見 [Tile 微架構](tile-microarchitecture.html) 引用的 aie-rt AIE2P 表與 mlir-aie 模型。
+- **不同**：XDNA 2 在 Ryzen AI 上沒有 PL、NoC、PMC；[Linux 驅動文件](https://docs.kernel.org/accel/amdxdna/amdnpu.html) 描述的是 4x8 陣列、一列 memory tile、由韌體管理的欄分區。AIE2P 的累加器是 5 個 2048-bit（[AIE2P 暫存器](isa-registers.html)），本手冊是 8 個。
+- **未核實**：stream 寬度、load／store 每週期位元數、MX6／MX9／fp8 型別、control module 在 AIE2P 上是否存在。本機 NPU 的時脈在先前量測筆記裡約 1.8 GHz，和本手冊 –1 等級的 1 GHz 目標不是同一顆晶片的數字。
+
+## 來源
+- [AM027：Introduction to AI Engines and AIE-ML v2](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Introduction-to-AI-Engines-and-AIE-ML-v2) — AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。
+- [AM027：AIE-ML v2 Tile Features](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Tile-Features) — AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。
+- [AM027：AIE-ML v2 Memory Tile Features](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Memory-Tile-Features) — AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。
+- [AM027：AIE-ML v2 Array Interface to NoC and PL Resources](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Array-Interface-to-NoC-and-PL-Resources) — AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。
+- [AM027：AIE-ML v2 Array Overview](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Array-Overview) — AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。
+- [AM027：AIE-ML v2 Array Hierarchy](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Array-Hierarchy) — AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。
+- [AM027：Performance](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Performance) — AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。
+- [AM027：Clocking Structure](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Clocking-Structure) — AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。
+- [AM027：Memory Error Handling](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Memory-Error-Handling) — AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。
+- [AM027：Privileged Register Access Control](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Privileged-Register-Access-Control) — AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。
+- [AM027：Comparison of AIE Generations](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Comparison-of-AIE-Generations) — AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。
+- [AM027：Revision History](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Revision-History) — AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。
+- [AM027：AIE-ML v2 Memory Tile Overview and Features](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Memory-Tile-Overview-and-Features) — AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。
+- [AM027：AIE-ML v2 Memory Tile Memory](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Memory-Tile-Memory) — AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。
+- [AM027：Accumulator Registers](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Accumulator-Registers) — AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。
+- [AM027：Functional Overview](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Functional-Overview) — AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。
+- [AM027：AIE-ML v2 Interfaces](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Interfaces) — AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。
+- [AM027：Memory-mapped AXI4 Interconnect](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Memory-mapped-AXI4-Interconnect) — AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。
+- [Linux kernel：AMD NPU（amdxdna）](https://docs.kernel.org/accel/amdxdna/amdnpu.html) — AMD 撰寫的驅動文件；XDNA 陣列拓樸、L2 記憶體與分區。
+
+## 關聯
+- [am027-tile](am027-tile.html)
+- [am027-core](am027-core.html)
+- [am027-memtile](am027-memtile.html)
+- [am027-system](am027-system.html)
+- [spec-gaps](spec-gaps.html)
+- [tile-microarchitecture](tile-microarchitecture.html)
+- [system](system.html)
+
+## 反向連結
+- [system](system.html)
+- [am027-tile](am027-tile.html)
+- [am027-core](am027-core.html)
+- [am027-memtile](am027-memtile.html)
+- [am027-system](am027-system.html)
+- [spec-gaps](spec-gaps.html)
+
+
+---
+
+# AM027 Tile 架構：記憶體鄰接、stream switch、程式記憶體與 memory module
+
+分類：架構 · 官方手冊摘要（AIE-ML v2，非 AIE2P） · 來源快照 2026-09-12
+
+AIE-ML v2 一顆 tile 的三個模組：核心看得到哪四塊記憶體、64-bit stream switch 的延遲與緩衝、介面清單、bank 仲裁、tile DMA 與 lock。
+
+> 公開資料與固定版本原始碼；未執行 NPU 實測。
+
+## 範圍
+
+本頁是 AMD 手冊 AM027（Versal AIE-ML v2，編譯器代號 AIE2PS）的中文摘要，rev 1.1，2026-11-12 讀取。XDNA 2 用的是 AIE2P，沒有公開的專屬架構手冊；本頁的數字除非在「和 XDNA 2 的對照」一節另外寫明，都不能直接當成 AIE2P 的規格。
+
+[Tile Architecture](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Tile-Architecture)：一顆 tile 由三個模組組成：tile interconnect（處理 AXI4-Stream 與 memory-mapped AXI4）、核心（手冊就叫 AIE-ML v2）、memory module（8 個 bank 共 64 KB、DMA、lock）。核心有純量資料路徑、向量資料路徑、三個位址產生器與 16 KB 程式記憶體。開機與 reset 時程式和資料記憶體都清為零。
+
+## 核心看得到哪四塊記憶體
+
+手冊列出每顆核心最多可接四塊 memory module：自己的、北邊的、南邊的、西邊的；陣列邊緣的核心少一到兩塊。它們被當成一塊連續記憶體存取，memory interface 依核心產生的位址把存取導向正確方向。同一節另有「all four directions」的說法，指的是四個方向的埠；圖上每顆 tile 的 memory module 畫在核心的東側，所以東向的那一塊就是自己的。
+
+[Load and Store Unit](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Load-and-Store-Unit) 的數字：四塊各 64 KB 合成 256 KB，AGU 產生的位址範圍是 `0x0000`–`0x3FFFF`；每塊分成 odd／even bank 交錯。相鄰核心靠這塊共享資料記憶體交換資料，不相鄰的走 stream。
+
+Cascade：水平與垂直都有，方向是北→南、西→東，起點與終點在陣列邊緣接死。[Register Move](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Register-Move-Functionality) 補充：cascade 一次傳一個 512-bit 累加器，輸入與輸出各有 2 格深的 512-bit FIFO，兩顆核心之間最多暫存四筆。
+
+## 兩種 interconnect
+
+[Memory-mapped AXI4](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Memory-mapped-AXI4-Interconnect)：外部的 AXI4 manager（經 NoC）可讀寫 tile 內所有暫存器與記憶體。請求從南邊進入每顆 tile 的 switch，位址屬於自己就在本地處理，否則往北傳。每顆 tile 佔 1 MB 位址空間：
+
+| 位元 | 欄位 |
+|---|---|
+| `[31:25]`（7 bits） | 欄 |
+| `[24:20]`（5 bits） | 列 |
+| `[19:0]`（20 bits） | tile 內位址 |
+
+[AXI4-Stream Interconnect](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AXI4-Stream-Interconnect)（stream switch）是 64-bit 的 crossbar，透過 memory-mapped AXI4 靜態設定，支援背壓：
+
+- 資料路徑全是 64-bit，每週期兩個 32-bit word；`TKEEP` 用來傳奇數個 word；每個 32-bit word 一個同位元。
+- 南、西、北、東與 FIFO 埠、DMA 都能跑滿 64-bit／週期；核心、trace、control packet 是 32-bit，經轉接器。
+- Switch 內有一個 16 格深、68-bit 寬的 FIFO。
+- 每個埠只能選 circuit 或 packet 其中一種模式。Circuit 是一對一或一對多廣播，延遲固定；packet 可多條邏輯 stream 共用實體埠，用 5-bit stream ID 決定目的地，延遲不固定。
+
+| 路徑 | 延遲 | 緩衝 |
+|---|---|---|
+| 本地 slave → 本地 master | 3 週期 | 6 個 double-word |
+| 本地 slave → 外部 master | 4 週期 | 8 個 double-word |
+| 外部 slave → 本地 master | 3 週期 | 6 個 double-word |
+| 外部 → 外部 | 4 週期 | 8 個 double-word |
+
+| 方向 | 條數 | 每條頻寬（1 GHz） | 合計 |
+|---|---|---|---|
+| 往北（從南） | 6 | 8 GB/s | 48 GB/s |
+| 往南（從北） | 4 | 8 GB/s | 32 GB/s |
+| 往西（從東） | 4 | 8 GB/s | 32 GB/s |
+| 往東（從西） | 4 | 8 GB/s | 32 GB/s |
+
+Packet header（32 bits）：`[31]` 奇同位、`[27:21]` 來源欄、`[20:16]` 來源列、`[14:12]` packet type、`[4:0]` stream ID，其餘為 0。
+
+## 程式記憶體與介面清單
+
+[Tile Program Memory](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Tile-Program-Memory)：16 KB、128-bit 寬。核心只能讀；外部 manager 可經 memory-mapped AXI4 讀寫。兩邊同時存取同一個 bank 時核心優先，另一邊收到 `SLVERR`。
+
+[Interfaces](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Interfaces) 列出核心的介面：
+
+| 介面 | 內容 |
+|---|---|
+| 資料記憶體 | 兩個 512-bit load、一個 512-bit store，各 512 bits／週期 |
+| 程式記憶體 | 128-bit，每週期可取一條指令 |
+| 直接 AXI4-Stream | 32-bit 輸入與輸出；每 4 週期一次 128-bit 存取，或每週期一個 32-bit word |
+| Cascade | 512-bit 累加器資料 |
+| Lock | 可存取四個方向的 lock module；semaphore lock |
+| Debug | 經 memory-mapped AXI4 讀寫所有核心暫存器 |
+| Event | 16-bit；core module 與 memory module 各 128 個內部事件 |
+| Tile timer | 64-bit |
+| Execution trace | 32-bit，封包式 |
+
+Stall 來源：外部 AXI4 manager、lock module、stream 空或滿、資料記憶體衝突、事件動作。
+
+## Memory module：bank、DMA 與 lock
+
+[Memory Module](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Memory-Module)：
+
+- **Bank**：8 個單埠 bank，各 256 word × 256-bit。程式視角是兩兩以 256-bit 為單位交錯成 4 個 512-bit bank。Bank 0–1 有 ECC，2–7 有同位保護。
+- **仲裁**：每個 bank 各自仲裁，不同 bank 可同時存取，所以一顆 tile 的資料記憶體有 8 個獨立仲裁器；仲裁是階層式的，存取者分成固定群組。
+- **Tile DMA**：2 條 S2MM（把 64-bit stream 寫進記憶體）與 2 條 MM2S；16 個 buffer descriptor，可串接；吞吐量每週期兩個 32-bit word。支援 4D 位址產生（含 iteration-offset）、task queue 與 task-complete-token、S2MM 在 `TLAST` 結束與亂序封包、S2MM 解壓縮、MM2S 壓縮。
+- **Lock**：16 把 semaphore lock，每把 6-bit 無號狀態；請求來自四個方向的核心、本地 DMA 與 memory-mapped AXI4。
+
+## 和 XDNA 2 的對照
+
+- **相同（有 AIE2P 來源）**：自己、南、西、北四個視窗與 64 KiB／16 KiB 容量，見 [Tile 微架構](tile-microarchitecture.html)；tile DMA 2+2 通道、16 個 BD、16 把 lock，見 [DMA／MMIO 規格](dma-registers.html)；lock 是計數 semaphore，見 [同步](synchronization.html)。
+- **本機看得到的行為**：lock 握手、bank 衝突造成的 1 週期 stall、cascade 背壓，見 [資料上 tile](data-ingress.html) 的本機 trace。
+- **未核實**：AIE2P 的 stream 是否 64-bit、load 是否兩個 512-bit／週期、switch 延遲與緩衝格數、DMA 壓縮功能。mlir-aie 模型對 NPU2 回報的 load／store bus 是 256 bits，和本手冊的 512 bits 不同。
+
+## 來源
+- [AM027：AIE-ML v2 Tile Architecture](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Tile-Architecture) — AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。
+- [AM027：Memory-mapped AXI4 Interconnect](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Memory-mapped-AXI4-Interconnect) — AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。
+- [AM027：AXI4-Stream Interconnect](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AXI4-Stream-Interconnect) — AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。
+- [AM027：AIE-ML v2 Tile Program Memory](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Tile-Program-Memory) — AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。
+- [AM027：AIE-ML v2 Interfaces](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Interfaces) — AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。
+- [AM027：AIE-ML v2 Memory Module](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Memory-Module) — AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。
+- [AM027：Load and Store Unit](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Load-and-Store-Unit) — AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。
+- [AM027：Register Move Functionality](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Register-Move-Functionality) — AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。
+
+## 關聯
+- [am027-overview](am027-overview.html)
+- [am027-core](am027-core.html)
+- [am027-memtile](am027-memtile.html)
+- [am027-system](am027-system.html)
+- [tile-microarchitecture](tile-microarchitecture.html)
+- [interconnect](interconnect.html)
+- [data-ingress](data-ingress.html)
+- [synchronization](synchronization.html)
+
+## 反向連結
+- [tile-microarchitecture](tile-microarchitecture.html)
+- [interconnect](interconnect.html)
+- [data-ingress](data-ingress.html)
+- [am027-overview](am027-overview.html)
+- [am027-core](am027-core.html)
+- [am027-memtile](am027-memtile.html)
+- [am027-system](am027-system.html)
+
+
+---
+
+# AM027 處理器架構：暫存器、load／store、純量與向量單元、六級管線
+
+分類：架構 · 官方手冊摘要（AIE-ML v2，非 AIE2P） · 來源快照 2026-09-12
+
+AIE-ML v2 核心的功能單元：暫存器檔、指令長度、三個 AGU、純量 ALU 延遲、整數與浮點向量乘加的六級管線、型別轉換與暫存器搬移。
+
+> 公開資料與固定版本原始碼；未執行 NPU 實測。
+
+## 範圍
+
+本頁是 AMD 手冊 AM027（Versal AIE-ML v2，編譯器代號 AIE2PS）的中文摘要，rev 1.1，2026-11-12 讀取。XDNA 2 用的是 AIE2P，沒有公開的專屬架構手冊；本頁的數字除非在「和 XDNA 2 的對照」一節另外寫明，都不能直接當成 AIE2P 的規格。
+
+[Functional Overview](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Functional-Overview)：核心是 VLIW SIMD 處理器，包含 memory interface、純量單元、向量單元（定點與浮點）、兩個 load 單元、一個 store 單元、指令 fetch／decode 單元。另有 processor bus 可直接讀寫本地 tile 的 memory-mapped 暫存器。
+
+## 乘加能力表
+
+| 型別 A | 型別 B | 累加 lane 數 | 每 lane 位元 | MAC 數 |
+|---|---|---|---|---|
+| int8 | int8 | 64 | 32 | 512 |
+| int16 | int16 | 64 | 32 | 128 |
+| int16 | int16 | 32 | 64 | 128 |
+| int32 | int16 | 32 | 64 | 64 |
+| bfloat16 | bfloat16 | 32 | fp32 | 256 |
+| float16 | float16 | 32 | fp32 | 256 |
+| float8 | float8 | 64 | fp32 | 512 |
+| MX6 | MX6 | 64 | fp32 | 1024 |
+| MX9 | MX9 | 64 | fp32 | 512 |
+
+- 4-bit × 4-bit 是模擬的；32 × 32 以 32 × 16 分解模擬；MX4 用 MX9 模擬。
+- 乘數與被乘數可有號或無號，累加器一律有號。
+- 稀疏：所有整數與浮點模式都支援（50% 稀疏），MX 區塊浮點除外。
+- MX 是共用指數的區塊浮點：MX9 每個元素 8 bits、MX6 5 bits、MX4 3 bits（都是二補數的符號加 mantissa），另有 8 bits 共用指數與 8 bits 共用 sub-tile shift。
+- fp8 支援 E4M3、E5M2 等格式。
+- 向量加法單元：8／16／32-bit 的加、減、比較、min／max；非線性函數 tanh、exp2（bfloat16 兩者都有，float16 只有 exp2）。
+
+## 暫存器
+
+| 類別 | 名稱 | 位寬 | 用途 |
+|---|---|---|---|
+| 純量（[Scalar](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Scalar-Registers)） | `r0`–`r31` | 32 | 通用 |
+| | `m0`–`m7` | 20 | modifier |
+| | `p0`–`p7` | 20 | pointer |
+| 特殊（[Special](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Special-Registers)） | `dn0`–`dn7`、`dj0`–`dj7`、`dc0`–`dc7` | 20 | AGU 的維度大小、步距、計數 |
+| | `s0`–`s3` | 6 | shift 控制 |
+| | `sp`、`lr`、`pc`、`fc` | 20 | 堆疊、連結、程式計數、fetch 計數 |
+| | `ls`、`le` | 20 | 迴圈起點、終點 |
+| | `lc`、`lci` | 32 | 迴圈計數 |
+| | `F`／`G`／`E` | 128／64／64 | MX6 的資料高位、sub-tile shift、指數 |
+| 向量（[Vector](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Vector-Registers)） | `wl0`–`wl11`、`wh0`–`wh11` | 256 | 兩個 W 合成一個 512-bit `x`，兩個 `x` 合成 1024-bit `y`（12 個 x、6 個 y） |
+| Mask（[Mask](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Mask-Registers)） | `Q0`–`Q3` | 128 | 稀疏用 |
+| 累加器（[Accumulator](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Accumulator-Registers)） | `bm`／`cm`／`dm` | 512／1024／2048 | 兩個 bm 合成 cm，兩個 cm 合成 dm；`dm0`–`dm7` |
+
+狀態與控制暫存器實際上是許多小欄位，只有經 debug 介面才會合成 32-bit 的 SR／CR 來存取。
+
+## Fetch、load／store 與純量單元
+
+- **Fetch／decode**（[原文](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Instruction-Fetch-and-Decode-Unit)）：以 PC 為位址向程式記憶體取 128-bit 的值再解碼。指令長度 16 到 128 bits、可變長度；用滿所有 VLIW slot 時多半需要 128 bits，外層迴圈與控制碼用短格式即可。
+- **Load／store**（[原文](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Load-and-Store-Unit)）：兩個 load 單元（AGUA、AGUB）與一個 store 單元（AGUS），各有一個位址產生單元，輸入是 20-bit 的 P 與 M 暫存器；AGU 延遲 1 週期。支援 2D／3D 定址。
+- **純量 ALU**（[原文](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Arithmetic-Logic-Unit-and-Scalar-Functions)）：每週期可發一條指令。
+
+| 運算 | 延遲 |
+|---|---|
+| 32-bit 加、減、比較 | 1 週期 |
+| 位元邏輯（AND／OR／XOR） | 1 週期 |
+| 左移、右移 | 1 週期 |
+| 32 × 32 乘法（結果 32 bits） | 2 週期 |
+
+另有倒數、平方根、平方根倒數的硬體加速。純量單元沒有浮點運算器，浮點靠模擬；手冊建議加法與乘法放在向量單元做。
+
+## 向量乘加的六級管線
+
+[Fixed-point Vector Unit](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Fixed-point-Vector-Unit) 的圖把整數乘法路徑分成 E1 到 E6：
+
+| 級 | 圖上的方塊 |
+|---|---|
+| E1 | 向量暫存器檔 X（12 × 512-bit／6 × 1024-bit） |
+| E2 | 兩個 permute／expand 單元：一個展開成 1024 × 8-bit，另一個成 1024 × 4-bit |
+| E3 | 乘法器：1024 個 9-bit × 5-bit |
+| E4–E5 | Post-add 與累加（128 × 16-bit／64 × 32-bit／32 × 64-bit），可加入最多兩個累加器輸入 |
+| E6 | 寫回累加器暫存器（8 × 2048-bit） |
+
+乘法路徑之外還有兩條向量路徑，輸入直接來自兩個向量暫存器、結果寫回向量暫存器：
+
+- **加法／比較**：16 × 32-bit、32 × 16-bit、64 × 8-bit 三種 lane 模式，有號與無號；每個 lane 可各自選加或減；支援 `<`、`>`、`≤`、`≥`、`< 0`、min、max。
+- **Shift**：以 8-bit 為單位右移；或把一個 8／16／32-bit 純量推進向量的一端，其餘 lane 依序移動。
+- **Shuffle**：8／16／32-bit 的交錯與解交錯、取上半或下半；也負責搬動 MX 的指數與 sub-tile shift。
+
+[Floating-point Vector Unit](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Floating-point-Vector-Unit) 同樣是六級：mantissa 和整數路徑一樣先經 permute 與乘法器，接著 post-add、`BFSHIFT`（對齊）、累加、`FPNORM`（正規化成 fp32）。MX 的指數來自 E 暫存器、sub-tile shift 來自 G 暫存器。所有浮點加法一次完成：把全部 mantissa 對齊到最大指數，保留 23 個小數位元。
+
+## 型別轉換與暫存器搬移
+
+[SRS and UPS](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Fixed-Point-SRS-and-UPS-Conversions)：SRS 讀累加器、轉換後寫到向量暫存器或直接寫進記憶體；UPS 從記憶體或向量暫存器讀、寫進累加器。
+
+- 整數：8↔32、16↔32、16↔64、32↔64 bits。
+- 浮點：fp32 累加器 ↔ bfloat16／float16 向量（16 或 32 lane）；fp32 累加器 → bfloat8／float8（32 lane）；bfloat16 → 32-bit 有號整數（16 lane）。
+- 區塊浮點：MX9／MX6／MX4 區塊 ↔ fp32 累加器；轉成 MX 時是 16 個 mantissa 共用一個指數與 sub-tile shift。
+
+[Register Move](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Register-Move-Functionality)：純量之間、立即值、純量與 AXI4-Stream 之間可搬；W／X／Y 同寬度之間一週期搬一個；BM 對 BM、CM 對 CM 一週期；向量到累加器有三條路（up-shift、乘以常數 1、BM 與 X 直接搬）；累加器到向量走 SRS 或直接搬；累加器與 cascade 互搬；純量與向量之間可插入或取出 8／16／32-bit 的值。
+
+## 和 XDNA 2 的對照
+
+以下 AIE2P 資料來自固定版本的 Peano 原始碼，見 [AIE2P 暫存器](isa-registers.html)：
+
+| 項目 | AM027（AIE-ML v2） | AIE2P（Peano 來源） |
+|---|---|---|
+| 向量暫存器 | 24 × 256-bit（12 個 x、6 個 y） | 相同 |
+| Mask 暫存器 | Q0–Q3，128-bit | 相同（`q0`–`q3`） |
+| 2048-bit 累加器 | `dm0`–`dm7`，8 個 | `dm0`–`dm4`，5 個 |
+| 指標、modifier、維度暫存器 | 各 8 個，20-bit | 相同 |
+
+- **管線級數**：Peano 對 AIE2P 的排程模型（[指令週期](instruction-cycles.html)）把整數與 bfloat16 的 VMAC 寫成：來源運算元在第 1 週期讀、累加器輸入在第 4 週期讀、結果在第 6 週期寫。這和本手冊圖上的 E1（向量暫存器）、E4（累加器輸入進 post-add）、E6（寫回累加器）對得上。這是編譯器模型和姊妹代手冊的對照，不是 AIE2P 矽上級數的量測。
+- **未核實**：fp8、MX6、MX9、float16 乘加在 AIE2P 上是否存在。AIE2P 的 bfp16 也是多個 8-bit mantissa 共用指數，但本 Wiki 沒有來源說它和 MX9 是同一種格式；型別請以 [資料型別](datatypes.html) 為準。
+
+## 來源
+- [AM027：Functional Overview](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Functional-Overview) — AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。
+- [AM027：Scalar Registers](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Scalar-Registers) — AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。
+- [AM027：Special Registers](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Special-Registers) — AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。
+- [AM027：Vector Registers](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Vector-Registers) — AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。
+- [AM027：Mask Registers](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Mask-Registers) — AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。
+- [AM027：Accumulator Registers](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Accumulator-Registers) — AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。
+- [AM027：Instruction Fetch and Decode Unit](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Instruction-Fetch-and-Decode-Unit) — AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。
+- [AM027：Load and Store Unit](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Load-and-Store-Unit) — AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。
+- [AM027：Arithmetic Logic Unit and Scalar Functions](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Arithmetic-Logic-Unit-and-Scalar-Functions) — AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。
+- [AM027：Fixed-point Vector Unit](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Fixed-point-Vector-Unit) — AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。
+- [AM027：Fixed-Point SRS and UPS Conversions](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Fixed-Point-SRS-and-UPS-Conversions) — AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。
+- [AM027：Floating-point Vector Unit](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Floating-point-Vector-Unit) — AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。
+- [AM027：Register Move Functionality](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Register-Move-Functionality) — AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。
+- [Peano：AIE2P 累加器暫存器定義](https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PRegisterInfo.td#L403-L469) — AIE2P 的 BM／CM／DM 索引 0–4。僅靜態來源查核。
+- [Peano：AIE2P VMAC operand/bypass 排程](https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/llvm/lib/Target/AIE/aie2p/AIE2PGenSchedule.td#L9024-L9064) — VMAC 的 dst=6、acc1=4、s1=s2=1。編譯器 itinerary，不是矽上量測。
+
+## 關聯
+- [am027-overview](am027-overview.html)
+- [am027-tile](am027-tile.html)
+- [am027-memtile](am027-memtile.html)
+- [am027-system](am027-system.html)
+- [isa-registers](isa-registers.html)
+- [vliw-pipeline](vliw-pipeline.html)
+- [instruction-cycles](instruction-cycles.html)
+- [compute](compute.html)
+- [datatypes](datatypes.html)
+
+## 反向連結
+- [vliw-pipeline](vliw-pipeline.html)
+- [am027-overview](am027-overview.html)
+- [am027-tile](am027-tile.html)
+- [am027-memtile](am027-memtile.html)
+- [am027-system](am027-system.html)
+
+
+---
+
+# AM027 Memory tile：512 KB、12 條 DMA 通道、鄰居存取、padding 與壓縮
+
+分類：架構 · 官方手冊摘要（AIE-ML v2，非 AIE2P） · 來源快照 2026-09-12
+
+AIE-ML v2 memory tile 的記憶體介面、DMA 功能、東西鄰居的位址與 lock 編號範圍，以及 stream switch 和 lock module。
+
+> 公開資料與固定版本原始碼；未執行 NPU 實測。
+
+## 範圍
+
+本頁是 AMD 手冊 AM027（Versal AIE-ML v2，編譯器代號 AIE2PS）的中文摘要，rev 1.1，2026-11-12 讀取。XDNA 2 用的是 AIE2P，沒有公開的專屬架構手冊；本頁的數字除非在「和 XDNA 2 的對照」一節另外寫明，都不能直接當成 AIE2P 的規格。
+
+[Memory Tile Overview](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Memory-Tile-Overview-and-Features)：memory tile 像一顆沒有核心與程式記憶體的 tile，換成較大的 512 KB 資料記憶體與 DMA，目的是提高資料局部性與頻寬、少用 PL 的記憶體。它的功能區塊（記憶體、DMA、lock、stream switch、AXI4 switch、控制與 debug／trace、事件）和 tile 相同或很接近。
+
+## 記憶體與存取介面
+
+[Memory Tile Memory](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Memory-Tile-Memory)：512 KB 分成 8 個 bank，各 64 KB（256-bit × 2K word），全部有 ECC 與 scrubbing。Bank 以 256-bit 為單位交錯：連續的 256-bit 存取落在不同 bank，8 個 bank 輪完（每 256 bytes）再繞回。
+
+每個 bank 有 10 個讀取介面與 10 個寫入介面：
+
+| 介面 | 數量 |
+|---|---|
+| Memory-mapped AXI4（含 control packet） | 1 |
+| 左邊 memory tile 的 DMA 通道 | 1 |
+| 本地 DMA 通道 0–5 | 6 |
+| 右邊 memory tile 的 DMA 通道 | 1 |
+| ECC scrubber（寫入側另含清零） | 1 |
+
+清單裡沒有 compute tile 的核心：核心不能直接 load／store memory tile 的記憶體，只能透過 DMA 與 stream。
+
+## DMA：12 條通道
+
+[Memory Tile DMA](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Memory-Tile-DMA)：6 條 S2MM、6 條 MM2S，各自獨立，都是 64-bit stream、256-bit 記憶體介面，共用 48 個 buffer descriptor。每條通道有自己的 task queue，完成工作時可發出 task-complete-token，支援 task repeat-count。相較於 tile DMA 多了：
+
+- 5D 位址產生（含 iteration-offset）。
+- 依封包 header 做亂序 BD 處理；S2MM 可設成依序或亂序模式，支援 Finish on `TLAST`。
+- MM2S 壓縮零值、S2MM 解壓縮。
+- 在 BD 呼叫之間保留遞增的位址 offset；MM2S 可抑制 `TLAST`。
+
+通道 0–3 還能存取東西兩側 memory tile 的記憶體與 lock，通道 4–5 只能碰本地的。12 條通道用同一套位址與 lock 編號：
+
+| 區域 | 位址範圍 | Lock 編號 | 限制 |
+|---|---|---|---|
+| 西鄰 | `0x0_0000`–`0x7_FFFF` | 0–63 | 只有通道 0–3 |
+| 本地 | `0x8_0000`–`0xF_FFFF` | 64–127 | |
+| 東鄰 | `0x10_0000`–`0x17_FFFF` | 128–191 | 只有通道 0–3 |
+
+位址或 lock 請求超出該通道可達範圍時，通道會停住，要 reset 通道才能繼續。
+
+## Constant padding
+
+MM2S 可以在 stream 資料裡插入常數：每條 MM2S 有一個 32-bit 暫存器存放要插入的值。用途有兩種：
+
+- **演算法 padding**：在有效資料邊緣補出周圍的資料（例如卷積的邊界）。
+- **粒度 padding**：kernel 以 16 個 channel 為單位運算，而某層有 24 個 channel 時，由 MM2S 把 channel 維度補到 32。
+
+Padding 綁在 4D 位址產生上：較低的三個維度各有「之前」與「之後」兩個 padding 欄位，加在該維度的 wrap 之外。
+
+## Lock 與 stream switch
+
+[Locks Module and Stream Switch](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Memory-Tile-Locks-Module-and-Stream-Switch)：
+
+- **Lock**：64 把 semaphore lock，每把 6-bit 無號狀態，和 tile 的 lock 相同。本地 DMA 通道、東西鄰居的通道 0–3、memory-mapped AXI4 都能存取。
+- **Stream switch**：和 tile 的設計相同，17 個 manager 埠、18 個 subordinate 埠，但沒有東西向的 stream 埠。北、南與 DMA 埠可跑滿 64-bit／週期；trace 與 control 埠是 32-bit，經轉接器。
+- **其他**：事件、事件動作、event broadcast 與 combo event；task-complete-token 邏輯；每顆 1 MB 的設定位址空間；stream control packet；6 個效能計數器與 64-bit tile timer。
+
+## 和 XDNA 2 的對照
+
+- **相同（有 AIE2P 來源）**：6+6 通道、48 個 BD、64 把本地 lock、西／本地／東的位址基底 0／`0x80000`／`0x100000` 與 192 個 lock 編號，見 [DMA／MMIO 規格](dma-registers.html) 與 [Tile 微架構](tile-microarchitecture.html)；沒有東西向 stream 埠，見 [Interconnect](interconnect.html)。
+- **本機用法**：把一份資料放在 memory tile、切給同一欄的多顆核心並重播多次，見 [資料上 tile](data-ingress.html)。
+- **未核實**：AIE2P 的 memory tile DMA 是否有壓縮、constant padding、亂序模式與 5D 位址；stream 是否 64-bit。mlir-aie 模型對 mem tile 回報的是 4 個位址維度。
+
+## 來源
+- [AM027：AIE-ML v2 Memory Tile Overview and Features](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Memory-Tile-Overview-and-Features) — AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。
+- [AM027：AIE-ML v2 Memory Tile Memory](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Memory-Tile-Memory) — AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。
+- [AM027：AIE-ML v2 Memory Tile DMA](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Memory-Tile-DMA) — AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。
+- [AM027：AIE-ML v2 Memory Tile Locks Module and Stream Switch](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Memory-Tile-Locks-Module-and-Stream-Switch) — AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。
+
+## 關聯
+- [am027-overview](am027-overview.html)
+- [am027-tile](am027-tile.html)
+- [am027-core](am027-core.html)
+- [am027-system](am027-system.html)
+- [dma](dma.html)
+- [dma-registers](dma-registers.html)
+- [data-ingress](data-ingress.html)
+- [memory](memory.html)
+
+## 反向連結
+- [data-ingress](data-ingress.html)
+- [dma-registers](dma-registers.html)
+- [am027-overview](am027-overview.html)
+- [am027-tile](am027-tile.html)
+- [am027-core](am027-core.html)
+- [am027-system](am027-system.html)
+
+
+---
+
+# AM027 介面、開機與觀測：array interface、中斷、設定流程、debug、trace 與事件
+
+分類：架構 · 官方手冊摘要（AIE-ML v2，非 AIE2P） · 來源快照 2026-09-12
+
+AIE-ML v2 陣列和外界的介面、開機與重設步驟，以及觀測手段：memory-mapped debug、兩種 trace 模式、效能計數器、事件動作與廣播。
+
+> 公開資料與固定版本原始碼；未執行 NPU 實測。
+
+## 範圍
+
+本頁是 AMD 手冊 AM027（Versal AIE-ML v2，編譯器代號 AIE2PS）的中文摘要，rev 1.1，2026-11-12 讀取。XDNA 2 用的是 AIE2P，沒有公開的專屬架構手冊；本頁的數字除非在「和 XDNA 2 的對照」一節另外寫明，都不能直接當成 AIE2P 的規格。
+
+這一頁涵蓋手冊裡和 Versal 平台綁得最緊的章節。Ryzen AI 上的 XDNA 2 沒有 PL、NoC 與 PMC，所以 array interface、中斷與開機流程主要用來理解概念，不能當成 NPU 的操作步驟。
+
+## Array interface tile
+
+[Array Interface Architecture](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Array-Interface-Architecture)：每一欄對應一顆 interface tile，排成一列，把 memory-mapped AXI4 與 stream 水平傳遞、再往上送進該欄。[Array Interface](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Array-Interface) 列出它的模組：
+
+| 模組 | 功能 |
+|---|---|
+| AXI-MM switch | 32-bit；西向送往較低欄、東向送往較高欄、北向送進同欄的 memory tile 與 tile；每顆 1 MB 位址空間。支援隔離：從東西進來的交易可被擋下 |
+| Stream switch | 64-bit；東、西、北向接陣列，南向接 PL 或 DMA；另接 control module、trace、control response（各 32-bit） |
+| PL stream 介面 | 每條 64-bit，可設成 32 或 64-bit，或兩條合成 128-bit；`TLAST=1` 時 `TKEEP` 只支援 32-bit 粒度且有效 word 必須連續 |
+| NoC 介面 | DMA（2 S2MM＋2 MM2S）、16 把 lock、NMU 介面、第二層中斷處理 |
+| DMA | S2MM 把 stream 變成 AXI4 寫入、MM2S 向 NoC 讀取後送上 stream；burst 最多 512 bytes；有 task queue 與 task-complete-token |
+| NMU／NSU | NMU 是 128-bit、48-bit 位址的 AXI4 manager（DMA 與 control 用）；NSU 接收外部的設定、狀態與 debug 交易 |
+| Control module | 設定應用、在執行期編排運算與資料搬移、和外部主機同步；有 AXI4 manager 與 subordinate 埠，並處理 task-complete-token 與 control packet |
+| 控制、debug、trace 單元 | 6 個效能計數器；事件數增加到 256 |
+| NPI 與 PLL | NPI 用來設定 PLL、全域 reset 與安全位元；陣列有一個專用 PLL |
+| 活動監測 | 40-bit 計數器，累計所有 tile 在一段時間內執行的向量指令數，經兩個 32-bit NPI 暫存器讀出，供電源管理使用 |
+
+| 連線 | 條數 | 時脈 | 每條頻寬 | 合計 |
+|---|---|---|---|---|
+| PL → array interface | 8 | PL 500 MHz | 4 GB/s | 32 GB/s |
+| Array interface → PL | 6 | PL 500 MHz | 4 GB/s | 24 GB/s |
+| Array interface → stream switch | 8 | 1 GHz | 8 GB/s | 64 GB/s |
+| Stream switch → array interface | 6 | 1 GHz | 8 GB/s | 48 GB/s |
+| 相鄰 stream switch 之間（東西向） | 4 | 1 GHz | 8 GB/s | 32 GB/s |
+
+## 中斷
+
+[Interrupt Handling](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Interrupt-Handling)：硬體錯誤分三類，都是固定接線、不能設定：不可更正（2-bit ECC 與同位錯誤）、可更正（1-bit ECC）、AXI 錯誤（`SLVERR`／`DECERR`）。同一類的事件先在 tile 內 OR 起來，再沿著欄 OR 起來，由 interface tile 鎖存、遮罩、清除並產生中斷。
+
+一般事件的中斷是兩層：每欄的第一層處理器捕捉事件，交給第二層；第二層可驅動四條中斷線中的任一條，最後接到 NPI 中斷 4–7，送往 PMC、APU 或 RPU。只有 NPI 中斷 4 可用 IMR／IER／IDR 暫存器設定，5–7 不受這些暫存器控制。
+
+## 設定、開機與重設
+
+[Array Configuration](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Array-Configuration)：任何 memory-mapped AXI4 manager（例如 PS、PMC）都能經 NoC 設定陣列內的暫存器；全域暫存器（PLL、全域 reset、安全位元）走 NPI。
+
+[Boot Sequence](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Boot-Sequence) 的順序：
+
+1. 欄時脈預設關閉。
+2. 開電並解除 power-on-reset；PLL 以預設速度運轉。PMC 與 NoC 必須先就緒。
+3. PMC 經 NPI 寫入全域暫存器（例如 PLL 設定），設定映像來自 flash。
+4. 開啟 PLL，等它鎖定。
+5. 開啟所有欄時脈，拉起欄 reset，等若干週期後放開。
+6. 設定 control module。
+7. 把陣列切成一個或多個獨立分區，每個分區是整數個欄；隔離預設在所有 tile 開啟，分區內部邊界要關掉。
+8. 經 memory-mapped AXI4 寫入程式記憶體、stream switch、DMA、事件與 trace 設定。
+
+各記憶體有硬體清零邏輯，以一個 1-bit 暫存器啟動並回報完成（control module 的是 3-bit）。
+
+[Array Reconfiguration](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Array-Reconfiguration)：設定內容是 bootgen 產生的 PDI。Reset 有七種，範圍從整個陣列（power-on、system、INITSTATE、array soft reset）到單欄、單一核心、interface tile。欄 reset 加上 interface tile reset 可以只重設並重新載入一個子陣列，不影響相鄰的子陣列。
+
+## Debug、trace、效能計數器與事件
+
+[Debug](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Debug)：除錯全部走 memory-mapped AXI4：程式與資料記憶體、核心暫存器、DMA、lock、stream switch、中斷點、事件與計數器都是 memory-mapped，PS、PL、PMC 都能讀寫。主機上的除錯器經 JTAG 或 HSDP 連到 PMC。
+
+[Trace](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Trace)：tile 內有兩個 trace unit（core module 與 memory module），interface tile 也有一個，輸出都接到 stream switch。
+
+| 模式 | 哪些單元有 | 記錄什麼 |
+|---|---|---|
+| Event-time | 全部 | 逐週期追蹤最多 8 個事件，事件狀態改變時產生一個 frame |
+| Event-PC | 只有 core module | 8 個事件中任一成立的週期，記錄當時的 PC 與 8 個事件的值 |
+
+Trace 以 packet-switched 封包送出，每個封包 8 個 32-bit word（1 個 header、7 個資料），可送到 tile 的本地記憶體、經 interface DMA 送到外部 DDR、或送到 PL。以 `trace_control0/1` 啟停，`trace_event0/1` 選擇事件。
+
+[Profiling](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Profiling-Performance-Counters)：core module 與 memory module 各 4 個效能計數器，memory tile 與 array interface 各 6 個；可計事件發生次數，或兩個事件之間的週期數。
+
+[Events](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Events)：core module 與 memory module 各有一組事件邏輯。事件本身沒有動作，要在動作暫存器裡填 7-bit 事件編號才會觸發，例如：啟用、停用或 reset 核心；debug halt、resume、單步；error halt；重新同步 timer；啟停計數器；啟停 trace；產生 broadcast 事件；驅動 combo 事件；ECC scrubbing。
+
+Broadcast 把事件傳給相鄰模組，為避免迴圈，方向規則如下，每個方向 16 條：
+
+| 來源 | 送往 |
+|---|---|
+| 內部、東、北、南 | 西 |
+| 內部、西、北、南 | 東 |
+| 內部、南 | 北 |
+| 內部、北 | 南 |
+
+Core module 的東向 broadcast 在 tile 內部接到 memory module 的西向，不會離開 tile。
+
+## 和 XDNA 2 的對照
+
+- **不同**：XDNA 2 沒有 PL、NoC、PMC、NPI 與 bootgen PDI。[Linux 驅動文件](https://docs.kernel.org/accel/amdxdna/amdnpu.html) 描述的是 PCIe 裝置、由韌體管理、以欄為單位切成分區並綁到工作 context；本手冊的開機步驟不適用。
+- **相近（有 AIE2P 來源）**：事件分類（memory、stream、cascade、lock stall 等）與 trace 的設定欄位（8 個 slot）見 [Events](events-debug.html)。那一頁引用的 aie-rt AIE2P 表把計數器數量列為 core 4、memory module 2、mem tile 4，和本手冊的 4／4／6 不同。
+- **本機做過的**：event-time 模式的 trace 在這台 NPU 上錄過，結果見 [資料上 tile](data-ingress.html)；event-PC 模式沒有錄過。
+- **未核實**：AIE2P 是否有 control module 與活動監測計數器。
+
+## 來源
+- [AM027：AIE-ML v2 Debug](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Debug) — AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。
+- [AM027：Trace](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Trace) — AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。
+- [AM027：Profiling (Performance Counters)](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Profiling-Performance-Counters) — AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。
+- [AM027：AIE-ML v2 Events](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Events) — AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。
+- [AM027：AIE-ML v2 Array Interface Architecture](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Array-Interface-Architecture) — AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。
+- [AM027：AIE-ML v2 Array Interface](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Array-Interface) — AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。
+- [AM027：Interrupt Handling](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Interrupt-Handling) — AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。
+- [AM027：AIE-ML v2 Array Configuration](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Array-Configuration) — AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。
+- [AM027：AIE-ML v2 Boot Sequence](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Boot-Sequence) — AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。
+- [AM027：AIE-ML v2 Array Reconfiguration](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Array-Reconfiguration) — AMD 官方手冊 AM027 rev 1.1（2025-10-23），2026-11-12 讀取全文。Versal AIE-ML v2（AIE2PS），不是 AIE2P 專屬文件。
+- [Linux kernel：AMD NPU（amdxdna）](https://docs.kernel.org/accel/amdxdna/amdnpu.html) — AMD 撰寫的驅動文件；XDNA 的韌體管理與分區。
+
+## 關聯
+- [am027-overview](am027-overview.html)
+- [am027-tile](am027-tile.html)
+- [am027-core](am027-core.html)
+- [am027-memtile](am027-memtile.html)
+- [events-debug](events-debug.html)
+- [debug](debug.html)
+- [runtime](runtime.html)
+- [data-ingress](data-ingress.html)
+
+## 反向連結
+- [events-debug](events-debug.html)
+- [am027-overview](am027-overview.html)
+- [am027-tile](am027-tile.html)
+- [am027-core](am027-core.html)
+- [am027-memtile](am027-memtile.html)
 
 
 ---
@@ -3556,7 +4442,17 @@ python3 programming_examples/basic/vector_scalar_add/vector_scalar_add.py \
 
 ## AIE2P 與 AIE2PS 手冊混用風險
 
-[版本header](https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/clang/lib/Headers/aie2p/aie2p_version.h#L14-L20)鎖定arch21。AMD [AM027 portal](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Architecture)是Versal AIE-ML v2；本次抓取僅得到loading頁，未宣稱讀完完整手冊。即使拿到AM027，也須逐項比對AIE2P，而不是搬入FP8/MX6、accumulator數或pipeline圖。
+[版本header](https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/clang/lib/Headers/aie2p/aie2p_version.h#L14-L20)鎖定arch21。AMD [AM027 portal](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Architecture)是Versal AIE-ML v2；2026-09-12 抓取僅得到loading頁；2026-11-12 由文件站取得 rev 1.1 全部 60 節的文字並讀完，27 張圖只看了其中幾張；摘要分成五頁，從 [AM027 導讀](am027-overview.html) 進入。即使拿到AM027，也須逐項比對AIE2P，而不是搬入FP8/MX6、accumulator數或pipeline圖。
+
+三個名稱容易混用：
+
+| 名稱 | 編譯器代號 | 用在哪 | 官方架構手冊 |
+|---|---|---|---|
+| AIE-ML | AIE2 | Versal、XDNA 1（Phoenix／Hawk Point，`npu1`） | [AM020](https://docs.amd.com/r/en-US/am020-versal-aie-ml) |
+| AIE2P | AIE2P（arch 21） | XDNA 2（Strix／Strix Halo／Krackan，`npu2`） | 沒有公開的專屬手冊 |
+| AIE-ML v2 | AIE2PS（arch 22） | Versal AI Edge Gen 2 | [AM027](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2) |
+
+AMD 寫的 [Linux 驅動文件](https://docs.kernel.org/accel/amdxdna/amdnpu.html)描述 Strix Point 為 4x8、L2 記憶體共 4096 KB，架構細節指向 AM020。因此 AM020／AM027 可用來對照共通結構（記憶體鄰接、memory tile、trace 模式），頻寬、load 寬度、stream 寬度等數字不可直接搬到 AIE2P。
 
 具名外部研究 [Daniel Estévez的Ryzen AI 7 350案例](https://destevez.net/2026/05/getting-peak-tops-on-a-ryzen-ai-7-350-npu/)在更新中指出aie2p/aie2ps與accumulator數差別，但後文仍部分沿用AIE-MLv2資料。本Wiki把它當閱讀assembly／觀測方法的案例，不將其1.8GHz、圖中pipeline或TOPS移植成gfx1151平台保證。附帶的公開assembly圖同样是他人案例，不是本機生成或量測。
 
@@ -3582,6 +4478,9 @@ python3 programming_examples/basic/vector_scalar_add/vector_scalar_add.py \
 - [check函式](https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/dma/xaie_dma_aie2p.c#L27-L50) — 固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。
 - [版本header](https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/clang/lib/Headers/aie2p/aie2p_version.h#L14-L20) — 固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。
 - [AM027 portal](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Architecture) — 固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。
+- [AM020](https://docs.amd.com/r/en-US/am020-versal-aie-ml) — 固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。
+- [AM027](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2) — 固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。
+- [Linux 驅動文件](https://docs.kernel.org/accel/amdxdna/amdnpu.html) — 固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。
 - [Daniel Estévez的Ryzen AI 7 350案例](https://destevez.net/2026/05/getting-peak-tops-on-a-ryzen-ai-7-350-npu/) — 固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。
 
 ## 關聯
@@ -3591,13 +4490,17 @@ python3 programming_examples/basic/vector_scalar_add/vector_scalar_add.py \
 - [interconnect](interconnect.html)
 - [dma-registers](dma-registers.html)
 - [validation](validation.html)
+- [am027-overview](am027-overview.html)
 
 ## 反向連結
 - [spec-index](spec-index.html)
+- [system](system.html)
 - [tile-microarchitecture](tile-microarchitecture.html)
 - [interconnect](interconnect.html)
+- [data-ingress](data-ingress.html)
 - [dma-registers](dma-registers.html)
 - [events-debug](events-debug.html)
+- [am027-overview](am027-overview.html)
 
 
 ---

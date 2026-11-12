@@ -62,6 +62,8 @@ program 放核心程式；data 工作區容納執行時資料。不可把兩者�
 - 同時檢查程式容量、最大連續 data run、stack 完整性與向量對齊。
 - 不照抄「L1 固定一個 cycle」；仲裁、bank 映射細節、實際衝突率與存取延遲仍未量測。
 
+核心可見的四塊記憶體在官方手冊的列舉（自己、北、南、西），以及資料實際怎麼被 DMA 寫進這 64 KiB，見 [資料上 tile](data-ingress.md)。
+
 ## 來源
 - [AIETargetModel：核心容量與地址](https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/include/aie/Dialect/AIE/IR/AIETargetModel.h#L749-L790) — 64 KiB data、16 KiB program、地址視窗、256-bit load/store bus 及 cascade 模型；非存取延遲量測。 僅靜態來源查核。
 - [AIETargetModel：mem tile 容量與 banks](https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/include/aie/Dialect/AIE/IR/AIETargetModel.h#L830-L834) — 512 KiB mem tile；模型回傳 mem tile 八 banks、其他 tile 四 banks。 僅靜態來源查核。
@@ -80,16 +82,19 @@ program 放核心程式；data 工作區容納執行時資料。不可把兩者�
 - [kv-cache](kv-cache.md)
 - [gemm](gemm.md)
 - [debug](debug.md)
+- [data-ingress](data-ingress.md)
 
 ## 反向連結
 - [system](system.md)
 - [tile-microarchitecture](tile-microarchitecture.md)
 - [compute](compute.md)
 - [dma](dma.md)
+- [data-ingress](data-ingress.md)
 - [synchronization](synchronization.md)
 - [datatypes](datatypes.md)
 - [iron](iron.md)
 - [runtime](runtime.md)
 - [gemm](gemm.md)
 - [kv-cache](kv-cache.md)
+- [am027-memtile](am027-memtile.md)
 - [glossary](glossary.md)

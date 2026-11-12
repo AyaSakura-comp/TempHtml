@@ -41,11 +41,17 @@
 
 這是地址視窗，不是四份新分配的64KiB私有 SRAM。Mem tile 的相鄰視窗則為 west=0、self=0x80000、east=0x100000，見 [getMemLocalBaseAddress](https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/lib/Dialect/AIE/IR/AIETargetModel.cpp#L1579-L1603)。共用同一 buffer 必須協調 ownership；位址可見不等於 cache coherence 或 free bandwidth。
 
+**官方手冊對照（2026-11-12 取得原文）：**[AM027 Tile Architecture](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Tile-Architecture)（AIE-ML v2，rev 1.1，2025-10-23）寫明每顆核心 “interface with up to four distinct memory modules”：its own local memory module、north、south、west；陣列邊緣的核心少一到兩塊。[AM020](https://docs.amd.com/r/en-US/am020-versal-aie-ml)（AIE-ML，rev 1.5，2026-02-18）同一節的列舉相同。兩本另有一句 “can access memory modules in all four directions as one contiguous block”：這裡的四個方向是四個位址視窗，東視窗就是自己，不可讀成能存取東鄰 tile。AM027 的 Memory Tile DMA 一節列 West `0x0_0000–0x7_FFFF`、Local `0x8_0000–0xF_FFFF`、East `0x10_0000–0x17_FFFF`，只有 channel 0–3 可達左右鄰居，與上列模型值一致；memory tile 的存取介面清單裡沒有 compute 核心。
+
+這兩本是 Versal 的前一代與姊妹代手冊，不是 AIE2P 專屬文件。AIE2P 專屬的對應是 [aie-rt ELF loader](https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/core/xaie_elfloader.c#L126-L202)：位址除以 64 KiB 得 4／5／6／7，對應南／西／北／自己（AIE2P 的 `IsCheckerBoard=0`）。核心直接讀鄰居 SRAM 在本機沒有實測；資料實際怎麼進 tile 見 [資料上 tile](data-ingress.md)。
+
 ## Allocator bank 與 event bank 的口徑差異
 
 [模型 getNumBanks](https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/include/aie/Dialect/AIE/IR/AIETargetModel.h#L830-L835)給 core=4、mem=8；[allocator](https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/lib/Dialect/AIE/Transforms/AIEAssignBuffers.cpp#L983-L1003)以 memory size 除以此值形成配置區間。因此得到 core 的16KiB區間、mem的64KiB區間，是**該配置模型的算術推導**。
 
 但 AIE2P runtime 的 [core-memory conflict events](https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/events/xaie_events_aie2p.h#L235-L255)列 `DM_BANK_0..7`，[mem-tile events](https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/events/xaie_events_aie2p.h#L527-L543)列 `DM_BANK_0..15`。不能說 silicon 只有4／8 banks，也不能僅憑event名稱就證明固定二對一物理配對、單埠/雙埠或 interleaving bit。這裡登錄的是**配置分區4/8，事件命名8/16**，物理映射仍待同代手冊或實驗核實。
+
+AM027 的 Memory Module 一節對姊妹代給了解釋：硬體是 8 個單埠 bank，程式視角每兩個交錯成一個，共 4 個 512-bit bank。方向與「配置分區 4、事件命名 8」相同，但那是 AIE-ML v2 的敘述，AIE2P 的實體映射仍沒有同代文件。
 
 ## SRAM 與 MMIO 是不同位址命名空間
 
@@ -66,6 +72,9 @@ GEMM double buffering 要同時記帳 A/B/C、stack、靜態data、bank配置與
 - [地址基底](https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/include/aie/Dialect/AIE/IR/AIETargetModel.h#L743-L756) — 固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。
 - [鄰接函式](https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/lib/Dialect/AIE/IR/AIETargetModel.cpp#L755-L824) — 固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。
 - [getMemLocalBaseAddress](https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/lib/Dialect/AIE/IR/AIETargetModel.cpp#L1579-L1603) — 固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。
+- [AM027 Tile Architecture](https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Tile-Architecture) — 固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。
+- [AM020](https://docs.amd.com/r/en-US/am020-versal-aie-ml) — 固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。
+- [aie-rt ELF loader](https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/core/xaie_elfloader.c#L126-L202) — 固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。
 - [模型 getNumBanks](https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/include/aie/Dialect/AIE/IR/AIETargetModel.h#L830-L835) — 固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。
 - [allocator](https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/lib/Dialect/AIE/Transforms/AIEAssignBuffers.cpp#L983-L1003) — 固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。
 - [core-memory conflict events](https://github.com/Xilinx/aie-rt/blob/8849e208bdcc533b20a0ed3f95c1ce961dee9c3a/driver/src/events/xaie_events_aie2p.h#L235-L255) — 固定原始碼或具名公開文件；來源層級見正文，不是本機硬體量測。
@@ -81,9 +90,15 @@ GEMM double buffering 要同時記帳 A/B/C、stack、靜態data、bank配置與
 - [vliw-pipeline](vliw-pipeline.md)
 - [interconnect](interconnect.md)
 - [spec-gaps](spec-gaps.md)
+- [data-ingress](data-ingress.md)
+- [am027-tile](am027-tile.md)
 
 ## 反向連結
 - [spec-index](spec-index.md)
 - [interconnect](interconnect.md)
+- [data-ingress](data-ingress.md)
 - [dma-registers](dma-registers.md)
+- [am027-overview](am027-overview.md)
+- [am027-tile](am027-tile.md)
+- [am027-memtile](am027-memtile.md)
 - [spec-gaps](spec-gaps.md)

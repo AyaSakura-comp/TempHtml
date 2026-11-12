@@ -46,6 +46,8 @@
 
 Trace buffer容量、packet輸出、共享DMA與讀回本身可能影響觀測。事件配置需透過正確runtime/platform權限；本Wiki只給來源與解讀，不要求使用者直接寫debug registers。
 
+AM027 的 Trace 一節（姊妹代）列出 core module 有 event-time 與 event-PC 兩種模式，memory module、memory tile 與 shim 只有 event-time；每個 trace unit 追蹤最多八個事件，封包為 8×32 bits。event-time 逐週期記錄事件狀態變化，event-PC 在事件成立的週期記錄 PC。兩者都不是逐指令、逐管線級的波形。本機實際錄到的事件 trace 與讀法見 [資料上 tile](data-ingress.md)。
+
 ## 建議的驗證紀錄格式
 
 ```text
@@ -75,8 +77,12 @@ DMA_bytes / completion_boundary / stalls / trace_overhead
 - [dma-registers](dma-registers.md)
 - [debug](debug.md)
 - [spec-gaps](spec-gaps.md)
+- [data-ingress](data-ingress.md)
+- [am027-system](am027-system.md)
 
 ## 反向連結
 - [spec-index](spec-index.md)
 - [interconnect](interconnect.md)
+- [data-ingress](data-ingress.md)
 - [dma-registers](dma-registers.md)
+- [am027-system](am027-system.md)
