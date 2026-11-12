@@ -1,6 +1,6 @@
 # AM027 Memory tile：512 KB、12 條 DMA 通道、鄰居存取、padding 與壓縮
 
-分類：架構 · 官方手冊摘要（AIE-ML v2，非 AIE2P） · 來源快照 2026-09-12
+分類：架構 · 官方手冊摘要（AIE-ML v2，非 AIE2P） · 來源快照 2026-11-12
 
 AIE-ML v2 memory tile 的記憶體介面、DMA 功能、東西鄰居的位址與 lock 編號範圍，以及 stream switch 和 lock module。
 

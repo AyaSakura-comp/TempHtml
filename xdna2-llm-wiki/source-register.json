@@ -1674,7 +1674,7 @@
   {
     "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2",
     "label": "AM027：Versal AIE-ML v2 Architecture Manual",
-    "retrieved": "2026-09-12",
+    "retrieved": "2026-11-12",
     "articles": [
       "data-ingress",
       "spec-gaps"
@@ -1687,7 +1687,7 @@
   {
     "url": "https://docs.kernel.org/accel/amdxdna/amdnpu.html",
     "label": "Linux kernel：AMD NPU（amdxdna）",
-    "retrieved": "2026-09-12",
+    "retrieved": "2026-11-12",
     "articles": [
       "data-ingress",
       "am027-overview",
@@ -1704,7 +1704,7 @@
   {
     "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/include/aie/Dialect/AIE/IR/AIEOps.td#L1500-L1611",
     "label": "AIE LockOp／UseLockOp：鎖語意",
-    "retrieved": "2026-09-12",
+    "retrieved": "2026-11-12",
     "articles": [
       "data-ingress",
       "synchronization"
@@ -1717,7 +1717,7 @@
   {
     "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/lib/Dialect/AIE/IR/AIETargetModel.cpp#L1554-L1577",
     "label": "AIETargetModel：lock 編號視窗",
-    "retrieved": "2026-09-12",
+    "retrieved": "2026-11-12",
     "articles": [
       "data-ingress",
       "dma-registers",
@@ -1731,7 +1731,7 @@
   {
     "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_guide/section-2/section-2a/README.md#L258-L298",
     "label": "ObjectFifo 文件：深度與重疊",
-    "retrieved": "2026-09-12",
+    "retrieved": "2026-11-12",
     "articles": [
       "data-ingress",
       "synchronization"
@@ -1744,7 +1744,7 @@
   {
     "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_guide/section-2/section-2d/README.md#L28-L36",
     "label": "Runtime sequence 文件：fill／drain",
-    "retrieved": "2026-09-12",
+    "retrieved": "2026-11-12",
     "articles": [
       "data-ingress"
     ],
@@ -1755,7 +1755,7 @@
   {
     "url": "https://github.com/Xilinx/mlir-aie/blob/0ed8e7e477fd9094acee8dada7ab81604a7fb07a/programming_guide/section-4/section-4b/README.md#L30-L72",
     "label": "Trace 文件：enable_trace 與解析",
-    "retrieved": "2026-09-12",
+    "retrieved": "2026-11-12",
     "articles": [
       "data-ingress"
     ],
@@ -1766,7 +1766,7 @@
   {
     "url": "https://github.com/Xilinx/llvm-aie/blob/386ca5c6634a84bb224b7248e79df8edabf0722f/clang/lib/Headers/aie2p/aie2p_locks.h#L14-L61",
     "label": "Peano AIE2P lock header",
-    "retrieved": "2026-09-12",
+    "retrieved": "2026-11-12",
     "articles": [
       "data-ingress",
       "synchronization"
@@ -2939,7 +2939,7 @@
   {
     "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Introduction-to-AI-Engines-and-AIE-ML-v2",
     "label": "AM027：Introduction to AI Engines and AIE-ML v2",
-    "retrieved": "2026-09-12",
+    "retrieved": "2026-11-12",
     "articles": [
       "am027-overview"
     ],
@@ -2950,7 +2950,7 @@
   {
     "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Tile-Features",
     "label": "AM027：AIE-ML v2 Tile Features",
-    "retrieved": "2026-09-12",
+    "retrieved": "2026-11-12",
     "articles": [
       "am027-overview"
     ],
@@ -2961,7 +2961,7 @@
   {
     "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Memory-Tile-Features",
     "label": "AM027：AIE-ML v2 Memory Tile Features",
-    "retrieved": "2026-09-12",
+    "retrieved": "2026-11-12",
     "articles": [
       "am027-overview"
     ],
@@ -2972,7 +2972,7 @@
   {
     "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Array-Interface-to-NoC-and-PL-Resources",
     "label": "AM027：AIE-ML v2 Array Interface to NoC and PL Resources",
-    "retrieved": "2026-09-12",
+    "retrieved": "2026-11-12",
     "articles": [
       "am027-overview"
     ],
@@ -2983,7 +2983,7 @@
   {
     "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Array-Overview",
     "label": "AM027：AIE-ML v2 Array Overview",
-    "retrieved": "2026-09-12",
+    "retrieved": "2026-11-12",
     "articles": [
       "am027-overview"
     ],
@@ -2994,7 +2994,7 @@
   {
     "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Array-Hierarchy",
     "label": "AM027：AIE-ML v2 Array Hierarchy",
-    "retrieved": "2026-09-12",
+    "retrieved": "2026-11-12",
     "articles": [
       "am027-overview"
     ],
@@ -3005,7 +3005,7 @@
   {
     "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Performance",
     "label": "AM027：Performance",
-    "retrieved": "2026-09-12",
+    "retrieved": "2026-11-12",
     "articles": [
       "am027-overview"
     ],
@@ -3016,7 +3016,7 @@
   {
     "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Clocking-Structure",
     "label": "AM027：Clocking Structure",
-    "retrieved": "2026-09-12",
+    "retrieved": "2026-11-12",
     "articles": [
       "am027-overview"
     ],
@@ -3027,7 +3027,7 @@
   {
     "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Memory-Error-Handling",
     "label": "AM027：Memory Error Handling",
-    "retrieved": "2026-09-12",
+    "retrieved": "2026-11-12",
     "articles": [
       "am027-overview"
     ],
@@ -3038,7 +3038,7 @@
   {
     "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Privileged-Register-Access-Control",
     "label": "AM027：Privileged Register Access Control",
-    "retrieved": "2026-09-12",
+    "retrieved": "2026-11-12",
     "articles": [
       "am027-overview"
     ],
@@ -3049,7 +3049,7 @@
   {
     "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Comparison-of-AIE-Generations",
     "label": "AM027：Comparison of AIE Generations",
-    "retrieved": "2026-09-12",
+    "retrieved": "2026-11-12",
     "articles": [
       "am027-overview"
     ],
@@ -3060,7 +3060,7 @@
   {
     "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Revision-History",
     "label": "AM027：Revision History",
-    "retrieved": "2026-09-12",
+    "retrieved": "2026-11-12",
     "articles": [
       "am027-overview"
     ],
@@ -3071,7 +3071,7 @@
   {
     "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Memory-Tile-Overview-and-Features",
     "label": "AM027：AIE-ML v2 Memory Tile Overview and Features",
-    "retrieved": "2026-09-12",
+    "retrieved": "2026-11-12",
     "articles": [
       "am027-overview",
       "am027-memtile"
@@ -3083,7 +3083,7 @@
   {
     "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Memory-Tile-Memory",
     "label": "AM027：AIE-ML v2 Memory Tile Memory",
-    "retrieved": "2026-09-12",
+    "retrieved": "2026-11-12",
     "articles": [
       "am027-overview",
       "am027-memtile"
@@ -3095,7 +3095,7 @@
   {
     "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Accumulator-Registers",
     "label": "AM027：Accumulator Registers",
-    "retrieved": "2026-09-12",
+    "retrieved": "2026-11-12",
     "articles": [
       "am027-overview",
       "am027-core"
@@ -3107,7 +3107,7 @@
   {
     "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Functional-Overview",
     "label": "AM027：Functional Overview",
-    "retrieved": "2026-09-12",
+    "retrieved": "2026-11-12",
     "articles": [
       "am027-overview",
       "am027-core"
@@ -3119,7 +3119,7 @@
   {
     "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Interfaces",
     "label": "AM027：AIE-ML v2 Interfaces",
-    "retrieved": "2026-09-12",
+    "retrieved": "2026-11-12",
     "articles": [
       "am027-overview",
       "am027-tile"
@@ -3131,7 +3131,7 @@
   {
     "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Memory-mapped-AXI4-Interconnect",
     "label": "AM027：Memory-mapped AXI4 Interconnect",
-    "retrieved": "2026-09-12",
+    "retrieved": "2026-11-12",
     "articles": [
       "am027-overview",
       "am027-tile"
@@ -3143,7 +3143,7 @@
   {
     "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AXI4-Stream-Interconnect",
     "label": "AM027：AXI4-Stream Interconnect",
-    "retrieved": "2026-09-12",
+    "retrieved": "2026-11-12",
     "articles": [
       "am027-tile"
     ],
@@ -3154,7 +3154,7 @@
   {
     "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Tile-Program-Memory",
     "label": "AM027：AIE-ML v2 Tile Program Memory",
-    "retrieved": "2026-09-12",
+    "retrieved": "2026-11-12",
     "articles": [
       "am027-tile"
     ],
@@ -3165,7 +3165,7 @@
   {
     "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Memory-Module",
     "label": "AM027：AIE-ML v2 Memory Module",
-    "retrieved": "2026-09-12",
+    "retrieved": "2026-11-12",
     "articles": [
       "am027-tile"
     ],
@@ -3176,7 +3176,7 @@
   {
     "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Load-and-Store-Unit",
     "label": "AM027：Load and Store Unit",
-    "retrieved": "2026-09-12",
+    "retrieved": "2026-11-12",
     "articles": [
       "am027-tile",
       "am027-core"
@@ -3188,7 +3188,7 @@
   {
     "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Register-Move-Functionality",
     "label": "AM027：Register Move Functionality",
-    "retrieved": "2026-09-12",
+    "retrieved": "2026-11-12",
     "articles": [
       "am027-tile",
       "am027-core"
@@ -3200,7 +3200,7 @@
   {
     "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Scalar-Registers",
     "label": "AM027：Scalar Registers",
-    "retrieved": "2026-09-12",
+    "retrieved": "2026-11-12",
     "articles": [
       "am027-core"
     ],
@@ -3211,7 +3211,7 @@
   {
     "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Special-Registers",
     "label": "AM027：Special Registers",
-    "retrieved": "2026-09-12",
+    "retrieved": "2026-11-12",
     "articles": [
       "am027-core"
     ],
@@ -3222,7 +3222,7 @@
   {
     "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Vector-Registers",
     "label": "AM027：Vector Registers",
-    "retrieved": "2026-09-12",
+    "retrieved": "2026-11-12",
     "articles": [
       "am027-core"
     ],
@@ -3233,7 +3233,7 @@
   {
     "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Mask-Registers",
     "label": "AM027：Mask Registers",
-    "retrieved": "2026-09-12",
+    "retrieved": "2026-11-12",
     "articles": [
       "am027-core"
     ],
@@ -3244,7 +3244,7 @@
   {
     "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Instruction-Fetch-and-Decode-Unit",
     "label": "AM027：Instruction Fetch and Decode Unit",
-    "retrieved": "2026-09-12",
+    "retrieved": "2026-11-12",
     "articles": [
       "am027-core"
     ],
@@ -3255,7 +3255,7 @@
   {
     "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Arithmetic-Logic-Unit-and-Scalar-Functions",
     "label": "AM027：Arithmetic Logic Unit and Scalar Functions",
-    "retrieved": "2026-09-12",
+    "retrieved": "2026-11-12",
     "articles": [
       "am027-core"
     ],
@@ -3266,7 +3266,7 @@
   {
     "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Fixed-point-Vector-Unit",
     "label": "AM027：Fixed-point Vector Unit",
-    "retrieved": "2026-09-12",
+    "retrieved": "2026-11-12",
     "articles": [
       "am027-core"
     ],
@@ -3277,7 +3277,7 @@
   {
     "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Fixed-Point-SRS-and-UPS-Conversions",
     "label": "AM027：Fixed-Point SRS and UPS Conversions",
-    "retrieved": "2026-09-12",
+    "retrieved": "2026-11-12",
     "articles": [
       "am027-core"
     ],
@@ -3288,7 +3288,7 @@
   {
     "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Floating-point-Vector-Unit",
     "label": "AM027：Floating-point Vector Unit",
-    "retrieved": "2026-09-12",
+    "retrieved": "2026-11-12",
     "articles": [
       "am027-core"
     ],
@@ -3299,7 +3299,7 @@
   {
     "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Memory-Tile-DMA",
     "label": "AM027：AIE-ML v2 Memory Tile DMA",
-    "retrieved": "2026-09-12",
+    "retrieved": "2026-11-12",
     "articles": [
       "am027-memtile"
     ],
@@ -3310,7 +3310,7 @@
   {
     "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Memory-Tile-Locks-Module-and-Stream-Switch",
     "label": "AM027：AIE-ML v2 Memory Tile Locks Module and Stream Switch",
-    "retrieved": "2026-09-12",
+    "retrieved": "2026-11-12",
     "articles": [
       "am027-memtile"
     ],
@@ -3321,7 +3321,7 @@
   {
     "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Debug",
     "label": "AM027：AIE-ML v2 Debug",
-    "retrieved": "2026-09-12",
+    "retrieved": "2026-11-12",
     "articles": [
       "am027-system"
     ],
@@ -3332,7 +3332,7 @@
   {
     "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Trace",
     "label": "AM027：Trace",
-    "retrieved": "2026-09-12",
+    "retrieved": "2026-11-12",
     "articles": [
       "am027-system"
     ],
@@ -3343,7 +3343,7 @@
   {
     "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Profiling-Performance-Counters",
     "label": "AM027：Profiling (Performance Counters)",
-    "retrieved": "2026-09-12",
+    "retrieved": "2026-11-12",
     "articles": [
       "am027-system"
     ],
@@ -3354,7 +3354,7 @@
   {
     "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Events",
     "label": "AM027：AIE-ML v2 Events",
-    "retrieved": "2026-09-12",
+    "retrieved": "2026-11-12",
     "articles": [
       "am027-system"
     ],
@@ -3365,7 +3365,7 @@
   {
     "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Array-Interface-Architecture",
     "label": "AM027：AIE-ML v2 Array Interface Architecture",
-    "retrieved": "2026-09-12",
+    "retrieved": "2026-11-12",
     "articles": [
       "am027-system"
     ],
@@ -3376,7 +3376,7 @@
   {
     "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Array-Interface",
     "label": "AM027：AIE-ML v2 Array Interface",
-    "retrieved": "2026-09-12",
+    "retrieved": "2026-11-12",
     "articles": [
       "am027-system"
     ],
@@ -3387,7 +3387,7 @@
   {
     "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/Interrupt-Handling",
     "label": "AM027：Interrupt Handling",
-    "retrieved": "2026-09-12",
+    "retrieved": "2026-11-12",
     "articles": [
       "am027-system"
     ],
@@ -3398,7 +3398,7 @@
   {
     "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Array-Configuration",
     "label": "AM027：AIE-ML v2 Array Configuration",
-    "retrieved": "2026-09-12",
+    "retrieved": "2026-11-12",
     "articles": [
       "am027-system"
     ],
@@ -3409,7 +3409,7 @@
   {
     "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Boot-Sequence",
     "label": "AM027：AIE-ML v2 Boot Sequence",
-    "retrieved": "2026-09-12",
+    "retrieved": "2026-11-12",
     "articles": [
       "am027-system"
     ],
@@ -3420,7 +3420,7 @@
   {
     "url": "https://docs.amd.com/r/en-US/am027-versal-aie-ml-v2/AIE-ML-v2-Array-Reconfiguration",
     "label": "AM027：AIE-ML v2 Array Reconfiguration",
-    "retrieved": "2026-09-12",
+    "retrieved": "2026-11-12",
     "articles": [
       "am027-system"
     ],

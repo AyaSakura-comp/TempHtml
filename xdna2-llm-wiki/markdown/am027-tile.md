@@ -1,6 +1,6 @@
 # AM027 Tile 架構：記憶體鄰接、stream switch、程式記憶體與 memory module
 
-分類：架構 · 官方手冊摘要（AIE-ML v2，非 AIE2P） · 來源快照 2026-09-12
+分類：架構 · 官方手冊摘要（AIE-ML v2，非 AIE2P） · 來源快照 2026-11-12
 
 AIE-ML v2 一顆 tile 的三個模組：核心看得到哪四塊記憶體、64-bit stream switch 的延遲與緩衝、介面清單、bank 仲裁、tile DMA 與 lock。
 

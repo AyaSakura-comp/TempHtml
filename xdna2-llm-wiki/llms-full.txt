@@ -1532,7 +1532,7 @@ Mem tile 較多 ND 維度與容量，使它適合作為某些 layout 轉換或�
 
 # 資料上 tile：DMA 路徑、lock 握手、雙緩衝與硬體 trace
 
-分類：架構 · 官方手冊／本機產物 · 來源快照 2026-09-12
+分類：架構 · 官方手冊／本機產物 · 來源快照 2026-11-12
 
 每顆 tile 的 SRAM 都要靠 DMA 餵資料：路徑、IRON 寫法、lock 握手、和指令排程的關係，以及這台 NPU 上錄到的事件 trace。
 
@@ -3751,7 +3751,7 @@ python3 programming_examples/basic/vector_scalar_add/vector_scalar_add.py \
 
 # AM027 導讀：AIE-ML v2 的陣列、時脈、記憶體保護與三代比較
 
-分類：架構 · 官方手冊摘要（AIE-ML v2，非 AIE2P） · 來源快照 2026-09-12
+分類：架構 · 官方手冊摘要（AIE-ML v2，非 AIE2P） · 來源快照 2026-11-12
 
 AMD 官方 AIE-ML v2 架構手冊的總覽章節：這本手冊和 XDNA 2 的關係、陣列組成、時脈目標、ECC，以及三代 AI Engine 的比較表。
 
@@ -3899,7 +3899,7 @@ AMD 官方 AIE-ML v2 架構手冊的總覽章節：這本手冊和 XDNA 2 的關
 
 # AM027 Tile 架構：記憶體鄰接、stream switch、程式記憶體與 memory module
 
-分類：架構 · 官方手冊摘要（AIE-ML v2，非 AIE2P） · 來源快照 2026-09-12
+分類：架構 · 官方手冊摘要（AIE-ML v2，非 AIE2P） · 來源快照 2026-11-12
 
 AIE-ML v2 一顆 tile 的三個模組：核心看得到哪四塊記憶體、64-bit stream switch 的延遲與緩衝、介面清單、bank 仲裁、tile DMA 與 lock。
 
@@ -4021,7 +4021,7 @@ Stall 來源：外部 AXI4 manager、lock module、stream 空或滿、資料記�
 
 # AM027 處理器架構：暫存器、load／store、純量與向量單元、六級管線
 
-分類：架構 · 官方手冊摘要（AIE-ML v2，非 AIE2P） · 來源快照 2026-09-12
+分類：架構 · 官方手冊摘要（AIE-ML v2，非 AIE2P） · 來源快照 2026-11-12
 
 AIE-ML v2 核心的功能單元：暫存器檔、指令長度、三個 AGU、純量 ALU 延遲、整數與浮點向量乘加的六級管線、型別轉換與暫存器搬移。
 
@@ -4172,7 +4172,7 @@ AIE-ML v2 核心的功能單元：暫存器檔、指令長度、三個 AGU、純
 
 # AM027 Memory tile：512 KB、12 條 DMA 通道、鄰居存取、padding 與壓縮
 
-分類：架構 · 官方手冊摘要（AIE-ML v2，非 AIE2P） · 來源快照 2026-09-12
+分類：架構 · 官方手冊摘要（AIE-ML v2，非 AIE2P） · 來源快照 2026-11-12
 
 AIE-ML v2 memory tile 的記憶體介面、DMA 功能、東西鄰居的位址與 lock 編號範圍，以及 stream switch 和 lock module。
 
@@ -4271,7 +4271,7 @@ Padding 綁在 4D 位址產生上：較低的三個維度各有「之前」與�
 
 # AM027 介面、開機與觀測：array interface、中斷、設定流程、debug、trace 與事件
 
-分類：架構 · 官方手冊摘要（AIE-ML v2，非 AIE2P） · 來源快照 2026-09-12
+分類：架構 · 官方手冊摘要（AIE-ML v2，非 AIE2P） · 來源快照 2026-11-12
 
 AIE-ML v2 陣列和外界的介面、開機與重設步驟，以及觀測手段：memory-mapped debug、兩種 trace 模式、效能計數器、事件動作與廣播。
 

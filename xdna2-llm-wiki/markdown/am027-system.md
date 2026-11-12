@@ -1,6 +1,6 @@
 # AM027 介面、開機與觀測：array interface、中斷、設定流程、debug、trace 與事件
 
-分類：架構 · 官方手冊摘要（AIE-ML v2，非 AIE2P） · 來源快照 2026-09-12
+分類：架構 · 官方手冊摘要（AIE-ML v2，非 AIE2P） · 來源快照 2026-11-12
 
 AIE-ML v2 陣列和外界的介面、開機與重設步驟，以及觀測手段：memory-mapped debug、兩種 trace 模式、效能計數器、事件動作與廣播。
 
